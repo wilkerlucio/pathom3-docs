@@ -1,9 +1,24 @@
 module.exports = {
   docs: [
     'introduction',
-    'resolvers',
-    {'Interfaces': ['interfaces/smart-maps', 'interfaces/eql']},
-    'indexes',
+    {
+      'Using Pathom': [
+        'resolvers',
+        {'Interfaces': ['smart-maps', 'eql']}
+      ]
+    },
+    {
+      'Understanding Pathom': [
+        'indexes',
+        'planner',
+        'runner'
+      ]
+    },
+    {
+      'Integrations': [
+        'integrations/graphql'
+      ]
+    },
     {
       Demos: [
         'tutorials/distributed-systems'

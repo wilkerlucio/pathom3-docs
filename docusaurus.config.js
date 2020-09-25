@@ -8,7 +8,7 @@ module.exports = {
   organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
   projectName: 'pathom3', // Usually your repo name.
   themeConfig: {
-    sidebarCollapsible: false,
+    sidebarCollapsible: true,
     prism: {
       theme: require('prism-react-renderer/themes/dracula'),
       additionalLanguages: ['clojure'],
@@ -21,7 +21,7 @@ module.exports = {
       },
       items: [
         {
-          to: 'docs/introduction',
+          to: 'docs/',
           activeBasePath: 'docs',
           label: 'Docs',
           position: 'left',
