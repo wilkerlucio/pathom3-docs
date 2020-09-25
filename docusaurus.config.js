@@ -38,11 +38,19 @@ module.exports = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Presentations',
           items: [
             {
-              label: 'Introduction',
-              to: 'docs/introduction',
+              label: 'Conj 2019 - The Maximal Graph',
+              href: 'https://www.youtube.com/watch?v=IS3i3DTUnAI',
+            },
+            {
+              label: 'Conj 2018 - Scaling Full Stack Applications',
+              href: 'https://www.youtube.com/watch?v=yyVKf2U8YVg',
+            },
+            {
+              label: 'Dutch Clojure Days 2018 - Clojure Graph API’s',
+              href: 'https://www.youtube.com/watch?v=r3zywlNflJI',
             }
           ],
         },
@@ -54,7 +62,7 @@ module.exports = {
               href: 'https://clojurians.slack.com/messages/pathom/',
             }
           ],
-        }
+        },
       ],
       copyright: `Copyright © ${new Date().getFullYear()} Wilker Lucio`,
     },
