@@ -12,7 +12,7 @@ module.exports = {
       title: 'Pathom 3',
       logo: {
         alt: 'Pathom 3',
-        src: 'img/icon_32x32.png',
+        src: 'img/icon_64x64.png',
       },
       items: [
         {
