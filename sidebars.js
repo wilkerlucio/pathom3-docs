@@ -1,14 +1,22 @@
 module.exports = {
   docs: [
     'introduction',
+    'rationale',
+    'tutorial',
     {
-      'Using Pathom': [
-        'resolvers',
-        {'Interfaces': ['smart-maps', 'eql']}
+      'Modeling Guides': [
+        'semantic-attributes'
       ]
     },
     {
-      'Understanding Pathom': [
+      'Using Pathom': [
+        'resolvers',
+        'eql',
+        'smart-maps',
+      ]
+    },
+    {
+      'How Pathom Works': [
         'indexes',
         'planner',
         'runner'
@@ -23,6 +31,7 @@ module.exports = {
       Demos: [
         'tutorials/distributed-systems'
       ]
-    }
+    },
+    'migrate-from-pathom2'
   ]
 };

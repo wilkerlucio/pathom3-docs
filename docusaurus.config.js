@@ -1,6 +1,6 @@
 module.exports = {
   title: 'Pathom 3',
-  tagline: 'Connecting data made easy.',
+  tagline: 'Hassle-free data integration.',
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
@@ -9,8 +9,11 @@ module.exports = {
   projectName: 'pathom3', // Usually your repo name.
   themeConfig: {
     sidebarCollapsible: true,
+    colorMode: {
+      defaultMode: 'dark',
+      disableSwitch: true,
+    },
     prism: {
-      theme: require('prism-react-renderer/themes/dracula'),
       additionalLanguages: ['clojure'],
     },
     navbar: {
@@ -73,15 +76,11 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          editUrl:
-            'https://github.com/wilkerlucio/pathom3-docs/edit/master/',
+          editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/',
         },
         blog: {
           showReadingTime: true,
-          // Please change this to your repo.
-          editUrl:
-            'https://github.com/wilkerlucio/pathom3-docs/edit/master/blog/',
+          editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/blog/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

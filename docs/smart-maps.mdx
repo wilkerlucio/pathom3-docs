@@ -2,3 +2,43 @@
 id: smart-maps
 title: Smart Maps
 ---
+
+Smart maps are a custom map type powered by Pathom resolvers.
+
+With smart maps you can leverage the power of Pathom processing using the accessible
+standard Clojure map interfaces.
+
+## Creating smart maps
+
+To create a smart map, we need at least some indexes with resolvers, here is a basic
+example:
+
+```clojure
+(ns com.wsscode.pathom.docs.smart-maps-demo
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.smart-map :as psm]))
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  ::full-name (str first-name " " last-name))
+
+(def indexes (pci/register full-name))
+
+(def person-data {::first-name "David" ::last-name "Nolan"})
+
+(def smart-map (psm/smart-map indexes person-data))
+
+; if you lookup for a key in the initial data, works the same way as a regular map
+(::first-name smart-map) ; => "David"
+
+; but when you read something that's not there, it will trigger tha Pathom engine to
+; fulfill the attribute
+(::full-name smart-map) ; => "David Nolan"
+```
+
+When you start a smart map, Pathom creates an atom with the initial data, and then when
+you request some new information Pathom triggers the resolver engine, merges the result
+in the same atom and returns the value for that key.
+
+This way the new data is cached and subsequent accesses have the same speed as a local
+entry.
