@@ -1,7 +1,7 @@
 module.exports = {
   docs: [
     'introduction',
-    {'Interfaces': ['interfaces/eql', 'interfaces/smart-maps']},
+    {'Interfaces': ['interfaces/smart-maps', 'interfaces/eql']},
     'style-demo'
   ],
 };

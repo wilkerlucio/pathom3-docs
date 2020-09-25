@@ -8,6 +8,10 @@ module.exports = {
   organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
   projectName: 'pathom3', // Usually your repo name.
   themeConfig: {
+    prism: {
+      theme: require('prism-react-renderer/themes/nightOwl'),
+      additionalLanguages: ['clojure'],
+    },
     navbar: {
       title: 'Pathom 3',
       logo: {
@@ -36,13 +40,9 @@ module.exports = {
           title: 'Docs',
           items: [
             {
-              label: 'Style Guide',
-              to: 'docs/',
-            },
-            {
-              label: 'Second Doc',
-              to: 'docs/doc2/',
-            },
+              label: 'Introduction',
+              to: 'docs/introduction',
+            }
           ],
         },
         {
