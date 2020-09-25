@@ -3,4 +3,42 @@ id: introduction
 title: Introduction
 ---
 
-Hello
+Hello, welcome the wonder world of Pathom.
+
+## Hello World
+
+```clojure
+(defn map-proxy-get
+  [t k]
+  (get t (keyword k)))
+
+; list keys
+(defn map-proxy-own-keys [t _]
+  (to-array (map #(subs (pr-str %) 1) (keys t))))
+
+(defn map-proxy-has [t k]
+  (contains? t (keyword k)))
+
+(defn map-proxy-property-descriptor [t k]
+  (if-let [x (find t (keyword k))]
+    #js {:value        (val x)
+         :writable     true
+         :enumerable   true
+         :configurable true}
+    js/undefined))
+
+; proxy factory
+(defn map-proxy [m]
+  (js/Proxy. m
+    #js {:get
+         map-proxy-get
+
+         :ownKeys
+         map-proxy-own-keys
+
+         :has
+         map-proxy-has
+
+         :getOwnPropertyDescriptor
+         map-proxy-property-descriptor}))
+```

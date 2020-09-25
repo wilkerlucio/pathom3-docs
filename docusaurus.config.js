@@ -8,8 +8,9 @@ module.exports = {
   organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
   projectName: 'pathom3', // Usually your repo name.
   themeConfig: {
+    sidebarCollapsible: false,
     prism: {
-      theme: require('prism-react-renderer/themes/nightOwl'),
+      theme: require('prism-react-renderer/themes/dracula'),
       additionalLanguages: ['clojure'],
     },
     navbar: {
