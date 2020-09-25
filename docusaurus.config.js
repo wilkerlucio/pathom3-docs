@@ -23,7 +23,7 @@ module.exports = {
         },
         {to: 'blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/pathom/pathom3',
+          href: 'https://github.com/wilkerlucio/pathom3',
           label: 'GitHub',
           position: 'right',
         },
