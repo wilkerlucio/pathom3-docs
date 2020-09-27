@@ -8,7 +8,28 @@ import styles from './styles.module.css';
 
 const features = [
   {
-    title: 'Schema Free',
+    title: 'Smart Maps',
+    to: 'docs/smart-maps',
+    imageUrl: 'img/smart-map-icon.png',
+    description: (
+      <>
+        Maps that can realize new attributes from resolvers.
+      </>
+    ),
+  },
+  {
+    title: 'EQL',
+    to: 'docs/eql',
+    description: (
+      <>
+        Request specific shapes of data and let Pathom optimize the process. And if
+        makes sense, use the parallel parser for maximum execution speed.
+      </>
+    ),
+  },
+  {
+    title: 'Schema Free Resolvers',
+    to: 'docs/resolvers',
     description: (
       <>
         Enjoy the freedom of not having to define a schema ahead of time, just keep
@@ -17,7 +38,18 @@ const features = [
     ),
   },
   {
+    title: 'GraphQL integration',
+    to: 'docs/integrations/graphql',
+    imageUrl: 'img/graphql.svg',
+    description: (
+      <>
+        Pull in data from one or many GraphQL services with minimum configuration.
+      </>
+    ),
+  },
+  {
     title: 'Distributed Computing',
+    to: 'docs/tutorials/distributed-systems',
     description: (
       <>
         Connect distributed graphs with ease.
@@ -25,16 +57,18 @@ const features = [
     ),
   },
   {
-    title: 'GraphQL Integration',
+    title: 'Tooling',
+    imageUrl: 'img/tools-icon.svg',
     description: (
       <>
-        Pull in data from one or many GraphQL services with minimum configuration.
+        Pathom provides a set of tools to make the development and debugging more
+        productive.
       </>
     ),
   },
 ];
 
-function Feature({imageUrl, title, description}) {
+function Feature({imageUrl, to, title, description}) {
   const imgUrl = useBaseUrl(imageUrl);
   return (
     <div className={clsx('col col--4', styles.feature)}>
@@ -43,7 +77,7 @@ function Feature({imageUrl, title, description}) {
           <img className={styles.featureImage} src={imgUrl} alt={title} />
         </div>
       )}
-      <h3>{title}</h3>
+      <h3>{ to ? <a href={useBaseUrl(to)}>{title}</a> : title}</h3>
       <p>{description}</p>
     </div>
   );

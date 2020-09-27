@@ -29,7 +29,12 @@ module.exports = {
           label: 'Docs',
           position: 'left',
         },
-        {to: 'blog', label: 'Blog', position: 'left'},
+        // {to: 'blog', label: 'Blog', position: 'left'},
+        // {
+        //   href: 'https://cljdoc.org/d/wilkerlucio/pathom3/',
+        //   label: 'API Reference',
+        //   position: 'right',
+        // },
         {
           href: 'https://github.com/wilkerlucio/pathom3',
           label: 'GitHub',
@@ -78,10 +83,10 @@ module.exports = {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/',
         },
-        blog: {
-          showReadingTime: true,
-          editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/blog/',
-        },
+        // blog: {
+        //   showReadingTime: true,
+        //   editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/blog/',
+        // },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
         },

@@ -24,16 +24,16 @@ example:
 
 (def indexes (pci/register full-name))
 
-(def person-data {::first-name "David" ::last-name "Nolan"})
+(def person-data {::first-name "Anne" ::last-name "Frank"})
 
 (def smart-map (psm/smart-map indexes person-data))
 
 ; if you lookup for a key in the initial data, works the same way as a regular map
-(::first-name smart-map) ; => "David"
+(::first-name smart-map) ; => "Anne"
 
 ; but when you read something that's not there, it will trigger tha Pathom engine to
 ; fulfill the attribute
-(::full-name smart-map) ; => "David Nolan"
+(::full-name smart-map) ; => "Anne Frank"
 ```
 
 When you start a smart map, Pathom creates an atom with the initial data, and then when
@@ -42,3 +42,18 @@ in the same atom and returns the value for that key.
 
 This way the new data is cached and subsequent accesses have the same speed as a local
 entry.
+
+### Keys modes
+
+By default, when you run `(keys smart-map)`, it will return only the cached keys. This
+decision makes the standard option to be safe.
+
+### Options reference
+
+`::psm/keys-modes`
+
+## Nested entries
+
+## Changes to smart maps
+
+## Overriding config

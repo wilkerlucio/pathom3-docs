@@ -2,3 +2,27 @@
 id: indexes
 title: Indexes
 ---
+
+## index-oir
+
+This is the most important index for Pathom when it processes the data.
+
+This `index-oir` stands for `output` → `input` → `resolver`.
+
+It’s the index used by Connect to look up attributes. Pathom builds this index using the
+input/output from the resolver when you register it.
+
+This is what it looks:
+
+```clojure
+; for this resolver
+(pco/defresolver product-by-id [{:keys [acme.product/id]}]
+  {::pco/output [:acme.product/name
+                 :acme.product/price
+                 :acme.product/in-stock?]})
+
+{::pci/index-oir
+ {:acme.product/name      {#{:acme.product/id} #{product-by-id}}
+  :acme.product/price     {#{:acme.product/id} #{product-by-id}}
+  :acme.product/in-stock? {#{:acme.product/id} #{product-by-id}}}}
+```
