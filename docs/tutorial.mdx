@@ -5,8 +5,23 @@ title: Pathom Tutorial
 
 This is a practical tutorial to go over the basic functions of Pathom.
 
-In this tutorial I'll demonstrate how to create scrapper using Pathom. I'll use this
-to go over all the basic primitives in Pathom.
+In this tutorial I'll demonstrate how to create a data model for a partial reddit clone.
+
+```clojure
+; db
+:reddit.post/id
+:reddit.post/link
+:reddit.post/title
+:reddit.post/text
+:reddit.post/posted-at
+
+:reddit.subreddit/name
+
+:reddit.user/login
+
+:reddit.comment/id
+:reddit.comment/text
+```
 
 ## Resolvers
 
