@@ -13,6 +13,7 @@ module.exports = {
         'resolvers',
         'eql',
         'smart-maps',
+        'plugins',
       ]
     },
     {
