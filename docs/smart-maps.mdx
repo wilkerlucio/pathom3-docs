@@ -8,10 +8,9 @@ Smart maps are a custom map type powered by Pathom resolvers.
 With smart maps you can leverage the power of Pathom processing using the accessible
 standard Clojure map interfaces.
 
-## Creating smart maps
+## Using smart maps
 
-To create a smart map, we need at least some indexes with resolvers, here is a basic
-example:
+To create a smart map, we need the indexes with resolvers, here is a basic example:
 
 ```clojure
 (ns com.wsscode.pathom.docs.smart-maps-demo
@@ -38,22 +37,99 @@ example:
 
 When you start a smart map, Pathom creates an atom with the initial data, and then when
 you request some new information Pathom triggers the resolver engine, merges the result
-in the same atom and returns the value for that key.
+in the same atom and returns the value for that key, effectively caching it.
 
-This way the new data is cached and subsequent accesses have the same speed as a local
-entry.
+This way the subsequent accesses have the same speed as a local entry.
 
-### Keys modes
+### Nested entities
 
-By default, when you run `(keys smart-map)`, it will return only the cached keys. This
-decision makes the standard option to be safe.
+Nested map values are wrapped with a smart map using the same environment configuration. For example:
 
-### Options reference
+```clojure
+(ns com.wsscode.pathom.docs.smart-maps-demo-2
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.smart-map :as psm]))
 
-`::psm/keys-modes`
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  ::full-name (str first-name " " last-name))
 
-## Nested entries
+(pco/defresolver anne []
+  ::anne {::first-name "Anne" ::last-name "Frank"})
+
+(def indexes (pci/register [full-name anne]))
+
+(def smart-map (psm/smart-map indexes))
+
+(::anne smart-map) ; => {::first-name "Anne" ::last-name "Frank"}
+
+; nested access
+(-> smart-map ::anne ::full-name) ; => "Anne Frank"
+```
+
+:::important
+This only applies for native Clojure/script maps, it doesn't wraps records and other
+custom map types.
+:::
+
+### Nested sequences
+
+It also applies for maps inside sequences:
+
+```clojure
+(ns com.wsscode.pathom.docs.smart-maps-demo-2
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.smart-map :as psm]))
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  ::full-name (str first-name " " last-name))
+
+(pco/defresolver stars []
+  ::start-wars-characters
+  [{::first-name "Luke" ::last-name "Skywalker"}
+   {::first-name "Darth" ::last-name "Vader"}
+   {::first-name "Han" ::last-name "Solo"}])
+
+(def indexes (pci/register [full-name stars]))
+
+(def smart-map (psm/smart-map indexes))
+
+; nested access on sequences
+(mapv ::full-name (::start-wars-characters smart-map))
+; => ["Luke Skywalker"
+;     "Darth Vader"
+;     "Han Solo"]
+```
+
+:::note
+Smart maps do the conversion of sequence items to smart maps on the sequence read. This
+means that anytime you read a sequence on a smart map, if the sequence is a `vector`, that
+scan will be done ahead of time, otherwise it will use `map` and the processing is lazy.
+:::
 
 ## Changes to smart maps
+
+## Keys modes
+
+Smart Maps keys mode is a configuration to decide how a smart map respond to `(keys smart-map)`
+
+To change this, use the helper `(psm/with-keys-mode ...)`, these are the available options
+for it:
+
+- `::psm/keys-mode-cached` - the default option, `keys` will return the keys cached
+in the internal smart map atom.
+- `::psm/keys-mode-reachable` - `keys` will return all possible keys that are reachable
+from the current data and the index.
+
+:::caution
+Be careful with `::psm/keys-mode-reachable`, consider that depending on the index and
+the current data, a simple `print` of the smart map can lead to infinite loops due
+to the recursive properties of smart maps.
+:::
+
+## Options reference
+
+`::psm/keys-modes`
 
 ## Overriding config
