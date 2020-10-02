@@ -26,3 +26,66 @@ to figure it out. Instead, you can move the `let` down on the attribute level:
 In the future Pathom may get smarter around this, but this is a long rabbit role when
 I consider that the last user statement may be an `if`, `cond`, etc...
 :::
+
+## Built-in Resolvers
+
+Pathom comes with built-in resolvers to handle common situations. You will find these
+resolver generators at:
+
+```clojure
+[com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+```
+
+### Constant values
+
+This is a simple way to express a constant value for a given attribute.
+
+```clojure
+(pbir/constantly-resolver :math/PI 3.1415)
+```
+
+### Aliasing
+
+You can use alias to create a resolver that provides one attribute based on the same
+value of another:
+
+```clojure
+(pbir/alias-resolver :specific.impl.product/id :generic.ui.product/id)
+
+; is equivalent to:
+
+(pco/defresolver spec->generic-prod-id [{:specific.impl.product/keys [id]}]
+  {:generic.ui.product/id id})
+```
+
+Like the example suggests, you can use alias to make some specific name and make it align
+generically with some other domain name.
+
+Note that this only goes in one direction, to illustrate this, consider the extended
+example here:
+
+```clojure
+(def indexes
+  (pci/register
+    [specific-impl-registry
+     another-impl-option
+     (pbir/alias-resolver :specific.impl.product/id :generic.ui.product/id)
+     (pbir/alias-resolver :another.impl.product/id :generic.ui.product/id)]))
+```
+
+In this case, both `:specific.impl.product/id` and `:another.impl.product/id` are valid
+value to show for `:generic.ui.product/id`; but if you have only the `:generic.ui.product/id`,
+you can't know if its from `specific` or `another` impl.
+
+### Equivalence
+
+Use this to express that two attributes are equivalent, that they share the same semantics.
+For example:
+
+```clojure
+(pbir/equivalence-resolver :acme.product/upc :affiliate.product/upc)
+```
+
+This is a common tool to integrate attributes from different systems.
+
+In practice, it creates one alias resolver for each direction.
