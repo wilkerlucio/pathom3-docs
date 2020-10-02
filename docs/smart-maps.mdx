@@ -55,7 +55,7 @@ Nested map values are wrapped with a smart map using the same environment config
   {::full-name (str first-name " " last-name)})
 
 (pco/defresolver anne []
-  ::anne {::first-name "Anne" ::last-name "Frank"})
+  {::anne {::first-name "Anne" ::last-name "Frank"}})
 
 (def indexes (pci/register [full-name anne]))
 
@@ -86,10 +86,10 @@ It also applies for maps inside sequences:
   {::full-name (str first-name " " last-name)})
 
 (pco/defresolver stars []
-  ::star-wars-characters
-  [{::first-name "Luke" ::last-name "Skywalker"}
-   {::first-name "Darth" ::last-name "Vader"}
-   {::first-name "Han" ::last-name "Solo"}])
+  {::star-wars-characters
+   [{::first-name "Luke" ::last-name "Skywalker"}
+    {::first-name "Darth" ::last-name "Vader"}
+    {::first-name "Han" ::last-name "Solo"}]})
 
 (def indexes (pci/register [full-name stars]))
 
