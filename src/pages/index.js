@@ -8,6 +8,16 @@ import styles from './styles.module.css';
 
 const features = [
   {
+    title: 'Schema Free Resolvers',
+    to: 'docs/resolvers',
+    description: (
+      <>
+        Enjoy the freedom of not having to define a schema ahead of time, just keep
+        adding attributes to the system as you figure it out.
+      </>
+    ),
+  },
+  {
     title: 'Smart Maps',
     to: 'docs/smart-maps',
     imageUrl: 'img/smart-map-icon.png',
@@ -27,45 +37,35 @@ const features = [
       </>
     ),
   },
-  {
-    title: 'Schema Free Resolvers',
-    to: 'docs/resolvers',
-    description: (
-      <>
-        Enjoy the freedom of not having to define a schema ahead of time, just keep
-        adding attributes to the system as you figure it out.
-      </>
-    ),
-  },
-  {
-    title: 'GraphQL integration',
-    to: 'docs/integrations/graphql',
-    imageUrl: 'img/graphql.svg',
-    description: (
-      <>
-        Pull in data from one or many GraphQL services with minimum configuration.
-      </>
-    ),
-  },
-  {
-    title: 'Distributed Computing',
-    to: 'docs/tutorials/distributed-systems',
-    description: (
-      <>
-        Connect distributed graphs with ease.
-      </>
-    ),
-  },
-  {
-    title: 'Tooling',
-    imageUrl: 'img/tools-icon.svg',
-    description: (
-      <>
-        Pathom provides a set of tools to make the development and debugging more
-        productive.
-      </>
-    ),
-  },
+  // {
+  //   title: 'GraphQL integration',
+  //   to: 'docs/integrations/graphql',
+  //   imageUrl: 'img/graphql.svg',
+  //   description: (
+  //     <>
+  //       Pull in data from one or many GraphQL services with minimum configuration.
+  //     </>
+  //   ),
+  // },
+  // {
+  //   title: 'Distributed Computing',
+  //   to: 'docs/tutorials/distributed-systems',
+  //   description: (
+  //     <>
+  //       Connect distributed graphs with ease.
+  //     </>
+  //   ),
+  // },
+  // {
+  //   title: 'Tooling',
+  //   imageUrl: 'img/tools-icon.svg',
+  //   description: (
+  //     <>
+  //       Pathom provides a set of tools to make the development and debugging more
+  //       productive.
+  //     </>
+  //   ),
+  // },
 ];
 
 function Feature({imageUrl, to, title, description}) {
