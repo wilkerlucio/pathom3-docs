@@ -1,6 +1,6 @@
 module.exports = {
   title: 'Pathom 3',
-  tagline: 'Hassle-free data modeling.',
+  tagline: 'A library to express and process attribute relationships.',
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',

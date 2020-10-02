@@ -33,7 +33,7 @@ const features = [
     description: (
       <>
         Enjoy the freedom of not having to define a schema ahead of time, just keep
-        adding properties to the system as you figure it out.
+        adding attributes to the system as you figure it out.
       </>
     ),
   },
