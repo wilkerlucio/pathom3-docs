@@ -41,7 +41,7 @@ in the same atom and returns the value for that key, effectively caching it.
 
 This way the subsequent accesses have the same speed as a local entry.
 
-### Nested entities
+### Nested maps
 
 Nested map values are wrapped with a smart map using the same environment configuration. For example:
 
@@ -107,6 +107,18 @@ Smart maps do the conversion of sequence items to smart maps on the sequence rea
 means that anytime you read a sequence on a smart map, if the sequence is a `vector`, that
 scan will be done ahead of time, otherwise it will use `map` and the processing is lazy.
 :::
+
+### Disable nested wrap
+
+You can disable the automatic nest wrap using `(psm/with-wrap-nested? false)` in the env.
+
+```clojure
+(psm/smart-map (-> indexes
+                   (psm/with-wrap-nested? false)
+  {:initial-data "value"}))
+```
+
+Then all values will return as-is.
 
 ## Changes to smart maps
 
