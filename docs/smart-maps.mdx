@@ -105,7 +105,7 @@ It also applies for maps inside sequences:
 :::note
 Smart maps do the conversion of sequence items to smart maps on the sequence read. This
 means that anytime you read a sequence on a smart map, if the sequence is a `vector`, that
-scan will be done ahead of time. Otherwise, it will use `map`, and the processing is lazy.
+scan will be done eagerly. Otherwise, it will use `map`, and the processing is lazy.
 :::
 
 ### Disable nested wrap
