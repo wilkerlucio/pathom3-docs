@@ -73,6 +73,13 @@ example here:
      (pbir/alias-resolver :another.impl.product/id :generic.ui.product/id)]))
 ```
 
+:::note
+A practical side of using this helper is that the helper will generate a name for the
+resolver for you, this alleviates the chore of repetitive writing, and makes the alias
+names look like each other. Try checking the resolver name for the alias resolvers
+from the previous example.
+:::
+
 In this case, both `:specific.impl.product/id` and `:another.impl.product/id` are valid
 value to show for `:generic.ui.product/id`; but if you have only the `:generic.ui.product/id`,
 you can't know if its from `specific` or `another` impl.
@@ -86,9 +93,10 @@ For example:
 (pbir/equivalence-resolver :acme.product/upc :affiliate.product/upc)
 ```
 
-This is a common tool to integrate attributes from different systems.
+This is a common tool to integrate attributes from different domains.
 
-In practice, it creates one alias resolver for each direction.
+In practice, it creates one alias resolver for each direction, any resolver that uses
+the first will also work with the second, and vice versa.
 
 ### Simple one-to-one transformation
 
@@ -101,6 +109,16 @@ under a different name. For example:
 (def registry
   [(pbir/single-attr-resolver :acme.track/duration-ms :affiliate.track/duration-seconds #(/ % 1000))
    (pbir/single-attr-resolver :affiliate.track/duration-seconds :acme.track/duration-ms #(* % 1000))])
+
+(def indexes (pci/register registry))
+
+(-> (psm/smart-map indexes {:acme.track/duration-ms 324000})
+    :affiliate.track/duration-seconds)
+; => 324
+
+(-> (psm/smart-map indexes {:affiliate.track/duration-seconds 324})
+    :acme.track/duration-ms)
+; => 324000
 ```
 
 The function receives a single argument, which is the value of the `source` attribute;
@@ -108,3 +126,25 @@ and returns the value for `target` attribute.
 
 If your transformation also requires access to `env`, use `single-attr-with-env-resolver`
 instead, then the arglist of `f` is `[env input-attribute-value]`.
+
+### Static Tables
+
+You can use static tables to provide extra data for some entities, given some identifier.
+
+```clojure
+(def registry
+  [(pbir/static-table-resolver `song-names :song/id
+     {1 {:song/name "Marchinha Psicotica de Dr. Soup"}
+      2 {:song/name "There's Enough"}})
+
+   (pbir/static-table-resolver `song-analysis :song/id
+     {1 {:song/duration 280 :song/tempo 98}
+      2 {:song/duration 150 :song/tempo 130}})])
+
+(let [sm (psm/smart-map (pci/register registry)
+           {:song/id 1})]
+  (select-keys sm [:song/id :song/name :song/duration]))
+; => #:song{:id 1, :name "Marchinha Psicotica de Dr. Soup", :duration 280}
+```
+
+This helper infers the output from the table data.
