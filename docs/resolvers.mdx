@@ -6,3 +6,23 @@ title: Resolvers
 If you use [Cursive](https://cursive-ide.com/), you can ask it to resolve the
 `pc/defresolver` as a `defn`, and you will get proper symbol resolution
 :::
+
+:::tip
+Pathom only looks at the last item of the body for implicit outputs, this means that
+if you wrap the map with something like a `let` statement, Pathom will not be able
+to figure it out. Instead, you can move the `let` down on the attribute level:
+
+```clojure
+(pco/defresolver foo []
+  ; infer won't work, the last statement is a let
+  (let [x 10]
+    {:foo x}))
+
+(pco/defresolver foo []
+  ; works
+  {:foo (let [x 10] x)})
+```
+
+In the future Pathom may get smarter around this, but this is a long rabbit role when
+I consider that the last user statement may be an `if`, `cond`, etc...
+:::
