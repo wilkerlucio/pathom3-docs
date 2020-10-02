@@ -120,6 +120,15 @@ You can disable the automatic nest wrap using `(psm/with-wrap-nested? false)` in
 
 Then all values will return as-is.
 
+:::tip
+You can manually wrap nested values in the same way the library does by using the same
+env on the value, for example:
+
+```clojure
+(psm/smart-map (psm/sm-env smart-map) (::map-value smart-map))
+```
+:::
+
 ## Changes to smart maps
 
 You can use the change operations of map in the smart map (`assoc`, `dissoc`, ...).
