@@ -137,6 +137,7 @@ You can use static tables to provide extra data for some entities, given some id
      {1 {:song/name "Marchinha Psicotica de Dr. Soup"}
       2 {:song/name "There's Enough"}})
 
+   ; note you need to provide the name for the resolver, prefer fully qualified symbols
    (pbir/static-table-resolver `song-analysis :song/id
      {1 {:song/duration 280 :song/tempo 98}
       2 {:song/duration 150 :song/tempo 130}})])
@@ -148,3 +149,33 @@ You can use static tables to provide extra data for some entities, given some id
 ```
 
 This helper infers the output from the table data.
+
+### Attribute Tables
+
+This is similar to static tables, but the table data comes from another attribute instead
+of static data.
+
+Because in this case the data is opaque, you need to express which keys will trigger
+this table attribute lookup. This example is similar to the one from static tables, but
+this time we will mix one static table with one attribute table.
+
+```clojure
+(def registry
+  [(pbir/static-table-resolver `song-names :song/id
+     {1 {:song/name "Marchinha Psicotica de Dr. Soup"}
+      2 {:song/name "There's Enough"}})
+
+   ; provide table in the attribute ::song-analysis
+   (pbir/constantly-resolver ::song-analysis
+     {1 {:song/duration 280 :song/tempo 98}
+      2 {:song/duration 150 :song/tempo 130}})
+
+   ; ref the attribute, the index attribute and the output that triggers this resolver
+   (pbir/attribute-table-resolver ::song-analysis :song/id
+     [:song/duration :song/tempo])])
+
+(let [sm (psm/smart-map (pci/register registry)
+           {:song/id 2})]
+  (select-keys sm [:song/id :song/name :song/duration]))
+; => #:song{:id 2, :name "There's Enough", :duration 150}
+```
