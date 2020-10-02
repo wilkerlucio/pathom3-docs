@@ -18,6 +18,7 @@ module.exports = {
     },
     {
       'How Pathom Works': [
+        'environment',
         'indexes',
         'planner',
         'runner'

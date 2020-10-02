@@ -129,41 +129,7 @@ env on the value, for example:
 ```
 :::
 
-## Changes to smart maps
-
-You can use the change operations of map in the smart map (`assoc`, `dissoc`, ...).
-
-When a change operation happens, you get a new smart map. Be aware this new smart map
-doesn't have the cached data from resolvers from the previous one. The modification is
-done from the `source map`, the one used to create the smart map in the first place.
-
-This is important so any data computed by resolvers can react to the changes based on
-the new data context. The following example illustrates this behavior:
-
-```clojure
-(ns com.wsscode.pathom.docs.smart-maps-demo
-  (:require [com.wsscode.pathom3.connect.indexes :as pci]
-            [com.wsscode.pathom3.connect.operation :as pco]
-            [com.wsscode.pathom3.interface.smart-map :as psm]))
-
-(pco/defresolver full-name [{::keys [first-name last-name]}]
-  {::full-name (str first-name " " last-name)})
-
-(def indexes (pci/register full-name))
-
-(def person-data {::first-name "John" ::last-name "Lock"})
-
-(def smart-map (psm/smart-map indexes person-data))
-
-(::full-name smart-map) ; => "John Lock"
-
-(-> smart-map
-    (assoc ::last-name "Oliver")
-    ::full-name)
-; => "John Oliver", the full-name gets re-computed due to the change
-```
-
-## Pre-load data
+### Preload data
 
 If you know the attributes you will need ahead of time, it's more efficient to load then
 in a single run than fetching one by one lazily.
@@ -212,14 +178,48 @@ in the internal smart map atom.
 from the current data and the index.
 
 :::caution
-Be careful with `::psm/keys-mode-reachable`, consider that depending on the index and
-the current data, a simple `print` of the smart map can lead to infinite loops due
-to the recursive properties of smart maps.
+Be careful with `::psm/keys-mode-reachable` combined with enabled nested wrapping,
+consider that depending on the index and the current data, a simple `print` of the smart
+map can lead to infinite loops due to the recursive properties of smart maps.
 :::
+
+## Changes to smart maps
+
+You can use the change operations of map in the smart map (`assoc`, `dissoc`, ...).
+
+When a change operation happens, you get a new smart map. Be aware this new smart map
+doesn't have the cached data from resolvers from the previous one. The modification is
+done from the `source map`, the one used to create the smart map in the first place.
+
+This is important so any data computed by resolvers can react to the changes based on
+the new data context. The following example illustrates this behavior:
+
+```clojure
+(ns com.wsscode.pathom.docs.smart-maps-demo
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.smart-map :as psm]))
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  {::full-name (str first-name " " last-name)})
+
+(def indexes (pci/register full-name))
+
+(def person-data {::first-name "John" ::last-name "Lock"})
+
+(def smart-map (psm/smart-map indexes person-data))
+
+(::full-name smart-map) ; => "John Lock"
+
+(-> smart-map
+    (assoc ::last-name "Oliver")
+    ::full-name)
+; => "John Oliver", the full-name gets re-computed due to the change
+```
 
 ## Inside smart maps
 
-The smart map data structure contains an [environment](enviroment) inside of it, there
+The smart map data structure contains an [environment](environment) inside of it, there
 you can find the [indexes](indexes), the cached data and any other relevant options that
 make the setup of the smart map.
 
