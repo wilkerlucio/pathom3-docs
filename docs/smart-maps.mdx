@@ -217,8 +217,11 @@ the current data, a simple `print` of the smart map can lead to infinite loops d
 to the recursive properties of smart maps.
 :::
 
-## Options reference
+## Inside smart maps
 
-`::psm/keys-modes`
+The smart map data structure contains an [environment](enviroment) inside of it, there
+you can find the [indexes](indexes), the cached data and any other relevant options that
+make the setup of the smart map.
 
-## Overriding config
+You can access the smart map environment using `psm/sm-env`. This includes all the data
+you sent as `env` during the smart map creation, plus the cache atom.
