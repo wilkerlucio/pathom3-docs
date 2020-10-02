@@ -4,7 +4,7 @@
             [com.wsscode.pathom3.interface.smart-map :as psm]))
 
 (pco/defresolver full-name [{::keys [first-name last-name]}]
-  ::full-name (str first-name " " last-name))
+  {::full-name (str first-name " " last-name)})
 
 (def indexes (pci/register full-name))
 
@@ -69,3 +69,23 @@
     (assoc ::last-name "Oliver")
     ::full-name)
 ; => "John Oliver", the full-name gets re-computed due to the change
+
+;; pre load
+
+(pco/defresolver right [{::keys [left width]}]
+  {::right (+ left width)})
+
+(pco/defresolver bottom [{::keys [top height]}]
+  {::bottom (+ top height)})
+
+(def indexes (pci/register [right bottom]))
+
+(def square {::left  10 ::top 30
+             ::width 23 ::height 35})
+
+(def smart-map
+  (-> (psm/smart-map indexes square)
+      (psm/sm-touch! [::right ::bottom])))
+
+(::right smart-map) ; => 33, read from cache
+(::bottom smart-map) ; => 65, read from cache

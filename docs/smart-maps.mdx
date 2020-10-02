@@ -19,7 +19,7 @@ To create a smart map, we need the indexes with resolvers, here is a basic examp
             [com.wsscode.pathom3.interface.smart-map :as psm]))
 
 (pco/defresolver full-name [{::keys [first-name last-name]}]
-  ::full-name (str first-name " " last-name))
+  {::full-name (str first-name " " last-name)})
 
 (def indexes (pci/register full-name))
 
@@ -52,7 +52,7 @@ Nested map values are wrapped with a smart map using the same environment config
             [com.wsscode.pathom3.interface.smart-map :as psm]))
 
 (pco/defresolver full-name [{::keys [first-name last-name]}]
-  ::full-name (str first-name " " last-name))
+  {::full-name (str first-name " " last-name)})
 
 (pco/defresolver anne []
   ::anne {::first-name "Anne" ::last-name "Frank"})
@@ -83,7 +83,7 @@ It also applies for maps inside sequences:
             [com.wsscode.pathom3.interface.smart-map :as psm]))
 
 (pco/defresolver full-name [{::keys [first-name last-name]}]
-  ::full-name (str first-name " " last-name))
+  {::full-name (str first-name " " last-name)})
 
 (pco/defresolver stars []
   ::star-wars-characters
@@ -147,7 +147,7 @@ the new data context. The following example illustrates this behavior:
             [com.wsscode.pathom3.interface.smart-map :as psm]))
 
 (pco/defresolver full-name [{::keys [first-name last-name]}]
-  ::full-name (str first-name " " last-name))
+  {::full-name (str first-name " " last-name)})
 
 (def indexes (pci/register full-name))
 
@@ -162,6 +162,42 @@ the new data context. The following example illustrates this behavior:
     ::full-name)
 ; => "John Oliver", the full-name gets re-computed due to the change
 ```
+
+## Pre-load data
+
+If you know the attributes you will need ahead of time, it's more efficient to load then
+in a single run than fetching one by one lazily.
+
+You can accomplish this using the fn `psm/touch!`, example:
+
+```clojure
+(ns com.wsscode.pathom.docs.smart-maps-demo
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.smart-map :as psm]))
+
+(pco/defresolver right [{::keys [left width]}]
+  {::right (+ left width)})
+
+(pco/defresolver bottom [{::keys [top height]}]
+  {::bottom (+ top height)})
+
+(def indexes (pci/register [right bottom]))
+
+(def square {::left  10 ::top 30
+             ::width 23 ::height 35})
+
+(def smart-map
+  (-> (psm/smart-map indexes square)
+      (psm/sm-touch! [::right ::bottom])))
+
+(::right smart-map) ; => 33, read from cache
+(::bottom smart-map) ; => 65, read from cache
+```
+
+:::tip
+You can also use `psm/touch-ast!` to provide an AST directly.
+:::
 
 ## Keys modes
 
