@@ -51,3 +51,21 @@
 ; => ["Luke Skywalker"
 ;     "Darth Vader"
 ;     "Han Solo"]
+
+;; changes demo
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  ::full-name (str first-name " " last-name))
+
+(def indexes (pci/register full-name))
+
+(def person-data {::first-name "John" ::last-name "Lock"})
+
+(def smart-map (psm/smart-map indexes person-data))
+
+(::full-name smart-map) ; => "John Lock"
+
+(-> smart-map
+    (assoc ::last-name "Oliver")
+    ::full-name)
+; => "John Oliver", the full-name gets re-computed due to the change

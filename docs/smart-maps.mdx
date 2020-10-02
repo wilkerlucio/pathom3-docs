@@ -46,7 +46,7 @@ This way the subsequent accesses have the same speed as a local entry.
 Nested map values are wrapped with a smart map using the same environment configuration. For example:
 
 ```clojure
-(ns com.wsscode.pathom.docs.smart-maps-demo-2
+(ns com.wsscode.pathom.docs.smart-maps-demo
   (:require [com.wsscode.pathom3.connect.indexes :as pci]
             [com.wsscode.pathom3.connect.operation :as pco]
             [com.wsscode.pathom3.interface.smart-map :as psm]))
@@ -77,7 +77,7 @@ custom map types.
 It also applies for maps inside sequences:
 
 ```clojure
-(ns com.wsscode.pathom.docs.smart-maps-demo-2
+(ns com.wsscode.pathom.docs.smart-maps-demo
   (:require [com.wsscode.pathom3.connect.indexes :as pci]
             [com.wsscode.pathom3.connect.operation :as pco]
             [com.wsscode.pathom3.interface.smart-map :as psm]))
@@ -86,7 +86,7 @@ It also applies for maps inside sequences:
   ::full-name (str first-name " " last-name))
 
 (pco/defresolver stars []
-  ::start-wars-characters
+  ::star-wars-characters
   [{::first-name "Luke" ::last-name "Skywalker"}
    {::first-name "Darth" ::last-name "Vader"}
    {::first-name "Han" ::last-name "Solo"}])
@@ -96,7 +96,7 @@ It also applies for maps inside sequences:
 (def smart-map (psm/smart-map indexes))
 
 ; nested access on sequences
-(mapv ::full-name (::start-wars-characters smart-map))
+(mapv ::full-name (::star-wars-characters smart-map))
 ; => ["Luke Skywalker"
 ;     "Darth Vader"
 ;     "Han Solo"]
@@ -109,6 +109,38 @@ scan will be done ahead of time, otherwise it will use `map` and the processing 
 :::
 
 ## Changes to smart maps
+
+You can use the change operations of map in the smart map (`assoc`, `dissoc`, ...).
+
+When a change operation happens, you get a new smart map. Be aware this new smart map
+doesn't have the cached data from resolvers from the previous one. The modification is
+done from the `source map`, the one used to create the smart map in the first place.
+
+This is important so any data computed by resolvers can react to the changes based on
+the new data context. The following example illustrates this behavior:
+
+```clojure
+(ns com.wsscode.pathom.docs.smart-maps-demo
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.smart-map :as psm]))
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  ::full-name (str first-name " " last-name))
+
+(def indexes (pci/register full-name))
+
+(def person-data {::first-name "John" ::last-name "Lock"})
+
+(def smart-map (psm/smart-map indexes person-data))
+
+(::full-name smart-map) ; => "John Lock"
+
+(-> smart-map
+    (assoc ::last-name "Oliver")
+    ::full-name)
+; => "John Oliver", the full-name gets re-computed due to the change
+```
 
 ## Keys modes
 
