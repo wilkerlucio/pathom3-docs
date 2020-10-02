@@ -177,7 +177,7 @@ in the internal smart map atom.
 - `::psm/keys-mode-reachable` - `keys` will return all possible keys that are reachable
 from the current data and the index.
 
-:::caution
+:::danger
 Be careful with `::psm/keys-mode-reachable` combined with enabled "nested wrapping".
 Considering that, depending on the index and the current data, a simple `print` of the
 smart map can lead to infinite loops due to smart maps' recursive properties.
@@ -219,8 +219,8 @@ the new data context. The following example illustrates this behavior:
 
 ## Inside smart maps
 
-The smart map data structure contains an [environment](environment) inside of it, there
-you can find the [indexes](indexes), the cached data, and any other relevant options that
+The smart map data structure contains an [environment](environment.mdx) inside of it, there
+you can find the [indexes](indexes.mdx), the cached data, and any other relevant options that
 make the setup of the smart map.
 
 You can access the smart map environment using `psm/sm-env`. This includes all the data
