@@ -5,7 +5,7 @@ title: Smart Maps
 
 Smart maps are a custom map type powered by Pathom resolvers.
 
-With smart maps you can leverage the power of Pathom processing using the accessible
+With smart maps, you can leverage the power of Pathom processing using the accessible
 standard Clojure map interfaces.
 
 ## Using smart maps
@@ -27,19 +27,19 @@ To create a smart map, we need the indexes with resolvers, here is a basic examp
 
 (def smart-map (psm/smart-map indexes person-data))
 
-; if you lookup for a key in the initial data, works the same way as a regular map
+; if you lookup for a key in the initial data, it works the same way as a regular map
 (::first-name smart-map) ; => "Anne"
 
-; but when you read something that's not there, it will trigger tha Pathom engine to
+; but when you read something that's not there, it will trigger the Pathom engine to
 ; fulfill the attribute
 (::full-name smart-map) ; => "Anne Frank"
 ```
 
 When you start a smart map, Pathom creates an atom with the initial data, and then when
-you request some new information Pathom triggers the resolver engine, merges the result
+you request some new information, Pathom triggers the resolver engine, merges the result
 in the same atom and returns the value for that key, effectively caching it.
 
-This way the subsequent accesses have the same speed as a local entry.
+This way, the subsequent accesses have the same speed as a local entry.
 
 ### Nested maps
 
@@ -68,7 +68,7 @@ Nested map values are wrapped with a smart map using the same environment config
 ```
 
 :::important
-This only applies for native Clojure/script maps, it doesn't wraps records and other
+This only applies to native Clojure/script maps. It doesn't wrap records and other
 custom map types.
 :::
 
@@ -105,7 +105,7 @@ It also applies for maps inside sequences:
 :::note
 Smart maps do the conversion of sequence items to smart maps on the sequence read. This
 means that anytime you read a sequence on a smart map, if the sequence is a `vector`, that
-scan will be done ahead of time, otherwise it will use `map` and the processing is lazy.
+scan will be done ahead of time. Otherwise, it will use `map`, and the processing is lazy.
 :::
 
 ### Disable nested wrap
@@ -178,14 +178,14 @@ in the internal smart map atom.
 from the current data and the index.
 
 :::caution
-Be careful with `::psm/keys-mode-reachable` combined with enabled nested wrapping,
-consider that depending on the index and the current data, a simple `print` of the smart
-map can lead to infinite loops due to the recursive properties of smart maps.
+Be careful with `::psm/keys-mode-reachable` combined with enabled "nested wrapping".
+Considering that, depending on the index and the current data, a simple `print` of the
+smart map can lead to infinite loops due to smart maps' recursive properties.
 :::
 
 ## Changes to smart maps
 
-You can use the change operations of map in the smart map (`assoc`, `dissoc`, ...).
+You can use the change operations of maps in the smart map (`assoc`, `dissoc`, ...).
 
 When a change operation happens, you get a new smart map. Be aware this new smart map
 doesn't have the cached data from resolvers from the previous one. The modification is
@@ -220,7 +220,7 @@ the new data context. The following example illustrates this behavior:
 ## Inside smart maps
 
 The smart map data structure contains an [environment](environment) inside of it, there
-you can find the [indexes](indexes), the cached data and any other relevant options that
+you can find the [indexes](indexes), the cached data, and any other relevant options that
 make the setup of the smart map.
 
 You can access the smart map environment using `psm/sm-env`. This includes all the data
