@@ -89,3 +89,22 @@ For example:
 This is a common tool to integrate attributes from different systems.
 
 In practice, it creates one alias resolver for each direction.
+
+### Simple one-to-one transformation
+
+This helper gives an easy way to convert one attribute into another, modified by a
+function. A common use case is to convert some attribute from one unit to another unit
+under a different name. For example:
+
+```clojure
+; in this example we create one different transformation for each direction
+(def registry
+  [(pbir/single-attr-resolver :acme.track/duration-ms :affiliate.track/duration-seconds #(/ % 1000))
+   (pbir/single-attr-resolver :affiliate.track/duration-seconds :acme.track/duration-ms #(* % 1000))])
+```
+
+The function receives a single argument, which is the value of the `source` attribute;
+and returns the value for `target` attribute.
+
+If your transformation also requires access to `env`, use `single-attr-with-env-resolver`
+instead, then the arglist of `f` is `[env input-attribute-value]`.
