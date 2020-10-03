@@ -4,11 +4,6 @@ module.exports = {
     'rationale',
     'tutorial',
     {
-      'Modeling Guides': [
-        'semantic-attributes'
-      ]
-    },
-    {
       'Using Pathom': [
         'resolvers',
         'eql',
@@ -16,6 +11,7 @@ module.exports = {
         'plugins',
       ]
     },
+    'modeling-guides',
     {
       'How Pathom Works': [
         'environment',

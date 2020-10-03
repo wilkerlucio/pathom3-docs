@@ -2,6 +2,30 @@
 title: Resolvers
 ---
 
+Resolvers are the primary building blocks in Pathom. They are the constructs to express
+relationships between attributes.
+
+In this page you will learn how to create resolvers and use then. After that you
+will learn about the built-in resolvers that come with Pathom.
+
+## Using `defresolver`
+
+The macro `defresolver` is the primary way to create new resolvers. It has some sugars
+to reduce the boilerplate code related to define a new resolver.
+
+The main pieces of a resolver are:
+
+- `::pco/op-name` - a symbol that identify the resolver, like a function name.
+- `::pco/output` - a EQL expression that informs the attributes **provided** by this resolver.
+- `::pco/input` - a EQL expression that informs the attributes **required** by this resolver.
+
+```clojure
+(pco/defresolver track-by-id [env {:amce.track/keys [id]}]
+  {::pco/output [:acme.track/title
+                 {:acme.track/artist [:acme.track/id]}]}
+  (fetch-track-by-id env id))
+```
+
 :::tip
 If you use [Cursive](https://cursive-ide.com/), you can ask it to resolve the
 `pc/defresolver` as a `defn`, and you will get proper symbol resolution
@@ -27,6 +51,65 @@ In the future Pathom may get smarter around this, but this is a long rabbit role
 I consider that the last user statement may be an `if`, `cond`, etc...
 :::
 
+### Resolvers are callable
+
+Like functions, you can call the resolvers directly. The arity to call resolver is similar
+to how to define resolvers:
+
+```clojure
+(pco/defresolver extension [{::keys [path]}]
+  {::path-ext (last (str/split path #"\."))})
+
+(extension {::path "foo.txt"})
+; => {::path-ext "txt"}
+```
+
+This makes easier to test resolvers in unit tests.
+
+## Generate the index
+
+Resolvers become interesting when you combine many of then, this is done via the `pci/register`
+function.
+
+From the resolvers you can generate the indexes. The Pathom engine
+uses those indexes to plan and run the resolvers. For more details on indexes visit
+the [indexes page](indexes.mdx).
+
+## Using `resolver`
+
+You can also create a resolver using the `resolver` helper, this is more useful when
+you are making some helper function to generate a resolver.
+
+To create a resolver using `pco/resolver` you have the following options:
+
+```clojure
+; using helper syntax
+(pco/resolver `op-name
+  {::pco/output [::foo]}
+  (fn [env input] {::foo "bar"}))
+
+; using config map
+(pco/resolver
+  {::pco/op-name `op-name
+   ::pco/output  [::foo]
+   ::pco/resolve (fn [env input] {::foo "bar"})})
+```
+
+As an example, here are how to generate resolvers to create unit conversion between
+meters and feet:
+
+```clojure
+(defn alias-resolver
+  "Create a resolver that will convert attribute `from` to a attribute `to` with
+  the same value. This only creates the alias in one direction."
+  [from to]
+  (let [resolver-name (symbol (str (attr-alias-resolver-name from to) "-alias"))]
+    (pco/resolver resolver-name
+      {::pco/input  [from]
+       ::pco/output [to]}
+      (fn [_ input] {to (get input from)}))))
+```
+
 ## Built-in Resolvers
 
 Pathom comes with built-in resolvers to handle common situations. You will find these
@@ -36,7 +119,7 @@ resolver generators at:
 [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
 ```
 
-### Constant values
+### Constants
 
 This is a simple way to express a constant value for a given attribute.
 
@@ -179,3 +262,69 @@ this time we will mix one static table with one attribute table.
   (select-keys sm [:song/id :song/name :song/duration]))
 ; => #:song{:id 2, :name "There's Enough", :duration 150}
 ```
+
+### EDN Files
+
+Load attributes from a EDN file.
+
+This is macro made to load some configuration from EDN at compilation time. It's an
+easy way to source some data from a file.
+
+Basic example, given this configuration file:
+
+```clojure title="my-config.edn"
+{:my.system.server/port
+ 1234
+
+ :my.system.resources/path
+ "resources/public"}
+```
+
+Loading with `edn-file-resolver`:
+
+```clojure
+; app
+(pco/defresolver full-url [{:keys [my.system.server/port my.system.resource/path]}]
+  {::server-url (str "http://localhost:" port "/" path)})
+
+(def registry
+  [(edn-file-resolver "my-config.edn")
+   full-url])
+
+(-> (psm/smart-map (pci/register registry))
+    ::server-url)
+; => "http://localhost:1234/resources/public
+```
+
+#### Attribute tables on EDN Files
+
+You can also provide attribute tables as part of the EDN configuration. To do so, you
+add the `:com.wsscode.pathom3/entity-table` key to the map meta, the value here defines
+which is the key to index the table data.
+
+```clojure title="my-config-with-table.edn"
+{:my.system.server/port
+ 1234
+
+ :my.system.resources/path
+ "resources/public"
+
+ :my.system/generic-db
+ ^{:com.wsscode.pathom3/entity-table :my.system/user-id}
+ {4 {:my.system.user/name "Anne"}
+  2 {:my.system.user/name "Fred"}}}
+```
+
+```clojure
+; app
+(def registry (edn-file-resolver "my-config.edn"))
+
+(let [sm (psm/smart-map (pci/register registry) {:my.system/user-id 4})]
+  (select-keys sm [:my.system/port :my.system.user/name])
+; => {:my.system/port 1234, :my.system.user/name "Anne"}
+```
+
+:::important
+Because this helper is a macro, it works on Clojurescript as well, but remember that
+it will pull the data from the EDN file at compilation time, not at runtime.
+:::
