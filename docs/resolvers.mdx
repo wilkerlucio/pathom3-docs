@@ -143,14 +143,52 @@ Note how as we change the input, Pathom adjusts the resolvers required to call, 
 is the main thing that Pathom brings to you, <mark>it removes the chore of knowing the
 function names</mark>, so you can focus on the data you have/need and not how to get it.
 
-## Generate the index
+## Generate the indexes
 
-Resolvers become interesting when you combine many of then, this is done via the `pci/register`
-function.
+Here we will cover in more details the process to generate the indexes from resolvers.
 
-From the resolvers you can generate the indexes. The Pathom engine
-uses those indexes to plan and run the resolvers. For more details on indexes visit
-the [indexes page](indexes.mdx).
+Think of resolvers as the **atomic blocks of Pathom**, which are annotated functions. If Pathom had to scan
+every resolver to figure a path it would be slow. So instead Pathom works on indexes
+generated from a set of resolvers.
+
+To generate the indexes we use the function `(pci/register ...)`. The values allowed
+on register are:
+
+- resolvers
+- mutations
+- indexes
+- sequence of previous items (recursively)
+
+Here are a couple of examples to illustrate:
+
+```clojure
+; create indexes for a single resolver
+(def single-registry (pci/register some-resolver))
+
+; creating indexes with a few resolvers
+(def many-registry (pci/register [resolver-a resolver-b]))
+
+; define a group of resolvers in a variable
+(def some-resolvers [res-a res-b])
+
+; now use in combination with other mixes:
+(def more-registry
+  (pci/register [some-resolvers
+                 [other-group with-more
+                  [deep-nested resolvers]]
+                 and-more]))
+
+; now using indexes as part of registry
+(def with-indexes (pci/register [some-resolvers many-registry]))
+
+; all together now
+(def all-together
+  (pci/register [[resolver-a resolver-b]
+                 some-resolvers
+                 many-registry]))
+```
+
+To learn more details about the indexes, check the [indexes page](indexes.mdx).
 
 ## Using `resolver`
 
