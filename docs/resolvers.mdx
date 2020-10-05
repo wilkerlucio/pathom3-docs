@@ -19,11 +19,37 @@ The main pieces of a resolver are:
 - `::pco/output` - a EQL expression that informs the attributes **provided** by this resolver.
 - `::pco/input` - a EQL expression that informs the attributes **required** by this resolver.
 
+Let's start with a verbose usage of `defresolver` to go over these main pieces:
+
 ```clojure
-(pco/defresolver track-by-id [env {:amce.track/keys [id]}]
-  {::pco/output [:acme.track/title
-                 {:acme.track/artist [:acme.track/id]}]}
-  (fetch-track-by-id env id))
+; this resolver computes a slug to use on URL from some article title
+(pco/defresolver article-slug [env {:acme.article/keys [title]}]
+  {::pco/op-name `article-slug
+   ::pco/input   [:acme.article/title]
+   ::pco/output  [:acme.article/slug]}
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+```
+
+:::note Design observation
+This resolver expresses an edge in Pathom attribute world, it says the attribute `:acme.article/slug`
+is reachable, given that a `:acme.article/title` is available.
+:::
+
+If you look close you can find a fair amount of repetition in this expression:
+- The `op-name` is repeated at the start to define the `var` name.
+- The `input` is repeated in the destructuring expression.
+- The `output` is visible in the output expression.
+
+Experience with Pathom 2 demonstrated these repetitions occur frequently in most Pathom
+code bases. So Pathom 3 adds some extra sugar tricks to avoid the repetition:
+
+1. We can remove the `::pco/op-name` and let `defresolver` use the same symbol as the `var`:
+
+```clojure
+(pco/defresolver article-slug [env {:acme.article/keys [title]}]
+  {::pco/input  [:acme.article/title]
+   ::pco/output [:acme.article/slug]}
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
 ```
 
 :::tip
@@ -31,7 +57,23 @@ If you use [Cursive](https://cursive-ide.com/), you can ask it to resolve the
 `pc/defresolver` as a `defn`, and you will get proper symbol resolution
 :::
 
-:::tip
+2. Now, given the `input` is the same as destructuring, we can let `defresolver` infer the input from it:
+
+```clojure
+(pco/defresolver article-slug [env {:acme.article/keys [title]}]
+  {::pco/output [:acme.article/slug]}
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+```
+
+3. Since the last element of our expression is a map, `defresolver` can infer the `output` from it:
+
+```clojure
+; given the map would be empty now, we can remove it completely
+(pco/defresolver article-slug [env {:acme.article/keys [title]}]
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+```
+
+:::important
 Pathom only looks at the last item of the body for implicit outputs, this means that
 if you wrap the map with something like a `let` statement, Pathom will not be able
 to figure it out. Instead, you can move the `let` down on the attribute level:
@@ -50,6 +92,25 @@ to figure it out. Instead, you can move the `let` down on the attribute level:
 In the future Pathom may get smarter around this, but this is a long rabbit role when
 I consider that the last user statement may be an `if`, `cond`, etc...
 :::
+
+4. Given we are not using `env`, we can also take it out, taking us to the final version:
+
+```clojure
+(pco/defresolver article-slug [{:acme.article/keys [title]}]
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+```
+
+:::tip
+In case you have a resolver that don't use an input, you can omit the first argument
+as well, for example:
+
+```clojure
+(pco/defresolver constant-pi []
+  {:acme.math/pi 3.1415})
+```
+:::
+
+### Resolvers without inputs
 
 ## Invoking resolvers
 

@@ -7,6 +7,23 @@
             [com.wsscode.pathom3.interface.smart-map :as psm]
             [com.wsscode.pathom3.entity-tree :as p.ent]))
 
+;; defresolver
+
+; this resolver computes a slug to use on URL from some article title
+(pco/defresolver article-slug [env {:acme.article/keys [title]}]
+  {::pco/op-name `article-slug
+   ::pco/input   [:acme.article/title]
+   ::pco/output  [:acme.article/slug]}
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+
+(pco/defresolver article-slug [env {:acme.article/keys [title]}]
+  {::pco/input  [:acme.article/title]
+   ::pco/output [:acme.article/slug]}
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+
+
+;; invoking resolvers
+
 (def user-from-id
   (pbir/static-table-resolver `user-db :acme.user/id
     {1 #:acme.user{:name  "Trey Parker"
