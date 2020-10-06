@@ -8,6 +8,81 @@ relationships between attributes.
 In this page you will learn how to create resolvers and use then. After that you
 will learn about the built-in resolvers that come with Pathom.
 
+## What is a resolver in Pathom?
+
+The Pathom engine gather its resolution features from the relationship between attributes.
+Resolvers are the piece that express those relationships.
+
+To put in more concrete terms, imagine that you have some user id, and you want to know
+what is the birth year of the user. In Pathom we express this relationship using the attributes
+`:acme.user/id` and `:acme.user/birth-year` for example.
+
+Now we need to implement how to fetch the name from the id, this can be a lookup in a
+database, or in a map, or any way, doesn't matter. What matters is that you express
+this connection, and provide code that makes it happen.
+
+Here I'll illustrate this using a map lookup:
+
+```clojure
+(def user-birthdays
+  {1 1969
+   2 1954
+   3 1986})
+
+; defresolver is the main option to create new resolvers
+(pco/defresolver user-birthday [{:keys [acme.user/id]}]
+  {:acme.user/birth-year (get user-birthdays id)})
+```
+
+In Pathom, resolvers represent edges in a graph. As illustrated in the following figure:
+
+:::note
+I'll short then names on the diagrams for space, but keep your domain qualifiers long!
+:::
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/resolver.svg)
+
+</div>
+
+This example was a simplification, most systems will store the full birth date instead,
+and then extract the year from this date.
+
+We can simulate such case using the following setup:
+
+```clojure
+; define a map for indexed access to user data
+(def users-db
+  {1 #:acme.user{:name     "Usuario 1"
+                 :email    "user@provider.com"
+                 :birthday "1989-10-25"}
+   2 #:acme.user{:name     "Usuario 2"
+                 :email    "anuser@provider.com"
+                 :birthday "1975-09-11"}})
+
+; pull stored user info from id
+(pco/defresolver user-by-id [{:keys [acme.user/id]}]
+  {::pco/output
+   [:acme.user/name
+    :acme.user/email
+    :acme.user/birthday]}
+  (get users-db id))
+
+; extract birth year from birthday
+(pco/defresolver birth-year [{:keys [acme.user/birthday]}]
+  {:acme.user/birth-year (first (str/split birthday #"-"))})
+```
+
+Here is a diagram from the previous setup:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/resolver-birthday-extended.svg)
+
+</div>
+
+
 ## Using `defresolver`
 
 The macro `defresolver` is the primary way to create new resolvers. It has some sugars
@@ -91,6 +166,11 @@ to figure it out. Instead, you can move the `let` down on the attribute level:
 
 In the future Pathom may get smarter around this, but this is a long rabbit role when
 I consider that the last user statement may be an `if`, `cond`, etc...
+:::
+
+:::note
+Although Pathom can infer the configuration, you can always override it using the
+options map.
 :::
 
 4. Given we are not using `env`, we can also take it out, taking us to the final version:

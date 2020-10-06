@@ -24,3 +24,11 @@
   margin: 0 calc(-1 * var(--ifm-pre-padding));
   padding: 0 var(--ifm-pre-padding);
 }
+
+.pathom-diagram {
+  background: #2d2d2d;
+  border: 1px solid #fff;
+  margin: 40px 0 30px;
+  padding: 30px 16px 10px;
+  text-align: center;
+}

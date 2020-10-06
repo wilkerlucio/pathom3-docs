@@ -7,6 +7,39 @@
             [com.wsscode.pathom3.interface.smart-map :as psm]
             [com.wsscode.pathom3.entity-tree :as p.ent]))
 
+;; what is a resolver?
+
+(def user-birthdays-map
+  {1 1969
+   2 1954
+   3 1986})
+
+(pco/defresolver user-birthday [{:keys [acme.user/id]}]
+  {:acme.user/birth-year (get user-birthdays-map id)})
+
+; next
+
+; define a map for indexed access to user data
+(def users-db
+  {1 #:acme.user{:name     "Usuario 1"
+                 :email    "user@provider.com"
+                 :birthday "1989-10-25"}
+   2 #:acme.user{:name     "Usuario 2"
+                 :email    "anuser@provider.com"
+                 :birthday "1975-09-11"}})
+
+; pull stored user info from id
+(pco/defresolver user-by-id [{:keys [acme.user/id]}]
+  {::pco/output
+   [:acme.user/name
+    :acme.user/email
+    :acme.user/birthday]}
+  (get users-db id))
+
+; extract birth year from birthday
+(pco/defresolver birth-year [{:keys [acme.user/birthday]}]
+  {:acme.user/birth-year (first (str/split birthday #"-"))})
+
 ;; defresolver
 
 ; this resolver computes a slug to use on URL from some article title
@@ -20,7 +53,6 @@
   {::pco/input  [:acme.article/title]
    ::pco/output [:acme.article/slug]}
   {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
-
 
 ;; invoking resolvers
 

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:dc="http://purl.org/dc/elements/1.1/" viewBox="615 378 523 159" width="523" height="159">
+  <defs>
+    <filter id="Shadow" filterUnits="userSpaceOnUse" x="562.7" y="362.1">
+      <feGaussianBlur in="SourceAlpha" result="blur" stdDeviation="1.308"/>
+      <feOffset in="blur" result="offset" dx="1" dy="3"/>
+      <feFlood flood-color="black" flood-opacity=".5" result="flood"/>
+      <feComposite in="flood" in2="offset" operator="in" result="color"/>
+      <feMerge>
+        <feMergeNode in="color"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <font-face font-family="Helvetica Neue" font-size="16" panose-1="2 0 5 3 0 0 0 2 0 4" units-per-em="1000" underline-position="-100" underline-thickness="50" slope="0" x-height="517" cap-height="714" ascent="951.9958" descent="-212.99744" font-weight="400">
+      <font-face-src>
+        <font-face-name name="HelveticaNeue"/>
+      </font-face-src>
+    </font-face>
+    <marker orient="auto" overflow="visible" markerUnits="strokeWidth" id="FilledArrow_Marker" stroke-linejoin="miter" stroke-miterlimit="10" viewBox="-1 -3 7 6" markerWidth="7" markerHeight="6" color="white">
+      <g>
+        <path d="M 4.8 0 L 0 -1.8 L 0 1.8 Z" fill="currentColor" stroke="currentColor" stroke-width="1"/>
+      </g>
+    </marker>
+  </defs>
+  <metadata> Produced by OmniGraffle 7.17.5\n2020-10-05 20:45:06 +0000</metadata>
+  <g id="Canvas_1" fill="none" stroke-opacity="1" fill-opacity="1" stroke="none" stroke-dasharray="none">
+    <title>Canvas 1</title>
+    <g id="Canvas_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Graphic_4" filter="url(#Shadow)">
+        <circle cx="693" cy="454.5" r="75.0001198426422" fill="#ffffc0"/>
+        <circle cx="693" cy="454.5" r="75.0001198426422" stroke="#f0f3f6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(638 445.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="30.408" y="15">user/id</tspan>
+        </text>
+      </g>
+      <g id="Graphic_5" filter="url(#Shadow)">
+        <circle cx="1057.5" cy="454.5" r="75.0001198426421" fill="#ffffc0"/>
+        <circle cx="1057.5" cy="454.5" r="75.0001198426421" stroke="#f0f3f6" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+        <text transform="translate(1002.5 445.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="2.408" y="15">user/birth-year</tspan>
+        </text>
+      </g>
+      <g id="Line_6" filter="url(#Shadow)">
+        <line x1="769" y1="454.5" x2="968.6" y2="454.5" marker-end="url(#FilledArrow_Marker)" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+      </g>
+      <g id="Graphic_7" filter="url(#Shadow)">
+        <rect x="815.8487" y="440.276" width="104.544" height="28.447998" fill="#c0c0ff"/>
+        <text transform="translate(820.8487 445.276)" fill="black">
+          <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="8455459e-19" y="15">user-birthday</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>
