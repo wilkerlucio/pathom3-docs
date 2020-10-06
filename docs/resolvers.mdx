@@ -110,8 +110,6 @@ as well, for example:
 ```
 :::
 
-### Resolvers without inputs
-
 ## Invoking resolvers
 
 Like functions, you can call the resolvers directly. The arity to call resolver is similar
@@ -409,9 +407,31 @@ You can use static tables to provide extra data for some entities, given some id
 
 This helper infers the output from the table data.
 
+### Attribute Map
+
+This one is similar to static tables, but to provide a single attribute for each entity
+instead of many:
+
+```clojure
+(def registry
+  [(pbir/attribute-map :song/id :song/name
+     {1 "Marchinha Psicotica de Dr. Soup"
+      2 "There's Enough"})
+
+   ; note you need to provide the name for the resolver, prefer fully qualified symbols
+   (pbir/static-table-resolver `song-analysis :song/id
+     {1 {:song/duration 280 :song/tempo 98}
+      2 {:song/duration 150 :song/tempo 130}})])
+
+(let [sm (psm/smart-map (pci/register registry)
+           {:song/id 1})]
+  (select-keys sm [:song/id :song/name :song/duration]))
+; => #:song{:id 1, :name "Marchinha Psicotica de Dr. Soup", :duration 280}
+```
+
 ### Attribute Tables
 
-This is similar to static tables, but the table data comes from another attribute instead
+This is also similar to static tables, but the table data comes from another attribute instead
 of static data.
 
 Because in this case the data is opaque, you need to express which keys will trigger
@@ -496,7 +516,7 @@ which is the key to index the table data.
 (def registry (edn-file-resolver "my-config.edn"))
 
 (let [sm (psm/smart-map (pci/register registry) {:my.system/user-id 4})]
-  (select-keys sm [:my.system/port :my.system.user/name])
+  (select-keys sm [:my.system/port :my.system.user/name]))
 ; => {:my.system/port 1234, :my.system.user/name "Anne"}
 ```
 
