@@ -21,16 +21,16 @@ module.exports = {
         'runner'
       ]
     },
-    {
-      'Integrations': [
-        'integrations/graphql'
-      ]
-    },
-    {
-      Demos: [
-        'tutorials/distributed-systems'
-      ]
-    },
+    // {
+    //   'Integrations': [
+    //     'integrations/graphql'
+    //   ]
+    // },
+    // {
+    //   Demos: [
+    //     'tutorials/distributed-systems'
+    //   ]
+    // },
     'migrate-from-pathom2'
   ]
 };
