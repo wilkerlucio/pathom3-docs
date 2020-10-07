@@ -5,21 +5,21 @@ title: Resolvers
 Resolvers are the primary building blocks in Pathom. They are the constructs to express
 relationships between attributes.
 
-In this page you will learn how to create resolvers and use then. After that you
+On this page, you will learn how to create resolvers and use then. After that you
 will learn about the built-in resolvers that come with Pathom.
 
 ## What is a resolver in Pathom?
 
-The Pathom engine gather its resolution features from the relationship between attributes.
-Resolvers are the piece that express those relationships.
+The Pathom engine gathers its resolution features from the relationship between attributes.
+Resolvers are the piece that expresses those relationships.
 
 To put in more concrete terms, imagine that you have some user id, and you want to know
-what is the birth year of the user. In Pathom we express this relationship using the attributes
+the user's birth year. In Pathom, we express this relationship using the attributes
 `:acme.user/id` and `:acme.user/birth-year` for example.
 
 Now we need to implement how to fetch the name from the id, this can be a lookup in a
-database, or in a map, or any way, doesn't matter. What matters is that you express
-this connection, and provide code that makes it happen.
+database, or a map, or any other way, doesn't matter. What matters is that you express
+this connection and provide code that makes it happen.
 
 Here I'll illustrate this using a map lookup:
 
@@ -46,7 +46,7 @@ I'll short then names on the diagrams for space, but keep your domain qualifiers
 
 </div>
 
-This example was a simplification, most systems will store the full birth date instead,
+This example was a simplification; most systems will store the full birth date instead,
 and then extract the year from this date.
 
 We can simulate such case using the following setup:
@@ -91,8 +91,8 @@ this user birthday, we can reach that using the path highlighted in the next dia
 
 </div>
 
-So resolvers establish edges in the Pathom graph, which allows Pathom to traverse from
-some source data to some target data. In the rest of this documentation you will learn
+So resolvers establish edges in the Pathom graph, allowing Pathom to traverse from
+some source data to some target data. In the rest of this documentation, you will learn
 how to define resolvers.
 
 ## Using `defresolver`
@@ -118,11 +118,11 @@ Let's start with a verbose usage of `defresolver` to go over these main pieces:
 ```
 
 :::note Design observation
-This resolver expresses an edge in Pathom attribute world, it says the attribute `:acme.article/slug`
+This resolver expresses an edge in Pathom attribute world. It says the attribute `:acme.article/slug`
 is reachable, given that a `:acme.article/title` is available.
 :::
 
-If you look close you can find a fair amount of repetition in this expression:
+If you look close, you can find a fair amount of repetition in this expression:
 - The `op-name` is repeated at the start to define the `var` name.
 - The `input` is repeated in the destructuring expression.
 - The `output` is visible in the output expression.
@@ -161,7 +161,7 @@ If you use [Cursive](https://cursive-ide.com/), you can ask it to resolve the
 ```
 
 :::important
-Pathom only looks at the last item of the body for implicit outputs, this means that
+Pathom only looks at the last item of the body for implicit outputs. This means that
 if you wrap the map with something like a `let` statement, Pathom will not be able
 to figure it out. Instead, you can move the `let` down on the attribute level:
 
@@ -176,7 +176,7 @@ to figure it out. Instead, you can move the `let` down on the attribute level:
   {:foo (let [x 10] x)})
 ```
 
-In the future Pathom may get smarter around this, but this is a long rabbit role when
+In the future, Pathom may get smarter around this, but this is a long rabbit role when
 I consider that the last user statement may be an `if`, `cond`, etc...
 :::
 
@@ -193,7 +193,7 @@ options map.
 ```
 
 :::tip
-In case you have a resolver that don't use an input, you can omit the first argument
+In case you have a resolver that doesn't use an input, you can omit the first argument
 as well, for example:
 
 ```clojure
@@ -215,13 +215,13 @@ to how to define resolvers:
 ; => {::path-ext "txt"}
 ```
 
-This makes easier to test resolvers in unit tests.
+This makes it easier to test resolvers in unit tests.
 
-Outside of test context, you should have little reason to invoke a resolver directly. What
-sets resolvers apart from regular functions is that it contains data about its requirements
+Outside of the test context, you should have little reason to invoke a resolver directly. What
+sets resolvers apart from regular functions are that it contains data about its requirements
 and what it provides.
 
-This allows you to abstract away the operation names, and focus only on the attributes.
+This allows you to abstract away the operation names and focus only on the attributes.
 
 To illustrate the difference, let's compare the two approaches, first let's define the resolvers:
 
@@ -248,7 +248,7 @@ To illustrate the difference, let's compare the two approaches, first let's defi
   {:acme.user/avatar-url (str "http://avatar-images-host/for-id/" avatar-slug)})
 ```
 
-Now, consider the question: Given I want to know the `avatar url` of the user with id `1`.
+Consider the question: What is the `avatar url` of the user with id `1`.
 
 The traditional way to get there using our resolvers as functions goes as:
 
@@ -265,7 +265,7 @@ Now check a few examples of how we can accomplish the same using the a [smart ma
 leveraged by the resolvers meta-data:
 
 ```clojure
-; first we build a index for the relations expressed by the resolvers
+; first, we build an index for the relations expressed by the resolvers
 (def indexes
   (pci/register [user-from-id
                  user-avatar-slug
@@ -296,14 +296,14 @@ function names</mark>, so you can focus on the data you have/need and not how to
 
 ## Generate the indexes
 
-Here we will cover in more details the process to generate the indexes from resolvers.
+Here we will cover in more detail the process to generate the indexes from resolvers.
 
 Think of resolvers as the **atomic blocks of Pathom**, which are annotated functions. If Pathom had to scan
-every resolver to figure a path it would be slow. So instead Pathom works on indexes
+every resolver to figure a path, it would be slow. So instead, Pathom works on indexes
 generated from a set of resolvers.
 
-To generate the indexes we use the function `(pci/register ...)`. The values allowed
-on register are:
+To generate the indexes, we use the function `(pci/register ...)`. The values allowed
+on `register` are:
 
 - resolvers
 - mutations
@@ -343,7 +343,7 @@ To learn more details about the indexes, check the [indexes page](indexes.mdx).
 
 ## Using `resolver`
 
-You can also create a resolver using the `resolver` helper, this is more useful when
+You can also create a resolver using the `resolver` helper. This is more useful when
 you are making some helper function to generate a resolver.
 
 To create a resolver using `pco/resolver` you have the following options:
@@ -375,244 +375,3 @@ meters and feet:
        ::pco/output [to]}
       (fn [_ input] {to (get input from)}))))
 ```
-
-## Built-in Resolvers
-
-Pathom comes with built-in resolvers to handle common situations. You will find these
-resolver generators at:
-
-```clojure
-[com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
-```
-
-### Constants
-
-This is a simple way to express a constant value for a given attribute.
-
-```clojure
-(pbir/constantly-resolver :math/PI 3.1415)
-```
-
-### Aliasing
-
-You can use alias to create a resolver that provides one attribute based on the same
-value of another:
-
-```clojure
-(pbir/alias-resolver :specific.impl.product/id :generic.ui.product/id)
-
-; is equivalent to:
-
-(pco/defresolver spec->generic-prod-id [{:specific.impl.product/keys [id]}]
-  {:generic.ui.product/id id})
-```
-
-Like the example suggests, you can use alias to make some specific name and make it align
-generically with some other domain name.
-
-Note that this only goes in one direction, to illustrate this, consider the extended
-example here:
-
-```clojure
-(def indexes
-  (pci/register
-    [specific-impl-registry
-     another-impl-option
-     (pbir/alias-resolver :specific.impl.product/id :generic.ui.product/id)
-     (pbir/alias-resolver :another.impl.product/id :generic.ui.product/id)]))
-```
-
-:::note
-A practical side of using this helper is that the helper will generate a name for the
-resolver for you, this alleviates the chore of repetitive writing, and makes the alias
-names look like each other. Try checking the resolver name for the alias resolvers
-from the previous example.
-:::
-
-In this case, both `:specific.impl.product/id` and `:another.impl.product/id` are valid
-value to show for `:generic.ui.product/id`; but if you have only the `:generic.ui.product/id`,
-you can't know if its from `specific` or `another` impl.
-
-### Equivalence
-
-Use this to express that two attributes are equivalent, that they share the same semantics.
-For example:
-
-```clojure
-(pbir/equivalence-resolver :acme.product/upc :affiliate.product/upc)
-```
-
-This is a common tool to integrate attributes from different domains.
-
-In practice, it creates one alias resolver for each direction, any resolver that uses
-the first will also work with the second, and vice versa.
-
-### Simple one-to-one transformation
-
-This helper gives an easy way to convert one attribute into another, modified by a
-function. A common use case is to convert some attribute from one unit to another unit
-under a different name. For example:
-
-```clojure
-; in this example we create one different transformation for each direction
-(def registry
-  [(pbir/single-attr-resolver :acme.track/duration-ms :affiliate.track/duration-seconds #(/ % 1000))
-   (pbir/single-attr-resolver :affiliate.track/duration-seconds :acme.track/duration-ms #(* % 1000))])
-
-(def indexes (pci/register registry))
-
-(-> (psm/smart-map indexes {:acme.track/duration-ms 324000})
-    :affiliate.track/duration-seconds)
-; => 324
-
-(-> (psm/smart-map indexes {:affiliate.track/duration-seconds 324})
-    :acme.track/duration-ms)
-; => 324000
-```
-
-The function receives a single argument, which is the value of the `source` attribute;
-and returns the value for `target` attribute.
-
-If your transformation also requires access to `env`, use `single-attr-with-env-resolver`
-instead, then the arglist of `f` is `[env input-attribute-value]`.
-
-### Static Tables
-
-You can use static tables to provide extra data for some entities, given some identifier.
-
-```clojure
-(def registry
-  [(pbir/static-table-resolver `song-names :song/id
-     {1 {:song/name "Marchinha Psicotica de Dr. Soup"}
-      2 {:song/name "There's Enough"}})
-
-   ; note you need to provide the name for the resolver, prefer fully qualified symbols
-   (pbir/static-table-resolver `song-analysis :song/id
-     {1 {:song/duration 280 :song/tempo 98}
-      2 {:song/duration 150 :song/tempo 130}})])
-
-(let [sm (psm/smart-map (pci/register registry)
-           {:song/id 1})]
-  (select-keys sm [:song/id :song/name :song/duration]))
-; => #:song{:id 1, :name "Marchinha Psicotica de Dr. Soup", :duration 280}
-```
-
-This helper infers the output from the table data.
-
-### Attribute Map
-
-This one is similar to static tables, but to provide a single attribute for each entity
-instead of many:
-
-```clojure
-(def registry
-  [(pbir/attribute-map :song/id :song/name
-     {1 "Marchinha Psicotica de Dr. Soup"
-      2 "There's Enough"})
-
-   ; note you need to provide the name for the resolver, prefer fully qualified symbols
-   (pbir/static-table-resolver `song-analysis :song/id
-     {1 {:song/duration 280 :song/tempo 98}
-      2 {:song/duration 150 :song/tempo 130}})])
-
-(let [sm (psm/smart-map (pci/register registry)
-           {:song/id 1})]
-  (select-keys sm [:song/id :song/name :song/duration]))
-; => #:song{:id 1, :name "Marchinha Psicotica de Dr. Soup", :duration 280}
-```
-
-### Attribute Tables
-
-This is also similar to static tables, but the table data comes from another attribute instead
-of static data.
-
-Because in this case the data is opaque, you need to express which keys will trigger
-this table attribute lookup. This example is similar to the one from static tables, but
-this time we will mix one static table with one attribute table.
-
-```clojure
-(def registry
-  [(pbir/static-table-resolver `song-names :song/id
-     {1 {:song/name "Marchinha Psicotica de Dr. Soup"}
-      2 {:song/name "There's Enough"}})
-
-   ; provide table in the attribute ::song-analysis
-   (pbir/constantly-resolver ::song-analysis
-     {1 {:song/duration 280 :song/tempo 98}
-      2 {:song/duration 150 :song/tempo 130}})
-
-   ; ref the attribute, the index attribute and the output that triggers this resolver
-   (pbir/attribute-table-resolver ::song-analysis :song/id
-     [:song/duration :song/tempo])])
-
-(let [sm (psm/smart-map (pci/register registry)
-           {:song/id 2})]
-  (select-keys sm [:song/id :song/name :song/duration]))
-; => #:song{:id 2, :name "There's Enough", :duration 150}
-```
-
-### EDN Files
-
-Load attributes from a EDN file.
-
-This is macro made to load some configuration from EDN at compilation time. It's an
-easy way to source some data from a file.
-
-Basic example, given this configuration file:
-
-```clojure title="my-config.edn"
-{:my.system.server/port
- 1234
-
- :my.system.resources/path
- "resources/public"}
-```
-
-Loading with `edn-file-resolver`:
-
-```clojure
-; app
-(pco/defresolver full-url [{:keys [my.system.server/port my.system.resource/path]}]
-  {::server-url (str "http://localhost:" port "/" path)})
-
-(def registry
-  [(edn-file-resolver "my-config.edn")
-   full-url])
-
-(-> (psm/smart-map (pci/register registry))
-    ::server-url)
-; => "http://localhost:1234/resources/public
-```
-
-#### Attribute tables on EDN Files
-
-You can also provide attribute tables as part of the EDN configuration. To do so, you
-add the `:com.wsscode.pathom3/entity-table` key to the map meta, the value here defines
-which is the key to index the table data.
-
-```clojure title="my-config-with-table.edn"
-{:my.system.server/port
- 1234
-
- :my.system.resources/path
- "resources/public"
-
- :my.system/generic-db
- ^{:com.wsscode.pathom3/entity-table :my.system/user-id}
- {4 {:my.system.user/name "Anne"}
-  2 {:my.system.user/name "Fred"}}}
-```
-
-```clojure
-; app
-(def registry (edn-file-resolver "my-config.edn"))
-
-(let [sm (psm/smart-map (pci/register registry) {:my.system/user-id 4})]
-  (select-keys sm [:my.system/port :my.system.user/name]))
-; => {:my.system/port 1234, :my.system.user/name "Anne"}
-```
-
-:::important
-Because this helper is a macro, it works on Clojurescript as well, but remember that
-it will pull the data from the EDN file at compilation time, not at runtime.
-:::

@@ -6,6 +6,7 @@ module.exports = {
     {
       'Using Pathom': [
         'resolvers',
+        'built-in-resolvers',
         'smart-maps',
         'eql',
         'plugins',
