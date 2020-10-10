@@ -9,7 +9,7 @@ module.exports = {
         'built-in-resolvers',
         'smart-maps',
         'eql',
-        'plugins',
+        // 'plugins',
       ]
     },
     'modeling-guides',
