@@ -152,6 +152,16 @@ If you use [Cursive](https://cursive-ide.com/), you can ask it to resolve the
   {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
 ```
 
+:::note
+You can also use destructuring via symbol binding, for example, this works the same:
+
+```clojure
+(pco/defresolver article-slug [env {title :acme.article/title}]
+  {::pco/output [:acme.article/slug]}
+  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
+```
+:::
+
 3. Since the last element of our expression is a map, `defresolver` can infer the `output` from it:
 
 ```clojure
