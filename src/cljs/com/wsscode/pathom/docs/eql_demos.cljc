@@ -1,22 +1,3 @@
----
-id: eql
-title: EQL
----
-
-Using the EQL interface you can request Pathom to fetch a specific shape of data.
-
-If you are not familiar with EQL, check https://edn-query-language.org for an overview of the syntax.
-
-The goal of using EQL is to express some data shape (hierarchy) without the values and
-let Pathom fill the values in.
-
-Using EQL is also the most efficient way to request multiple things at once with Pathom.
-With EQL Pathom knows the full request ahead of time, therefore Pathom can use this information
-to optimize the planning and execution.
-
-## Using EQL interface
-
-```clojure
 (ns com.wsscode.pathom.docs.eql-demos
   (:require [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
             [com.wsscode.pathom3.connect.indexes :as pci]
@@ -27,30 +8,18 @@ to optimize the planning and execution.
     [(pbir/constantly-resolver ::pi 3.1415)
      (pbir/single-attr-resolver ::pi ::tau #(* % 2))]))
 
-(p.eql/process indexes [::pi ::tau])
+(p.eql/process indexes [::tau ::pi
+                        :com.wsscode.pathom3.connect.runner/run-stats])
 ; => {::pi 3.1415 ::tau 6.283}
-```
 
-### Providing data via EQL idents
+(p.eql/process indexes [{[::pi 2.3] [::tau]} :com.wsscode.pathom3.connect.runner/run-stats])
 
-Pathom uses the EQL `ident` as a form to specify a single attribute to start requesting
-data from. Here is an example using the revolvers we created before:
+; (p.eql/process [{(:>/wilker {::first-name "Wilker" ::last-name "Silva"}) [::full-name]}])
 
-```clojure
-(p.eql/process indexes [{[::pi 2.3] [::tau]}])
-; => {::tau 4.6}
-```
+(p.eql/process indexes [{^:pathom/spread [::name {::pi 1 ::tau 3}] [::pi ::tau]}])
 
-In this example, given `PI` is `2.3`, `Tau` becomes `4.6`, since its defined as the
-double of PI.
-
-## Fetching run status
-
-To debug a EQL process, add the attribute `:com.wsscode.pathom3.connect.runner/run-stats`
-to the query:
-
-```clojure
 (p.eql/process indexes [::tau :com.wsscode.pathom3.connect.runner/run-stats])
+
 ;{:com.wsscode.pathom.docs.eql-demos/tau
 ; 6.283
 ;
@@ -88,6 +57,3 @@ to the query:
 ;                                                                                 :com.wsscode.pathom3.connect.planner/run-next         1,
 ;                                                                                 :com.wsscode.pathom3.connect.planner/node-id          2}},
 ;  :com.wsscode.pathom3.connect.runner.stats/resolver-accumulated-duration-ms 0.01607900857925415}}
-```
-
-For more details on what is the `run-stats` check at the [runner page](runner.mdx#run-stats).

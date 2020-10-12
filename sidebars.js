@@ -9,13 +9,13 @@ module.exports = {
         'built-in-resolvers',
         'smart-maps',
         'eql',
+        'environment',
         // 'plugins',
       ]
     },
     'modeling-guides',
     {
       'How Pathom Works': [
-        'environment',
         'indexes',
         'planner',
         'runner'
