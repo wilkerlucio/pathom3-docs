@@ -57,3 +57,30 @@
 ;                                                                                 :com.wsscode.pathom3.connect.planner/run-next         1,
 ;                                                                                 :com.wsscode.pathom3.connect.planner/node-id          2}},
 ;  :com.wsscode.pathom3.connect.runner.stats/resolver-accumulated-duration-ms 0.01607900857925415}}
+
+(def indexes
+  (pci/register
+    [(pbir/constantly-resolver ::pi 3.1415)
+     (pbir/single-attr-resolver ::pi ::tau #(* % 2))
+     ; define a resolver to provide a collection of items
+     (pbir/constantly-resolver ::pi-worlds
+       [{::pi 3.14}
+        {::pi 3.14159}
+        {::pi 6.8}
+        {::tau 20}
+        {::pi 10 ::tau 50}])]))
+
+(p.eql/process indexes
+  ; using a map we are able to specify nested requirements from some attribute
+  [{::pi-worlds [::tau ::pi]}])
+; => {::pi-worlds
+;      [{::tau 6.28
+;        ::pi  3.14}
+;       {::tau 6.28318
+;        ::pi  3.14159}
+;       {::tau 13.6
+;        ::pi  6.8}
+;       {::tau 20
+;        ::pi  3.1415}
+;       {::tau 50
+;        ::pi  10}]}
