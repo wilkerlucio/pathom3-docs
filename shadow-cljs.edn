@@ -1,0 +1,4 @@
+{:deps   true
+ :builds {:docs {:target     :npm-module
+                 :entries    [com.wsscode.pathom3.docs.main]
+                 :output-dir "node_modules/pathom_docs"}}}
