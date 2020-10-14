@@ -8,7 +8,7 @@ import styles from './styles.module.css';
 
 const features = [
   {
-    title: 'Schema Free Resolvers',
+    title: 'Flexible Modeling',
     to: 'docs/resolvers',
     description: (
       <>
