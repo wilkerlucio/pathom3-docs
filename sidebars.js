@@ -31,6 +31,6 @@ module.exports = {
     //     'tutorials/distributed-systems'
     //   ]
     // },
-    'migrate-from-pathom2'
+    // 'migrate-from-pathom2'
   ]
 };
