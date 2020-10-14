@@ -1,0 +1,36 @@
+---
+title: Shape Descriptor
+---
+
+Shape descriptor is a format to express data shapes used internally by Pathom.
+
+We can compare it to EQL to represent some example data shape:
+
+```clojure
+; sample data
+{:user/name         "usuario"
+ ; nested map
+ :user/billing-card {:card/number "123"}
+ ; nested map sequence
+ :user/friends      [{:user/id 1}
+                     {:user/id 2}]}
+
+; in EQL, we can describe that shape as:
+[:user/name
+ {:user/billing-card [:card/number]}
+ {:user/friends [:user/id]}]
+
+; same representation using the shape descriptor format:
+{:user/name         {}
+ :user/billing-card {:card/number {}}
+ :user/friends      {:user/id {}}}
+```
+
+Pathom uses shape descriptor when it needs to know if some attribute is available in
+some given data, this format preserves the structure of the data, without the details.
+
+Compared to EQL it's faster to use for this case, given that it has indexed lookups
+to verify the presence of some attribute.
+
+The namespace `com.wsscode.pathom3.format.shape-descriptor` contains helpers to work
+with this format.
