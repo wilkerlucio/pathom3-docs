@@ -2,7 +2,7 @@
  :deps  {com.fulcrologic/guardrails {:mvn/version "0.0.12"}
          com.wsscode/async          {:mvn/version "1.0.11"}
          com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3"
-                                     :sha     "81358cee7c9b75ef8395954e11ce827090445ee0"}
+                                     :sha     "5da54de99d2418426c492ad8506167f6086ad2eb"}
          com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop"
                                      :sha     "ca861d607da8cf63208e296b0250eae225d9a10c"}
          lilactown/helix            {:mvn/version "0.0.13"}
