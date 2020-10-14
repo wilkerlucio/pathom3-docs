@@ -2,3 +2,93 @@
 id: environment
 title: Environment
 ---
+
+The environment is a map containing contextual information, both from Pathom itself
+and from any user/library extensions.
+
+In this page you will learn
+Given the environment is a generic and open map, it makes more sense to talk about
+what features of Pathom you can see and interact with.
+
+You can always add more things to the environment to suite your own needs.
+
+## Using environment on your resolvers
+
+The environment
+
+## Native features on environment
+
+### Entity
+
+#### `:com.wsscode.pathom3.entity-tree/entity-tree*`
+
+This attribute contains the atom with the current entity data. As Pathom processes the
+graph, new data gets merged into the entity.
+
+You can find helpers to manipulate the entity in the `com.wsscode.pathom3.entity-tree`
+namespace.
+
+### Indexes
+
+Indexes should be present in all environments, given they are the center for connect
+processing
+
+#### `:com.wsscode.pathom3.connect.indexes/index-attributes`
+#### `:com.wsscode.pathom3.connect.indexes/index-io`
+#### `:com.wsscode.pathom3.connect.indexes/index-oir`
+#### `:com.wsscode.pathom3.connect.indexes/index-resolvers`
+
+For details on the indexes keys, check the [indexes page](indexes.mdx).
+
+### Path
+
+#### `:com.wsscode.pathom3.path/path`
+
+This attribute tells you which is the path of the current run process. It is a vector
+telling the path from left to right. The following example does a simple demonstration
+of the path environment attribute.
+
+```clojure
+(ns com.wsscode.pathom.docs.environment-demo
+  (:require [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+            [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.eql :as p.eql]
+            [com.wsscode.pathom3.path :as p.path]))
+
+(pco/defresolver env-path [{::p.path/keys [path]} _]
+  {::p.path/path path})
+
+(p.eql/process (pci/register [env-path
+                              (pbir/constantly-resolver ::data
+                                {::nested [{} {}]})])
+  [::p.path/path
+   {::data [::p.path/path
+            {::nested [::p.path/path]}]}])
+; => {::p.path/path
+;     []
+;
+;     ::data
+;     {::p.path/path
+;      [::data]
+;
+;      ::nested
+;      [{::p.path/path [::data ::nested]}
+;       {::p.path/path [::data ::nested]}]}}
+```
+
+### Planner
+
+#### `:com.wsscode.pathom3.connect.planner/graph`
+
+Contains the current execution plan in progress. You can find more details about the
+plan graph at the [planner page](planner.mdx).
+
+#### `:com.wsscode.pathom3.connect.planner/node`
+
+The current [execution node](planner.mdx#execution-node) for the plan. This is useful
+to get more details from the resolver node run, like the parameters.
+
+#### `:com.wsscode.pathom3.connect.planner/plan-cache*`
+
+This is an optional attribute, when present the planner will cache plans on it.
