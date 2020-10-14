@@ -88,3 +88,20 @@ to get more details from the resolver node run, like the parameters.
 #### `:com.wsscode.pathom3.connect.planner/plan-cache*`
 
 This is an optional attribute, when present the planner will cache plans on it.
+
+Here is an example of how to define an environment with a plan cache:
+
+```clojure
+(def indexes (pci/register ...))
+
+(def env-with-cache (pcp/with-plan-cache indexes))
+```
+
+You can also create a shared cache and re-use in different environments:
+
+```clojure
+(defonce plan-cache* (atom {}))
+
+(def env-with-cache (pcp/with-plan-cache indexes plan-cache*))
+(def other-env-with-cache (pcp/with-plan-cache other-indexes plan-cache*))
+```
