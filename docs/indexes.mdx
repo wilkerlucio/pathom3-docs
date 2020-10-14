@@ -7,7 +7,7 @@ title: Indexes
 
 This is the most important index to understand how Pathom processes the data.
 
-The `oir` stands for `output` → `input` → `resolver`.
+`oir` stands for `output` → `input` → `resolver`.
 
 In other words, this is the index that tells Pathom which are the paths available to
 reach a given attribute in the system.
@@ -19,7 +19,8 @@ Let's look at an example and talk over it:
 (pco/defresolver product-by-id [{:keys [acme.product/id]}]
   {::pco/output [:acme.product/name
                  :acme.product/price
-                 :acme.product/in-stock?]})
+                 :acme.product/in-stock?]}
+  (fetch-product id))
 
 ; we get this index-oir
 {::pci/index-oir
@@ -42,6 +43,26 @@ This is an overview of this index, for more details on how the planner uses it, 
 the [planner page](planner.mdx).
 
 ## index-io
+
+This index tells, for given attribute set (with empty, one or more items), which attributes
+are **directly reachable** (one resolver distance) from that set.
+
+`io` stands for `input` → `output`.
+
+Here is what `index-io` looks like, using the same resolver from our previous example:
+
+```clojure
+{::pci/index-oir
+ {:acme.product/name      {#{:acme.product/id} #{product-by-id}}
+  :acme.product/price     {#{:acme.product/id} #{product-by-id}}
+  :acme.product/in-stock? {#{:acme.product/id} #{product-by-id}}}}
+```
+
+The `output` part uses the [shape descriptor](shape-descriptor.mdx) format.
+
+[Smart maps](smart-maps.mdx) use this index to figure reachable attributes when used in "reachable mode".
+
+This is a good index to create auto-complete features in editors for Pathom integration.
 
 ## index-attributes
 
