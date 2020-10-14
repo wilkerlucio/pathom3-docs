@@ -1,4 +1,4 @@
-(ns com.wsscode.pathom.docs.smart-maps-demo
+(ns com.wsscode3.pathom.docs.smart-maps-demo
   (:require [com.wsscode.pathom3.connect.indexes :as pci]
             [com.wsscode.pathom3.connect.operation :as pco]
             [com.wsscode.pathom3.interface.smart-map :as psm]

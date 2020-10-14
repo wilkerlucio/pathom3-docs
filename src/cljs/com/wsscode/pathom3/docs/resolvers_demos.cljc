@@ -1,4 +1,4 @@
-(ns com.wsscode.pathom.docs.resolvers-demos
+(ns com.wsscode.pathom3.docs.resolvers-demos
   (:require [clojure.string :as str]
             [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
             [com.wsscode.pathom3.connect.indexes :as pci]

@@ -1,4 +1,4 @@
-(ns com.wsscode.pathom.docs.environment-demo
+(ns com.wsscode.pathom3.docs.environment-demo
   (:require [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
             [com.wsscode.pathom3.connect.indexes :as pci]
             [com.wsscode.pathom3.connect.operation :as pco]

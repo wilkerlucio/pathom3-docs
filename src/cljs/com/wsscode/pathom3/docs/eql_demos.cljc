@@ -1,4 +1,4 @@
-(ns com.wsscode.pathom.docs.eql-demos
+(ns com.wsscode.pathom3.docs.eql-demos
   (:require [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
             [com.wsscode.pathom3.connect.indexes :as pci]
             [com.wsscode.pathom3.interface.eql :as p.eql]))
