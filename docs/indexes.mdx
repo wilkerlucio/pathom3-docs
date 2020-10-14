@@ -52,10 +52,11 @@ are **directly reachable** (one resolver distance) from that set.
 Here is what `index-io` looks like, using the same resolver from our previous example:
 
 ```clojure
-{::pci/index-oir
- {:acme.product/name      {#{:acme.product/id} #{product-by-id}}
-  :acme.product/price     {#{:acme.product/id} #{product-by-id}}
-  :acme.product/in-stock? {#{:acme.product/id} #{product-by-id}}}}
+{::pci/index-io
+ {#{:acme.product/id}
+  {:acme.product/name      {}
+   :acme.product/price     {}
+   :acme.product/in-stock? {}}}}
 ```
 
 The `output` part uses the [shape descriptor](shape-descriptor.mdx) format.
@@ -65,5 +66,59 @@ The `output` part uses the [shape descriptor](shape-descriptor.mdx) format.
 This is a good index to create auto-complete features in editors for Pathom integration.
 
 ## index-attributes
+
+This index contains accumulated information about how a specific attribute relates to
+other attributes and resolvers.
+
+Let's use the `full-name` resolver example to demonstrate the index-attributes at play:
+
+```clojure
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  {::full-name (str first-name " " last-name)})
+
+{::pci/index-attributes
+ {#{::first-name ::last-name} {:com.wsscode.pathom3.connect.indexes/attr-id       #{::first-name ::last-name}
+                               :com.wsscode.pathom3.connect.indexes/attr-provides {::full-name #{:full-name}}
+                               :com.wsscode.pathom3.connect.indexes/attr-input-in #{full-name}}
+  ::first-name                {:com.wsscode.pathom3.connect.indexes/attr-id           ::first-name
+                               :com.wsscode.pathom3.connect.indexes/attr-combinations #{#{::first-name ::last-name}}
+                               :com.wsscode.pathom3.connect.indexes/attr-input-in     #{full-name}}
+  ::last-name                 {:com.wsscode.pathom3.connect.indexes/attr-id           ::last-name
+                               :com.wsscode.pathom3.connect.indexes/attr-combinations #{#{::first-name ::last-name}}
+                               :com.wsscode.pathom3.connect.indexes/attr-input-in     #{full-name}}
+  ::full-name                 {:com.wsscode.pathom3.connect.indexes/attr-id        ::full-name
+                               :com.wsscode.pathom3.connect.indexes/attr-reach-via {#{::first-name ::last-name} #{full-name}}
+                               :com.wsscode.pathom3.connect.indexes/attr-output-in #{full-name}}}}
+```
+
+The first level of the index is the attribute itself, the details we can explain key by
+key:
+
+#### `:com.wsscode.pathom3.connect.indexes/attr-id`
+
+Contains the ID of the attribute, it may be a keyword (as seen in the example) or also
+a set in cases of attribute combinations.
+
+#### `:com.wsscode.pathom3.connect.indexes/attr-input-in`
+
+A set containing a list of all resolvers in which this attribute appears as an input.
+
+#### `:com.wsscode.pathom3.connect.indexes/attr-output-in`
+
+A set containing a list of all resolvers in which this attribute appears as an output.
+
+#### `:com.wsscode.pathom3.connect.indexes/attr-provides`
+
+This is a sub-index, telling what other attributes are reachable from this attribute, by
+which resolver.
+
+#### `:com.wsscode.pathom3.connect.indexes/attr-reach-via`
+
+This is a sub-index, telling what other attributes you can use to reach the current, by
+which resolver.
+
+#### `:com.wsscode.pathom3.connect.indexes/attr-combinations`
+
+A set with all the input combinations that this attribute appears in.
 
 ## index-resolvers
