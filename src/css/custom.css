@@ -77,6 +77,10 @@
   color: #fff;
 }
 
+.admonition-heading svg {
+  margin-right: 0.2rem;
+}
+
 .admonition h5 {
   margin-top: 0;
   margin-bottom: 8px;
