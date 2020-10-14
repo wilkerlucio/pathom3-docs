@@ -23,7 +23,7 @@ Let's look at an example and talk over it:
   (fetch-product id))
 
 ; we get this index-oir
-{::pci/index-oir
+{:com.wsscode.pathom3.connect.indexes/index-oir
  {:acme.product/name      {#{:acme.product/id} #{product-by-id}}
   :acme.product/price     {#{:acme.product/id} #{product-by-id}}
   :acme.product/in-stock? {#{:acme.product/id} #{product-by-id}}}}
@@ -52,7 +52,7 @@ are **directly reachable** (one resolver distance) from that set.
 Here is what `index-io` looks like, using the same resolver from our previous example:
 
 ```clojure
-{::pci/index-io
+{:com.wsscode.pathom3.connect.indexes/index-io
  {#{:acme.product/id}
   {:acme.product/name      {}
    :acme.product/price     {}
@@ -76,7 +76,7 @@ Let's use the `full-name` resolver example to demonstrate the index-attributes a
 (pco/defresolver full-name [{::keys [first-name last-name]}]
   {::full-name (str first-name " " last-name)})
 
-{::pci/index-attributes
+{:com.wsscode.pathom3.connect.indexes/index-attributes
  {#{::first-name ::last-name} {:com.wsscode.pathom3.connect.indexes/attr-id       #{::first-name ::last-name}
                                :com.wsscode.pathom3.connect.indexes/attr-provides {::full-name #{:full-name}}
                                :com.wsscode.pathom3.connect.indexes/attr-input-in #{full-name}}
@@ -122,3 +122,27 @@ which resolver.
 A set with all the input combinations that this attribute appears in.
 
 ## index-resolvers
+
+In this index you can lookup resolvers by their name. Using both `product-by-id` and
+`full-name` resolvers, this is what the `index-resolvers` looks like:
+
+```clojure
+{:com.wsscode.pathom3.connect.indexes/index-resolvers
+ {product-by-id
+  #com.wsscode.pathom3.connect.operation.Resolver
+  {:config  {:com.wsscode.pathom3.connect.operation/input    [:acme.product/id]
+             :com.wsscode.pathom3.connect.operation/provides {:acme.product/name      {}
+                                                              :acme.product/price     {}
+                                                              :acme.product/in-stock? {}}
+             :com.wsscode.pathom3.connect.operation/output   [:acme.product/name :acme.product/price :acme.product/in-stock?]
+             :com.wsscode.pathom3.connect.operation/op-name  product-by-id}
+   :resolve product-by-id--23075}
+
+  full-name
+  #com.wsscode.pathom3.connect.operation.Resolver
+  {:config  {:com.wsscode.pathom3.connect.operation/input    [::first-name ::last-name]
+             :com.wsscode.pathom3.connect.operation/provides {::full-name {}}
+             :com.wsscode.pathom3.connect.operation/output   [::full-name]
+             :com.wsscode.pathom3.connect.operation/op-name  full-name}
+   :resolve full-name--23079}}}
+```
