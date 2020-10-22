@@ -175,6 +175,32 @@ we will mix one static table with one attribute table this time.
 ; => #:song{:id 2, :name "There's Enough", :duration 150}
 ```
 
+## Environment Tables
+
+Environment tables are like attribute tables, but instead of looking for the table as
+an input, it looks for the table in the environment map.
+
+```clojure
+(def registry
+  [(pbir/static-table-resolver `song-names :song/id
+     {1 {:song/name "Marchinha Psicotica de Dr. Soup"}
+      2 {:song/name "There's Enough"}})
+
+   (pbir/env-table-resolver ::song-analysis :song/id
+     [:song/duration :song/tempo])])
+
+(def song-details-table
+  {1 {:song/duration 280 :song/tempo 98}
+   2 {:song/duration 150 :song/tempo 130}})
+
+(let [sm (psm/smart-map (assoc (pci/register registry)
+                          ; add song-details-table to environment
+                          ::song-analysis song-details-table)
+           {:song/id 2})]
+  (select-keys sm [:song/id :song/name :song/duration]))
+; => #:song{:id 2, :name "There's Enough", :duration 150}
+```
+
 ## EDN Files
 
 Load attributes from an EDN file.
