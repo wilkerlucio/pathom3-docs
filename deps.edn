@@ -1,11 +1,11 @@
 {:paths ["src/cljs"]
- :deps  {com.fulcrologic/guardrails {:mvn/version "0.0.12"}
+ :deps  {applied-science/js-interop {:mvn/version "0.2.7"}
+         com.fulcrologic/fulcro     {:mvn/version "3.4.3"}
+         com.fulcrologic/guardrails {:mvn/version "0.0.12"}
          com.wsscode/async          {:mvn/version "1.0.11"}
-         com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3"
-                                     :sha     "5da54de99d2418426c492ad8506167f6086ad2eb"}
-         com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop"
-                                     :sha     "ca861d607da8cf63208e296b0250eae225d9a10c"}
-         lilactown/helix            {:mvn/version "0.0.13"}
+         com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop" :sha "ca861d607da8cf63208e296b0250eae225d9a10c"}
+         com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "3eeb310c36590117e8df8af2f02da7d4f232b02b"}
+         lilactown/helix            {:local/root "/Users/wilkerlucio/Development/helix"}
          org.clojure/clojure        {:mvn/version "1.10.1"}
          org.clojure/clojurescript  {:mvn/version "1.10.764"}
          thheller/shadow-cljs       {:mvn/version "2.11.4"}}}
