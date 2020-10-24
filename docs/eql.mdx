@@ -69,6 +69,15 @@ existence of many worlds where PI have different values:
 ;        ::pi  10}]}
 ```
 
+### Providing map data
+
+You can provide initial data to the EQL process using the following syntax:
+
+```clojure
+(p.eql/process indexes {::pi 2.3} [::tau])
+; => {::tau 4.6}
+```
+
 ### Providing data via EQL idents
 
 Pathom uses the EQL `ident` as a form to specify a single attribute to start requesting
@@ -76,7 +85,7 @@ data from. Here is an example using the revolvers we created before:
 
 ```clojure
 (p.eql/process indexes [{[::pi 2.3] [::tau]}])
-; => {::tau 4.6}
+; => {[::pi 2.3] {::tau 4.6}}
 ```
 
 In this example, given `PI` is `2.3`, `Tau` becomes `4.6`, since it's defined as the
