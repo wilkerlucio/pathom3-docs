@@ -17,7 +17,8 @@ Let's look at an example and talk over it:
 ```clojure
 ; for this resolver
 (pco/defresolver product-by-id [{:keys [acme.product/id]}]
-  {::pco/output [:acme.product/name
+  {::pco/input  [:acme.product/id]
+   ::pco/output [:acme.product/name
                  :acme.product/price
                  :acme.product/in-stock?]}
   (fetch-product id))
