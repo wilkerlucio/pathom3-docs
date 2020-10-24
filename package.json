@@ -16,6 +16,8 @@
     "@mdx-js/react": "^1.5.8",
     "@visx/visx": "^1.0.0",
     "clsx": "^1.1.1",
+    "cytoscape": "^3.16.2",
+    "dagre": "^0.8.5",
     "react": "^16.8.4",
     "react-dom": "^16.8.4",
     "react-refresh": "0.8.1",
