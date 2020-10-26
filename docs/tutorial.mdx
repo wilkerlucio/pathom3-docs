@@ -130,12 +130,153 @@ service, I find it a great source to look for open API's to play with.
 
 ## Resolvers
 
-:::tip
-I like to stress that while requesting information with Pathom it helps to think about
-the attribute connections, the resolver names are unimportant most of the time, focus
-on the attribute names.
+:::note
+While requesting information with Pathom, it helps to think about the attribute
+connections, the resolver names are unimportant most of the time.
 :::
 
-Let's state our problem again, this time in terms of data,
+To implement the resolvers, I'll start with the one to fetch the latitude and longitude
+from the IP, writing a resolver is similar to write a function:
 
-I personally find easier to start at the 0
+```clojure
+(ns com.wsscode.pathom3.demos.ip-weather
+  (:require
+    [cheshire.core :as json]
+    [com.wsscode.pathom3.connect.operation :as pco]))
+
+(pco/defresolver ip->lat-long
+  [{:keys [ip]}]
+  {::pco/output [:latitude :longitude]}
+  (-> (slurp (str "https://get.geojs.io/v1/ip/geo/" ip ".json"))
+      (json/parse-string keyword)
+      (select-keys [:latitude :longitude])))
+
+(defn main [{:keys [ip]}]
+  (println "Request temperature for the IP" ip))
+```
+
+To test the resolver in the REPL, I call it, like a function:
+
+```clojure
+(ip->lat-long {:ip "198.29.213.3"})
+; => {:longitude "-88.0569", :latitude "41.5119"}
+```
+
+A resolver is a custom type, here is what's inside:
+
+```clojure
+ip->lat-long
+; #com.wsscode.pathom3.connect.operation.Resolver
+; {:config
+;  #:com.wsscode.pathom3.connect.operation
+;  {:input [:ip]
+;   :provides {:longitude {}
+;              :latitude {}}
+;   :output [:longitude
+;            :latitude]
+;   :op-name com.wsscode.pathom3.demos.ip-weather/ip->lat-long},
+;
+;  :resolve
+;  #object[com.wsscode.pathom3.demos.ip_weather$ip__GT_lat_long__17350
+;          0x4b7b5266
+;          "com.wsscode.pathom3.demos.ip_weather$ip__GT_lat_long__17350@4b7b5266"]}
+```
+
+Note that in the configuration map of the resolver, we have the same `::pco/output` as
+we wrote in the resolver, the `::pco/input` was inferred from the destructuring used in
+the resolver attribute vector.
+
+You can  learn more about the details at [resolvers documentation page](resolvers.mdx).
+
+Now that we have the latitude and longitude, the next resolver will find a `WOEID` from
+that:
+
+```clojure {13-21}
+(ns com.wsscode.pathom3.demos.ip-weather
+  (:require
+    [cheshire.core :as json]
+    [com.wsscode.pathom3.connect.operation :as pco]))
+
+(pco/defresolver ip->lat-long
+  [{:keys [ip]}]
+  {::pco/output [:latitude :longitude]}
+  (-> (slurp (str "https://get.geojs.io/v1/ip/geo/" ip ".json"))
+      (json/parse-string keyword)
+      (select-keys [:latitude :longitude])))
+
+(pco/defresolver latlong->woeid
+  [{:keys [latitude longitude]}]
+  {:woeid
+   (-> (slurp
+         (str "https://www.metaweather.com/api/location/search/?lattlong="
+              latitude "," longitude))
+       (json/parse-string keyword)
+       first
+       :woeid)})
+
+(defn main [{:keys [ip]}]
+  (println "Request temperature for the IP" ip))
+```
+
+Testing the resolver in the REPL:
+
+```clojure
+(latlong->woeid {:longitude "-88.0569", :latitude "41.5119"})
+; => {:woeid 2379574}
+```
+
+We are getting close, the final step is to find out the temperature, given the `WOEID`:
+
+```clojure {23-30}
+(ns com.wsscode.pathom3.demos.ip-weather
+  (:require
+    [cheshire.core :as json]
+    [com.wsscode.pathom3.connect.operation :as pco]))
+
+(pco/defresolver ip->lat-long
+  [{:keys [ip]}]
+  {::pco/output [:latitude :longitude]}
+  (-> (slurp (str "https://get.geojs.io/v1/ip/geo/" ip ".json"))
+      (json/parse-string keyword)
+      (select-keys [:latitude :longitude])))
+
+(pco/defresolver latlong->woeid
+  [{:keys [latitude longitude]}]
+  {:woeid
+   (-> (slurp
+         (str "https://www.metaweather.com/api/location/search/?lattlong="
+              latitude "," longitude))
+       (json/parse-string keyword)
+       first
+       :woeid)})
+
+(pco/defresolver woeid->temperature
+  [{:keys [woeid]}]
+  {:temperature
+   (-> (slurp (str "https://www.metaweather.com/api/location/" woeid))
+       (json/parse-string keyword)
+       :consolidated_weather
+       first
+       :the_temp)})
+
+(defn main [{:keys [ip]}]
+  (println "Request temperature for the IP" ip))
+```
+
+To keep our REPL testing in check:
+
+```clojure
+(woeid->temperature {:woeid 2379574})
+; => {:temperature 4.529999999999999}
+```
+
+The whole process chains nicely, starting from `ip` to `temperature`, this is a hint
+for what is to come:
+
+```clojure
+(-> {:ip "198.29.213.3"}
+    ip->lat-long
+    latlong->woeid
+    woeid->temperature)
+; => {:temperature 4.529999999999999}
+```
