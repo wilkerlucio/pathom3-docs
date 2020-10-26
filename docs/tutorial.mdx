@@ -1,30 +1,141 @@
 ---
 id: tutorial
-title: Pathom Tutorial
+title: Pathom Tutorial - IP Weather
+sidebar_label: Pathom Tutorial
 ---
 
-This is a practical tutorial to go over the basic functions of Pathom.
+The task of this tutorial is to implement a series of resolvers that can tell the current
+temperature, based on some IP address.
 
-In this tutorial I'll demonstrate how to create a data model for a partial reddit clone.
+To implement this I'll use [GeoJS](https://get.geojs.io) to find the location from some
+given IP, and then use [Meta Weather](https://www.metaweather.com) to find the temperature.
+
+## App Setup
+
+In this demo I'll be using [Clojure Deps](https://clojure.org/guides/deps_and_cli) to manage the dependencies:
+
+```clojure title="deps.edn"
+{:paths
+ ["src"]
+
+ :deps
+ {cheshire/cheshire   {:mvn/version "5.10.0"}
+  com.wsscode/pathom3 {:git/url "https://github.com/wilkerlucio/pathom3"
+                       :sha     "1f3ca76ead855609e0f27b30f6e8bf23b5bcfa0a"}
+  org.clojure/clojure {:mvn/version "1.10.0"}}}
+```
+
+We are going to use `cheshire` to parse `JSON` from the API responses.
+
+## Command Line Application
+
+To run our application we will use the `:exec-fn` feature from `deps.edn`, I'll start
+setting up a main entry point and show how to trigger it from the command line:
 
 ```clojure
-; db
-:reddit.post/id
-:reddit.post/link
-:reddit.post/title
-:reddit.post/text
-:reddit.post/posted-at
+(ns com.wsscode.pathom3.demos.ip-weather)
 
-:reddit.subreddit/name
-
-:reddit.user/login
-
-:reddit.comment/id
-:reddit.comment/text
+(defn main [{:keys [ip]}]
+  (println "Request temperature for the IP" ip))
 ```
+
+To test this, run the following:
+
+```
+clj -X com.wsscode.pathom3.demos.ip-weather/main :ip '"198.29.213.3"'
+```
+
+To make this command shorter, I can add an alias to `deps.edn`:
+
+```clojure {10-13} title="deps.edn"
+{:paths
+ ["src"]
+
+ :deps
+ {cheshire/cheshire   {:mvn/version "5.10.0"}
+  com.wsscode/pathom3 {:git/url "https://github.com/wilkerlucio/pathom3"
+                       :sha     "1f3ca76ead855609e0f27b30f6e8bf23b5bcfa0a"}
+  org.clojure/clojure {:mvn/version "1.10.0"}}
+
+ ; add alias to make easier to call
+ :aliases
+ {:ip-weather
+  {:exec-fn com.wsscode.pathom3.demos.ip-weather/main}}}
+```
+
+Now we can run:
+
+```
+clj -X:ip-weather :ip '"198.29.213.3"'
+```
+
+Scaffolding done, time to start writing some resolvers.
+
+## Start from the tail
+
+First lets understand the data scenario for this task. If we start assuming we know
+nothing about the services involved, we still know what we have (the IP) and what we
+want (the temperature), we can start with this graph representation:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-plan-0.png)
+
+</div>
+
+By looking at the documentation on the [Meta Weather API](https://www.metaweather.com/api/),
+I see that the temperature information is present in the
+`https://www.metaweather.com/api/location/$WOEID$` endpoint (`WOEID` stands for Where On Earth ID)
+, under `consolidated_weather` -> `the_temp`. This means that to fetch the temperature, we need some `woeid`.
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-plan-1.png)
+
+</div>
+
+Meta Weather provides search endpoints to figure out the `WOEID`:
+
+```
+https://www.metaweather.com/api/location/search/?query=san
+https://www.metaweather.com/api/location/search/?query=london
+https://www.metaweather.com/api/location/search/?lattlong=36.96,-122.02
+https://www.metaweather.com/api/location/search/?lattlong=50.068,-5.316
+```
+
+To make this example more interesting, we are going to use the one with latitude and
+longitude. In this systems, this means that now `WOEID` depends on `latitude` and `longitude`:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-plan-2.png)
+
+</div>
+
+Finally, using the GeoJS API, we can use the endpoint `https://get.geojs.io/v1/ip/geo/$IP$.json`
+to figure the latitude and longitude, given some IP:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-plan-3.png)
+
+</div>
+
+Now we have the complete path from the `IP` to the `temperature`.
+
+:::tip
+I found those API's using the [Public API's](https://github.com/public-apis/public-apis)
+service, I find it a great source to look for open API's to play with.
+:::
 
 ## Resolvers
 
-Resolvers are the main building block on Pathom.
+:::tip
+I like to stress that while requesting information with Pathom it helps to think about
+the attribute connections, the resolver names are unimportant most of the time, focus
+on the attribute names.
+:::
 
+Let's state our problem again, this time in terms of data,
 
+I personally find easier to start at the 0
