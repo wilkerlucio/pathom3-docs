@@ -3,6 +3,28 @@ id: introduction
 title: Getting Started
 slug: /
 ---
+
+## Install
+
+Find the instructions to include Pathom as a dependency in the [Clojars page](https://clojars.org/com.wsscode/pathom3).
+
+## Namespace aliases
+
+When you read code from the examples in this documentation they will use alias to reference
+namespaces, here you can find what the aliases point to:
+
+```clojure
+[com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+[com.wsscode.pathom3.connect.indexes :as pci]
+[com.wsscode.pathom3.connect.operation :as pco]
+[com.wsscode.pathom3.connect.planner :as pcp]
+[com.wsscode.pathom3.connect.runner :as pcr]
+[com.wsscode.pathom3.interface.eql :as p.eql]
+[com.wsscode.pathom3.interface.smart-map :as psm]
+```
+
+## Usage
+
 **Pathom** is a Clojure/script library to model attribute relationships.
 
 Attribute modeling is a way to think and design information systems.
@@ -62,10 +84,10 @@ Now to make the original question to Pathom, we are going to use the [Smart Map]
 (:temperature smart-map); => 23
 ```
 
-::important
+:::important
 Note that in this example, we only mention the indexes and the attributes, the resolver
 names get abstracted from the user and left for Pathom to figure when to call then.
-::
+:::
 
 Now consider a slightly different question: Is it cold in `Recife` now?
 
