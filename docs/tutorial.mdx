@@ -412,8 +412,13 @@ We can move that code to our `main` function and make our program work:
 Then we can run from the command line:
 
 ```bash
+# some specific IP
 clj -X:ip-weather :ip '"198.29.213.3"'
 # => It's currently 8.33C at {:ip "198.29.213.3"}
+
+# get from your IP
+clj -X:ip-weather :ip "\"$(curl -s ifconfig.me)\""
+# => It's currently ??C at {:ip "YOUR_IP"}
 ```
 
 Magic? No, it's the power of graphs!
@@ -437,6 +442,32 @@ It sees that it depends on `:woeid`, which we don't have, but the index says you
 get it if you provide `:latitude` and `:longitude`. We don't have those either, then
 Pathom has to look again in the index for then, and those are available though `:ip`,
 which is in the available context. It's the same path we described before with the table column associations.
+
+The previous paragraph described the **planning** process, the output of that process
+is a execution graph, that describes what will take to fulfill the demand. Then it
+starts running it, first figure `:latitude` and `:longitude` from `:ip`:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-run-1.png)
+
+</div>
+
+With `:latitude` and `:longitude` available, now the process can fetch the `:woeid`:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-run-2.png)
+
+</div>
+
+Finally, use `:woeid` to get the `:temperature`:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/table-run-3.png)
+
+</div>
 
 Because our code only talks about context and demand, we can also use this command
 line tool in a few other forms:
