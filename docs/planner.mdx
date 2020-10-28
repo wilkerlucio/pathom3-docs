@@ -2,4 +2,101 @@
 title: Planner
 ---
 
-Welcome to the heart of Pathom.
+Welcome to the heart of Pathom. The planner is the part of Pathom that figures which
+resolvers to call, in which order to fulfill the data demand.
+
+## What is a plan?
+
+The Pathom plan is a [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), and it
+looks like this:
+
+GRAPH HERE
+
+
+
+To compute the plan, Pathom requires:
+
+- [Indexes](indexes.mdx)
+- [EQL AST](https://edn-query-language.org/eql/1.0.0/specification.html) of the demand
+
+Pathom represents the plan DAG using plain Clojure maps.
+
+Here you can see an example to get a more concrete sense of what a plan looks like:
+
+```clojure
+(ns com.wsscode.pathom3.docs.planner
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.connect.planner :as pcp]
+            [edn-query-language.core :as eql]))
+
+; start with a simple resolver
+(pco/defresolver answer []
+  {::answer-to-everything 42})
+
+; create indexes
+(def indexes (pci/register answer))
+
+; generate execution DAG
+(let [ast (eql/query->ast [::answer-to-everything])]
+  (pcp/compute-run-graph
+    (assoc indexes
+      :edn-query-language.ast/node ast)))
+```
+
+Generates this plan:
+
+```clojure
+{::pcp/nodes
+ {1
+  {::pco/op-name
+   com.wsscode.pathom3.docs.planner/answer
+
+   ::pcp/node-id
+   1
+
+   ::pcp/requires
+   {:com.wsscode.pathom3.docs.planner/answer-to-everything {}}
+
+   ::pcp/input
+   {}
+
+   ::pcp/source-for-attrs
+   #{:com.wsscode.pathom3.docs.planner/answer-to-everything}}}
+
+ ::pcp/index-resolver->nodes
+ {com.wsscode.pathom3.docs.planner/answer #{1}}
+
+ ::pcp/unreachable-resolvers
+ #{}
+
+ ::pcp/unreachable-attrs
+ #{}
+
+ ::pcp/index-ast
+ {:com.wsscode.pathom3.docs.planner/answer-to-everything
+  {:type         :prop
+   :dispatch-key :com.wsscode.pathom3.docs.planner/answer-to-everything
+   :key          :com.wsscode.pathom3.docs.planner/answer-to-everything}}
+
+ ::pcp/root
+ 1
+
+ ::pcp/index-attrs
+ {:com.wsscode.pathom3.docs.planner/answer-to-everything 1}}
+```
+
+Time to break down the attributes here:
+
+#### `::pcp/nodes`
+
+Contains a map with all the nodes from this graph, indexed by `node-id`. The `node-id`
+is a monotonic incremental value, the first node gets the ID 1.
+
+In case you already have some data available, you can tell the planner about it so it will
+take that in consideration when formulating the plan.
+
+It can also take optionally a [Shape Descriptor](shape-descriptor.mdx) with the available
+attributes.
+
+## The simplest plan
