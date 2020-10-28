@@ -41,7 +41,7 @@ setting up a main entry point and show how to trigger it from the command line:
 
 To test this, run the following:
 
-```
+```bash
 clj -X com.wsscode.pathom3.demos.ip-weather/main :ip '"198.29.213.3"'
 ```
 
@@ -65,7 +65,7 @@ To make this command shorter, I can add an alias to `deps.edn`:
 
 Now we can run:
 
-```
+```bash
 clj -X:ip-weather :ip '"198.29.213.3"'
 ```
 
@@ -136,7 +136,7 @@ connections, the resolver names are unimportant most of the time.
 :::
 
 To implement the resolvers, I'll start with the one to fetch the latitude and longitude
-from the IP, writing a resolver is similar to write a function:
+from the IP:
 
 ```clojure
 (ns com.wsscode.pathom3.demos.ip-weather
@@ -155,6 +155,12 @@ from the IP, writing a resolver is similar to write a function:
   (println "Request temperature for the IP" ip))
 ```
 
+A resolver is like a function, with some constraints:
+
+1. The resolver input **must** be a map, so the input information is labeled.
+2. A resolver **must** return a map, so the output information is labeled.
+3. A resolver may also receive another map, containing the environment information.
+
 To test the resolver in the REPL, I call it, like a function:
 
 ```clojure
@@ -164,22 +170,21 @@ To test the resolver in the REPL, I call it, like a function:
 
 A resolver is a custom type, here is what's inside:
 
-```clojure
-ip->lat-long
-; #com.wsscode.pathom3.connect.operation.Resolver
-; {:config
-;  #:com.wsscode.pathom3.connect.operation
-;  {:input [:ip]
-;   :provides {:longitude {}
-;              :latitude {}}
-;   :output [:longitude
-;            :latitude]
-;   :op-name com.wsscode.pathom3.demos.ip-weather/ip->lat-long},
-;
-;  :resolve
-;  #object[com.wsscode.pathom3.demos.ip_weather$ip__GT_lat_long__17350
-;          0x4b7b5266
-;          "com.wsscode.pathom3.demos.ip_weather$ip__GT_lat_long__17350@4b7b5266"]}
+```clojure title="ip->lat-long"
+#com.wsscode.pathom3.connect.operation.Resolver
+{:config
+ #:com.wsscode.pathom3.connect.operation
+ {:input [:ip]
+  :provides {:longitude {}
+             :latitude {}}
+  :output [:longitude
+           :latitude]
+  :op-name com.wsscode.pathom3.demos.ip-weather/ip->lat-long},
+
+ :resolve
+ #object[com.wsscode.pathom3.demos.ip_weather$ip__GT_lat_long__17350
+         0x4b7b5266
+         "com.wsscode.pathom3.demos.ip_weather$ip__GT_lat_long__17350@4b7b5266"]}
 ```
 
 Note that in the configuration map of the resolver, we have the same `::pco/output` as
@@ -280,3 +285,170 @@ for what is to come:
     woeid->temperature)
 ; => {:temperature 4.529999999999999}
 ```
+
+## Graph Traversal
+
+In the previous example, we were able to find the temperature starting from the IP. I
+like to point all the names involved in the operation when we finished it, let's look
+at it again:
+
+```clojure
+(-> {:ip "198.29.213.3"}
+    ip->lat-long
+    latlong->woeid
+    woeid->temperature)
+```
+
+This is, we have the `:ip` attribute in a map, and then we have `3` function names,
+which dictates the step. Now we are going to replace all the resolver names with a single
+attribute, that is our data demand, the `:temperature`.
+
+It's time to leverage the attribute relations established from the resolvers.
+
+To do this, Pathom needs some indexes that combine the attribute relations described
+by a list of resolvers. This is demonstrated in the highlighted fragments of the
+following snippet:
+
+```clojure {4,33-36}
+(ns com.wsscode.pathom3.demos.ip-weather
+  (:require
+    [cheshire.core :as json]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]))
+
+(pco/defresolver ip->lat-long
+  [{:keys [ip]}]
+  {::pco/output [:latitude :longitude]}
+  (-> (slurp (str "https://get.geojs.io/v1/ip/geo/" ip ".json"))
+      (json/parse-string keyword)
+      (select-keys [:latitude :longitude])))
+
+(pco/defresolver latlong->woeid
+  [{:keys [latitude longitude]}]
+  {:woeid
+   (-> (slurp
+         (str "https://www.metaweather.com/api/location/search/?lattlong="
+              latitude "," longitude))
+       (json/parse-string keyword)
+       first
+       :woeid)})
+
+(pco/defresolver woeid->temperature
+  [{:keys [woeid]}]
+  {:temperature
+   (-> (slurp (str "https://www.metaweather.com/api/location/" woeid))
+       (json/parse-string keyword)
+       :consolidated_weather
+       first
+       :the_temp)})
+
+(def env
+  (pci/register [ip->lat-long
+                 latlong->woeid
+                 woeid->temperature]))
+
+(defn main [{:keys [ip]}]
+  (println "Request temperature for the IP" ip))
+```
+
+Using the indexes we generated at the name of `env`, we can do the same processing
+without mentioning any resolver name, using a [Smart Map](smart-maps.mdx):
+
+```clojure
+(-> (psm/smart-map env {:ip "198.29.213.3"})
+    :temperature)
+; 5.24
+```
+
+Note the previous snippet doesn't include the name of any resolver!
+
+We can move that code to our `main` function and make our program work:
+
+```clojure {6,39-42}
+(ns com.wsscode.pathom3.demos.ip-weather
+  (:require
+    [cheshire.core :as json]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.interface.smart-map :as psm]))
+
+(pco/defresolver ip->lat-long
+  [{:keys [ip]}]
+  {::pco/output [:latitude :longitude]}
+  (-> (slurp (str "https://get.geojs.io/v1/ip/geo/" ip ".json"))
+      (json/parse-string keyword)
+      (select-keys [:latitude :longitude])))
+
+(pco/defresolver latlong->woeid
+  [{:keys [latitude longitude]}]
+  {:woeid
+   (-> (slurp
+         (str "https://www.metaweather.com/api/location/search/?lattlong="
+              latitude "," longitude))
+       (json/parse-string keyword)
+       first
+       :woeid)})
+
+(pco/defresolver woeid->temperature
+  [{:keys [woeid]}]
+  {:temperature
+   (-> (slurp (str "https://www.metaweather.com/api/location/" woeid))
+       (json/parse-string keyword)
+       :consolidated_weather
+       first
+       :the_temp)})
+
+(def env
+  (pci/register [ip->lat-long
+                 latlong->woeid
+                 woeid->temperature]))
+
+(defn main [args]
+  ; start smart maps with call args
+  (let [sm (psm/smart-map env args)]
+    (println (str "It's currently " (:temperature sm) "C at " (pr-str args)))))
+```
+
+Then we can run from the command line:
+
+```bash
+clj -X:ip-weather :ip '"198.29.213.3"'
+# => It's currently 8.33C at {:ip "198.29.213.3"}
+```
+
+Magic? No, it's the power of graphs!
+
+To help understand how this works, have a look at some parts of the environment:
+
+<div className="pathom-diagram">
+
+  ![](./assets/diagrams/ip-weather/index-oir-connected.png)
+
+</div>
+
+:::note
+For now let's focus on the `index-oir`, which is the main index used to traverse
+dependencies. Check the [indexes page](indexes.mdx) to learn more about the other
+indexes.
+:::
+
+When we request the `:temperature`, Pathom looks in the index for a path to that attribute.
+It sees that it depends on `:woeid`, which we don't have, but the index says you can
+get it if you provide `:latitude` and `:longitude`. We don't have those either, then
+Pathom has to look again in the index for then, and those are available though `:ip`,
+which is in the available context. It's the same path we described before with the table column associations.
+
+Because our code only talks about context and demand, we can also use this command
+line tool in a few other forms:
+
+```bash
+# from lat long
+clj -X:ip-weather :latitude '"41.5119"' :longitude '"-88.0569"'
+# => It's currently 8.33C at {:latitude "41.5119", :longitude "-88.0569"}
+
+# from woeid
+clj -X:ip-weather :woeid 2379574
+# => It's currently 8.33C at {:woeid 2379574}
+```
+
+As long as you use some data that has a path to the temperature, it works.
