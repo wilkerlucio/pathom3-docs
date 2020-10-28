@@ -71,7 +71,7 @@ clj -X:ip-weather :ip '"198.29.213.3"'
 
 Scaffolding done, time to start writing some resolvers.
 
-## Start from the tail
+### Start from the tail
 
 First lets understand the data scenario for this task. If we start assuming we know
 nothing about the services involved, we still know what we have (the IP) and what we
@@ -128,7 +128,7 @@ I found those API's using the [Public API's](https://github.com/public-apis/publ
 service, I find it a great source to look for open API's to play with.
 :::
 
-## Resolvers
+### Resolvers
 
 :::note
 While requesting information with Pathom, it helps to think about the attribute
@@ -286,7 +286,7 @@ for what is to come:
 ; => {:temperature 4.529999999999999}
 ```
 
-## Graph Traversal
+### Graph Traversal
 
 In the previous example, we were able to find the temperature starting from the IP. I
 like to point all the names involved in the operation when we finished it, let's look
@@ -441,7 +441,8 @@ When we request the `:temperature`, Pathom looks in the index for a path to that
 It sees that it depends on `:woeid`, which we don't have, but the index says you can
 get it if you provide `:latitude` and `:longitude`. We don't have those either, then
 Pathom has to look again in the index for then, and those are available though `:ip`,
-which is in the available context. It's the same path we described before with the table column associations.
+which is in the available context. It's the same path we described before with the table
+column associations.
 
 The previous paragraph described the **planning** process, the output of that process
 is a execution graph, that describes what will take to fulfill the demand. Then it
@@ -483,3 +484,19 @@ clj -X:ip-weather :woeid 2379574
 ```
 
 As long as you use some data that has a path to the temperature, it works.
+
+## What's next
+
+This concludes this tutorial. A quick review:
+
+- Map the available data you have, and the data you want in terms of attributes.
+- Write resolvers connecting the attribute names, adding more attributes as needed.
+- Prepare an environment with the [indexes](indexes.mdx).
+- Use [Smart Maps](smart-maps.mdx) to make the information request.
+
+I designed this demo to illustrate the basic concepts of attribute modeling and Pathom.
+
+I like to encourage you to go and play with it a bit more, here is an exercise suggestion:
+
+- Add a resolver to use the Meta Weather API to search based on a search query.
+- Add a resolver to use the current user public IP when nothing else is provided.
