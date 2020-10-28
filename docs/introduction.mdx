@@ -25,6 +25,9 @@ namespaces, here you can find what the aliases point to:
 
 ## Basic Concepts
 
+**Pathom** is a Clojure/script library to model attribute relationships. The following
+list includes the main broad concepts and constructs in Pathom:
+
 ### Attributes
 
 Attributes are the main drivers of Pathom logic. In Pathom you express the relationship
@@ -32,124 +35,24 @@ of attributes via resolvers.
 
 ### Resolvers
 
-
+Resolvers are building blocks to establish relationships between attributes.
 
 ### Environment
 
+Is a map containing all the necessary context required to process a request.
+
 ### Planner
+
+Given some initial data and a request, the planner is responsible for figuring what
+resolvers to call, in what order.
 
 ### Runner
 
-### Plugins
+One the plan is ready, the runner is going to execute the plan, it checks if the
+responses are coming as expected and chooses the path when multiple options
+are available.
 
 ### Interfaces
 
-
-
-**Pathom** is a Clojure/script library to model attribute relationships.
-
-Attribute modeling is a way to think and design information systems.
-
-Consider the question: What's the temperature in the city of Recife now?
-
-Using my attribute modeler hat, I can break this description into two attributes and one
-value. The demand is for a `:temperature`, and the available information is the
-`:city` with the value of `Recife`. Or we can express it as a Clojure map:
-
-```clojure
-{:city        "Recife"
- :temperature ?}
-```
-
-Note we left `?` for the unknown attributes. In a way, this map expresses the same thing
-as the question we had before.
-
-Now, to realize the `:temperature` from the `city`, we write a resolver
-establishing this relationship.
-
-```clojure
-; our mock temperatures database
-(def temperatures
-  {"Recife" 23})
-
-(pco/defresolver temperature-from-city [{:keys [city]}]
-  {:temperature (get temperatures city)})
-```
-
-A resolver looks like a function but with some constraints:
-
-1. The resolver input **must** be a map, so the input information is labeled.
-2. A resolver **must** return a map, so the output information is labeled.
-3. A resolver may also receive another map, containing the environment information.
-
-The next step is to create the indexes:
-
-```clojure
-(def indexes
-  (pci/register [temperature-from-city]))
-```
-
-Pathom uses the indexes to traverse the attribute relationships.
-
-Now to make the original question to Pathom, we are going to use the [Smart Map](smart-maps.mdx) interface:
-
-```clojure
-; this creates a smart map, using our indexes, and with some initial data
-(def smart-map (psm/smart-map indexes {:city "Recife"}))
-
-; smart maps work as regular maps when looking for the initial data
-(:city smart-map); => "Recife"
-
-; but the difference comes when we ask for keys not present in the map, but reachable
-; via resolvers
-(:temperature smart-map); => 23
-```
-
-:::important
-Note that in this example, we only mention the indexes and the attributes, the resolver
-names get abstracted from the user and left for Pathom to figure when to call then.
-:::
-
-Now consider a slightly different question: Is it cold in `Recife` now?
-
-```clojure
-{:city  "Recife"
- :cold? ?}
-```
-
-To compute the `:cold?` attribute, we can write a resolver that depends on the `:temperature`
-attribute:
-
-```clojure
-(pco/defresolver cold? [{:keys [temperature]}]
-  {:cold? (< temperature 20)})
-```
-
-Update the indexes definition to also include the `cold?` resolver:
-
-```clojure
-(def indexes
-  (pci/register [temperature-from-city cold?]))
-```
-
-Now, back to the question: Is it cold in `Recife` now? This time we will use a different
-interface, the [EQL](eql.mdx) interface.
-
-```clojure
-; this time we will use the EQL interface to trigger the Pathom engine
-(p.eql/process
-  indexes
-  {:city "Recife"}
-  [:cold?])
-; => {:cold? false}
-```
-
-Note that our "lookup code" remains the same size, although we have to run more operations
-now. This ability to abstract the function call chain is the primary utility you should
-look for in Pathom.
-
-In this getting started, we talked a bit about attribute modeling, how to write a few
-resolvers and how to trigger the Pathom engine to fulfill attribute questions.
-
-You can find a complete tutorial playing with weather API's at the [Pathom Tutorial](tutorial.mdx)
-page.
+The interfaces are forms to make requests to Pathom. There is the Smart Map and the
+EQL interfaces available.
