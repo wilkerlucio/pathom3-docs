@@ -37,39 +37,11 @@ h4 a code {
   color: #649fff;
 }
 
-/* Admonitions */
+.docusaurus-highlight-code-line {
+  background: #3e4b75;
+}
 
-/*.alert {*/
-/*  background-color: transparent;*/
-/*  border: none;*/
-/*  display: flex;*/
-/*  padding: 0;*/
-/*}*/
-
-/*.admonition-heading {*/
-/*  color: var(--ifm-alert-background-color);*/
-/*  text-align: center;*/
-/*  margin-right: 1rem;*/
-/*}*/
-
-/*.admonition-heading svg {*/
-/*  display: block;*/
-/*}*/
-
-/*.admonition-heading svg * {*/
-/*  fill: var(--ifm-alert-background-color);*/
-/*  stroke: var(--ifm-alert-background-color);*/
-/*}*/
-
-/*.admonition-content {*/
-/*  background-color: #ffffffd6;*/
-/*  border-left: 6px solid var(--ifm-alert-background-color);*/
-/*  border-bottom: 1px solid #c1c1c1;*/
-/*  border-right: 1px solid #c1c1c1;*/
-/*  border-top: 1px solid #c1c1c1;*/
-/*  flex: 1;*/
-/*  padding: .75rem;*/
-/*}*/
+/* region Admonitions */
 
 .alert a {
   color: #fff;
@@ -189,3 +161,5 @@ h4 a code {
   stroke: #b36cdb;
   fill: #b36cdb;
 }
+
+/* endregion */
