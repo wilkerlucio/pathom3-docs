@@ -7,12 +7,12 @@ sidebar_label: Pathom Tutorial
 The task of this tutorial is to implement a series of resolvers that can tell the current
 temperature, based on some IP address.
 
-To implement this I'll use [GeoJS](https://get.geojs.io) to find the location from some
+To implement this, I'll use [GeoJS](https://get.geojs.io) to find the location from some
 given IP, and then use [Meta Weather](https://www.metaweather.com) to find the temperature.
 
 ## App Setup
 
-In this demo I'll be using [Clojure Deps](https://clojure.org/guides/deps_and_cli) to manage the dependencies:
+In this demo, I'll be using [Clojure Deps](https://clojure.org/guides/deps_and_cli) to manage the dependencies:
 
 ```clojure title="deps.edn"
 {:paths
@@ -29,8 +29,8 @@ We are going to use `cheshire` to parse `JSON` from the API responses.
 
 ## Command Line Application
 
-To run our application we will use the `:exec-fn` feature from `deps.edn`, I'll start
-setting up a main entry point and show how to trigger it from the command line:
+To run our application, we will use the `:exec-fn` feature from `deps.edn`, I'll start
+setting up the main entry point and show how to trigger it from the command line:
 
 ```clojure
 (ns com.wsscode.pathom3.demos.ip-weather)
@@ -45,7 +45,7 @@ To test this, run the following:
 clj -X com.wsscode.pathom3.demos.ip-weather/main :ip '"198.29.213.3"'
 ```
 
-To make this command shorter, I can add an alias to `deps.edn`:
+To make this command shorter, add an alias to `deps.edn`:
 
 ```clojure {10-13} title="deps.edn"
 {:paths
@@ -69,11 +69,11 @@ Now we can run:
 clj -X:ip-weather :ip '"198.29.213.3"'
 ```
 
-Scaffolding done, time to start writing some resolvers.
+Scaffolding is done. Time to start writing some resolvers.
 
 ### Start from the tail
 
-First lets understand the data scenario for this task. If we start assuming we know
+First, let's understand the data scenario for this task. If we start assuming that we know
 nothing about the services involved, we still know what we have (the IP) and what we
 want (the temperature), we can start with this graph representation:
 
@@ -85,7 +85,7 @@ want (the temperature), we can start with this graph representation:
 
 By looking at the documentation on the [Meta Weather API](https://www.metaweather.com/api/),
 I see that the temperature information is present in the
-`https://www.metaweather.com/api/location/$WOEID$` endpoint (`WOEID` stands for Where On Earth ID)
+`https://www.metaweather.com/api/location/$WOEID$` endpoint (`WOEID` stands for [Where On Earth ID](https://en.wikipedia.org/wiki/WOEID))
 , under `consolidated_weather` -> `the_temp`. This means that to fetch the temperature, we need some `woeid`.
 
 <div className="pathom-diagram">
@@ -104,7 +104,7 @@ https://www.metaweather.com/api/location/search/?lattlong=50.068,-5.316
 ```
 
 To make this example more interesting, we are going to use the one with latitude and
-longitude. In this systems, this means that now `WOEID` depends on `latitude` and `longitude`:
+longitude. In these systems, this means that now `WOEID` depends on `latitude` and `longitude`:
 
 <div className="pathom-diagram">
 
@@ -125,15 +125,10 @@ Now we have the complete path from the `IP` to the `temperature`.
 
 :::tip
 I found those API's using the [Public API's](https://github.com/public-apis/public-apis)
-service, I find it a great source to look for open API's to play with.
+service, I find it a great source to look for open API's to play.
 :::
 
 ### Resolvers
-
-:::note
-While requesting information with Pathom, it helps to think about the attribute
-connections, the resolver names are unimportant most of the time.
-:::
 
 To implement the resolvers, I'll start with the one to fetch the latitude and longitude
 from the IP:
@@ -159,9 +154,9 @@ A resolver is like a function, with some constraints:
 
 1. The resolver input **must** be a map, so the input information is labeled.
 2. A resolver **must** return a map, so the output information is labeled.
-3. A resolver may also receive another map, containing the environment information.
+3. A resolver may also receive another map containing the environment information.
 
-To test the resolver in the REPL, I call it, like a function:
+To test the resolver in the REPL, call it like a function:
 
 ```clojure
 (ip->lat-long {:ip "198.29.213.3"})
@@ -188,10 +183,10 @@ A resolver is a custom type, here is what's inside:
 ```
 
 Note that in the configuration map of the resolver, we have the same `::pco/output` as
-we wrote in the resolver, the `::pco/input` was inferred from the destructuring used in
+we wrote in the resolver, while the `::pco/input` was inferred from the destructuring used in
 the resolver attribute vector.
 
-You can  learn more about the details at [resolvers documentation page](resolvers.mdx).
+You can learn more about the details at [resolvers documentation page](resolvers.mdx).
 
 Now that we have the latitude and longitude, the next resolver will find a `WOEID` from
 that:
@@ -222,6 +217,12 @@ that:
 (defn main [{:keys [ip]}]
   (println "Request temperature for the IP" ip))
 ```
+
+:::note
+In `latlong->woeid` resolver, we let Pathom infer the output automatically. To use this
+feature, remember that the last expression **must** be a map. Otherwise, Pathom will
+not try to infer the output.
+:::
 
 Testing the resolver in the REPL:
 
@@ -275,8 +276,7 @@ To keep our REPL testing in check:
 ; => {:temperature 4.529999999999999}
 ```
 
-The whole process chains nicely, starting from `ip` to `temperature`, this is a hint
-for what is to come:
+The whole process chains nicely, starting from `ip` to `temperature`, like this:
 
 ```clojure
 (-> {:ip "198.29.213.3"}
@@ -299,9 +299,9 @@ at it again:
     woeid->temperature)
 ```
 
-This is, we have the `:ip` attribute in a map, and then we have `3` function names,
-which dictates the step. Now we are going to replace all the resolver names with a single
-attribute, that is our data demand, the `:temperature`.
+We have the `:ip` attribute in a map, and then we have `3` function names,
+which dictates the step. Now we will to replace all the resolver names with a single
+attribute: our data demand, the `:temperature`.
 
 It's time to leverage the attribute relations established from the resolvers.
 
@@ -361,6 +361,11 @@ without mentioning any resolver name, using a [Smart Map](smart-maps.mdx):
 ```
 
 Note the previous snippet doesn't include the name of any resolver!
+
+:::tip
+While requesting information with Pathom, it helps to think in terms of the attribute
+connections, the resolver names are unimportant most of the time.
+:::
 
 We can move that code to our `main` function and make our program work:
 
@@ -423,7 +428,8 @@ clj -X:ip-weather :ip "\"$(curl -s ifconfig.me)\""
 
 Magic? No, it's the power of graphs!
 
-To help understand how this works, have a look at some parts of the environment:
+To help understand how this works, have a look inside that `env` variable we defined (the
+map on the right side):
 
 <div className="pathom-diagram">
 
@@ -432,20 +438,20 @@ To help understand how this works, have a look at some parts of the environment:
 </div>
 
 :::note
-For now let's focus on the `index-oir`, which is the main index used to traverse
+For now, let's focus on the `index-oir`, which is the main index used to traverse
 dependencies. Check the [indexes page](indexes.mdx) to learn more about the other
 indexes.
 :::
 
 When we request the `:temperature`, Pathom looks in the index for a path to that attribute.
-It sees that it depends on `:woeid`, which we don't have, but the index says you can
+It depends on `:woeid`, which we don't have, but the index says you can
 get it if you provide `:latitude` and `:longitude`. We don't have those either, then
-Pathom has to look again in the index for then, and those are available though `:ip`,
-which is in the available context. It's the same path we described before with the table
+Pathom has to look again in the index for then, and those are available through `:ip`,
+which is in the data context. It's the same path we described before with the table
 column associations.
 
-The previous paragraph described the **planning** process, the output of that process
-is a execution graph, that describes what will take to fulfill the demand. Then it
+The previous paragraph described the **planning** process. The output of that process
+is an execution graph that describes what will take to fulfill the demand. Then it
 starts running it, first figure `:latitude` and `:longitude` from `:ip`:
 
 <div className="pathom-diagram">
@@ -489,14 +495,14 @@ As long as you use some data that has a path to the temperature, it works.
 
 This concludes this tutorial. A quick review:
 
-- Map the available data you have, and the data you want in terms of attributes.
+- Map the available data you have and the data you want in terms of attributes.
 - Write resolvers connecting the attribute names, adding more attributes as needed.
 - Prepare an environment with the [indexes](indexes.mdx).
 - Use [Smart Maps](smart-maps.mdx) to make the information request.
 
 I designed this demo to illustrate the basic concepts of attribute modeling and Pathom.
 
-I like to encourage you to go and play with it a bit more, here is an exercise suggestion:
+I like to encourage you to go and play with it a bit more. Here are a few exercise suggestions:
 
 - Add a resolver to use the Meta Weather API to search based on a search query.
 - Add a resolver to use the current user public IP when nothing else is provided.
