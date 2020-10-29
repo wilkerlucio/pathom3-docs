@@ -6,37 +6,47 @@ slug: /
 
 ## Basic Concepts
 
-**Pathom** is a Clojure/script library to model attribute relationships. The following
-list includes the main broad concepts and constructs in Pathom:
+**Pathom** is a Clojure/script library for building APIs more naturally shaped to your domain.
+ Similar to libraries such as [GraphQL](https://graphql.org/) and [Falcor](https://netflix.github.io/falcor/), but
+  modeled around attribute, rather than entity or object relationships. The following list includes
+   the main broad concepts and constructs in Pathom:
 
 ### Attributes
 
-Attributes are the main drivers of Pathom logic. In Pathom you express the relationship
+Attributes are the main drivers of Pathom logic, and are first class citizens.  For example in Pathom,
+`:user/first-name` stands on it's own. In contrast to other approaches where defining `User.firstName` means that
+`firstName` has no meaning outside the context of a User object.  In Pathom you express the relationship
 of attributes via resolvers.
 
 ### Resolvers
 
-Resolvers are building blocks to establish relationships between attributes.
+Resolvers are building blocks that establish relationships between attributes.  Pathom's secret sauce is
+navigating a graph of resolvers to determine the set that are necessary to service a given request.
 
 ### Environment
 
-Is a map containing all the necessary context required to process a request.
+Is a map containing all the necessary context required to process a request.  The environment map is
+handled using Clojure best practices.  Data for Pathom internals uses Pathom-specific namespaced keys,
+and you will typically add your own entries (database connections, etc.) such that all these data are
+available to your resolvers.
 
 ### Planner
 
-Given some initial data and a request, the planner is responsible for figuring what
+Given the environment, some initial data and a request, the planner is responsible for figuring what
 resolvers to call, in what order.
 
 ### Runner
 
-One the plan is ready, the runner is going to execute the plan, it checks if the
-responses are coming as expected and chooses the path when multiple options
-are available.
+Once the plan is ready the runner executes the plan, by traversing and executing resolvers, then
+shaping the results to satisfy the request.  It handles errors as well as potential conflicts
+(e.g. multiple resolvers can handle a given request).
 
 ### Interfaces
 
-The interfaces are forms to make requests to Pathom. There is the Smart Map and the
-EQL interfaces available.
+Pathom requests can executed via [EQL](https://github.com/edn-query-language/eql) queries or, new in Pathom 3, Smart Maps.  EQL, inspired by Datomic's pull syntax,
+allows you to express queries with Clojure/script data structures that represent both the data content and shape
+needed by a client.  Smart Maps take this even further by allowing you work with Clojure/script maps that are transparently
+associated with Pathom resolvers.
 
 ## Install
 
