@@ -208,7 +208,7 @@ you sent as `env` during the smart map creation, plus the cache atom.
 
 ## Debugging reads
 
-Sometimes the result will be unexpected, to debug the smart map you can use the `psm/sm-get-debug`
+Sometimes the result will be unexpected, to debug the smart map you can use the `psm/sm-get-with-stats`
 function to return the [run  stats](runner.mdx#run-stats) of the process:
 
 ```clojure
@@ -220,7 +220,7 @@ function to return the [run  stats](runner.mdx#run-stats) of the process:
      (pbir/single-attr-resolver ::y ::z #(- % 10))]))
 
 (-> (psm/smart-map indexes)
-    (psm/sm-get-debug ::y))
+    (psm/sm-get-with-stats ::y))
 ;{:com.wsscode.pathom3.connect.planner/index-attrs #:com.wsscode.pathom.docs.smart-maps-demo{:n 3,
 ;                                                                                            :y 1,
 ;                                                                                            :x 2},
