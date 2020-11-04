@@ -1,7 +1,7 @@
 module.exports = {
   docs: [
     'introduction',
-    'rationale',
+    // 'rationale',
     'tutorial',
     {
       'Using Pathom': [
@@ -13,15 +13,16 @@ module.exports = {
         // 'plugins',
       ]
     },
-    'modeling-guides',
+    // 'modeling-guides',
     {
       'How Pathom Works': [
         'indexes',
-        'planner',
-        'runner',
+        // 'planner',
+        // 'runner',
         'shape-descriptor',
       ]
     },
+    // 'faq',
     // {
     //   'Integrations': [
     //     'integrations/graphql'
