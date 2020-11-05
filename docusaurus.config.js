@@ -16,9 +16,6 @@ module.exports = {
     prism: {
       additionalLanguages: ['clojure'],
     },
-    googleAnalytics: {
-      trackingID: 'G-GZFCYV0DXN',
-    },
     gtag: {
       trackingID: 'G-GZFCYV0DXN',
     },
