@@ -7,7 +7,6 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
   projectName: 'pathom3', // Usually your repo name.
-  plugins: ['@docusaurus/plugin-google-gtag'],
   themeConfig: {
     sidebarCollapsible: true,
     colorMode: {
