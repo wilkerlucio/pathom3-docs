@@ -7,6 +7,7 @@ module.exports = {
   favicon: 'img/favicon.ico',
   organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
   projectName: 'pathom3', // Usually your repo name.
+  plugins: ['@docusaurus/plugin-google-gtag'],
   themeConfig: {
     sidebarCollapsible: true,
     colorMode: {
@@ -15,6 +16,9 @@ module.exports = {
     },
     prism: {
       additionalLanguages: ['clojure'],
+    },
+    gtag: {
+      trackingID: 'G-GZFCYV0DXN',
     },
     navbar: {
       title: 'Pathom 3',
