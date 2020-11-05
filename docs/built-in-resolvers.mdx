@@ -273,3 +273,25 @@ which is the key to index the table data.
 Because this helper is a macro, it works on Clojurescript as well, but remember that
 it will pull the data from the EDN file at compilation time, not at runtime.
 :::
+
+## Global Data
+
+Global data is the same operation that EDN Files do, but using the data directly:
+
+```clojure
+; app
+(pco/defresolver full-url [{:keys [my.system.server/port my.system.resource/path]}]
+  {::server-url (str "http://localhost:" port "/" path)})
+
+(def registry
+  [(global-data-resolver {:my.system.server/port
+                          1234
+
+                          :my.system.resources/path
+                          "resources/public"})
+   full-url])
+
+(-> (psm/smart-map (pci/register registry))
+    ::server-url)
+; => "http://localhost:1234/resources/public
+```
