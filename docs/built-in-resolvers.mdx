@@ -17,6 +17,13 @@ This is a simple way to express a constant value for a given attribute.
 (pbir/constantly-resolver :math/PI 3.1415)
 ```
 
+If instead of a constant value you want a function to generate the value, you can use
+the `constantly-fn-resolver`:
+
+```clojure
+(pbir/constantly-fn-resolver ::throw-error (fn [_] (throw (ex-info "Error" {}))))
+```
+
 ## Aliasing
 
 You can use an alias to create a resolver that provides one attribute based on the same
