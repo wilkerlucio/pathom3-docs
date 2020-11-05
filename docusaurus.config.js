@@ -19,6 +19,9 @@ module.exports = {
     googleAnalytics: {
       trackingID: 'G-GZFCYV0DXN',
     },
+    gtag: {
+      trackingID: 'G-GZFCYV0DXN',
+    },
     navbar: {
       title: 'Pathom 3',
       logo: {
