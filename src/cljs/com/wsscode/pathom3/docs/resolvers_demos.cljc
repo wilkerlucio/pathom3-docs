@@ -44,12 +44,6 @@
 
 ; this resolver computes a slug to use on URL from some article title
 (pco/defresolver article-slug [env {:acme.article/keys [title]}]
-  {::pco/op-name `article-slug
-   ::pco/input   [:acme.article/title]
-   ::pco/output  [:acme.article/slug]}
-  {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
-
-(pco/defresolver article-slug [env {:acme.article/keys [title]}]
   {::pco/input  [:acme.article/title]
    ::pco/output [:acme.article/slug]}
   {:acme.article/slug (str/replace title #"[^a-z0-9A-Z]" "-")})
@@ -107,3 +101,17 @@
 (-> {:acme.user/id 1}
     (->> (p.ent/with-entity indexes))
     (p.eql/process [:acme.user/email :acme.user/avatar-slug]))
+
+; demo meter to feet
+
+(defn meter<->feet-resolver
+  [attribute]
+  (let [foot-kw  (keyword (namespace attribute) (str (name attribute) "-ft"))
+        meter-kw (keyword (namespace attribute) (str (name attribute) "-m"))]
+    [(pbir/single-attr-resolver meter-kw foot-kw #(* % 3.281))
+     (pbir/single-attr-resolver foot-kw meter-kw #(/ % 3.281))]))
+
+(let [sm (psm/smart-map (pci/register (meter<->feet-resolver :foo)))]
+  [(-> sm (assoc :foo-m 169) :foo-ft)
+   (-> sm (assoc :foo-ft 358) :foo-m)])
+; => [554.489 109.11307528192624]

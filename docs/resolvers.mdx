@@ -373,18 +373,20 @@ To create a resolver using `pco/resolver` you have the following options:
 ```
 
 As an example, here are how to generate resolvers to create unit conversion between
-meters and feet:
+meters and foot to a given attribute name:
 
 ```clojure
-(defn alias-resolver
-  "Create a resolver that will convert attribute `from` to a attribute `to` with
-  the same value. This only creates the alias in one direction."
-  [from to]
-  (let [resolver-name (symbol (str (attr-alias-resolver-name from to) "-alias"))]
-    (pco/resolver resolver-name
-      {::pco/input  [from]
-       ::pco/output [to]}
-      (fn [_ input] {to (get input from)}))))
+(defn meter<->feet-resolver
+  [attribute]
+  (let [foot-kw  (keyword (namespace attribute) (str (name attribute) "-ft"))
+        meter-kw (keyword (namespace attribute) (str (name attribute) "-m"))]
+    [(pbir/single-attr-resolver meter-kw foot-kw #(* % 3.281))
+     (pbir/single-attr-resolver foot-kw meter-kw #(/ % 3.281))]))
+
+(let [sm (psm/smart-map (pci/register (meter<->feet-resolver :foo)))]
+  [(-> sm (assoc :foo-m 169) :foo-ft)
+   (-> sm (assoc :foo-ft 358) :foo-m)])
+; => [554.489 109.11307528192624]
 ```
 
 ## Resolver environment
