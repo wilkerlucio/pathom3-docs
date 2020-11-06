@@ -21,7 +21,7 @@ const features = [
   {
     title: 'Smart Maps',
     to: 'docs/smart-maps',
-    // imageUrl: 'img/smart-map-icon.png',
+    imageUrl: 'img/smart-map-icon.png',
     description: (
       <>
         Maps that can realize new attributes from resolvers.
