@@ -101,7 +101,7 @@
      (pbir/single-attr-resolver ::y ::z #(- % 10))]))
 
 (-> (psm/smart-map indexes)
-    (psm/sm-get-debug ::y))
+    (psm/sm-get-with-stats ::y))
 ;{:com.wsscode.pathom3.connect.planner/index-attrs #:com.wsscode.pathom.docs.smart-maps-demo{:n 3,
 ;                                                                                            :y 1,
 ;                                                                                            :x 2},
@@ -144,3 +144,16 @@
 ;                                                :com.wsscode.pathom3.connect.planner/run-next 1,
 ;                                                :com.wsscode.pathom3.connect.planner/node-id 2}},
 ; :com.wsscode.pathom3.connect.runner.stats/resolver-accumulated-duration-ms 0.015876948833465576}
+
+;; error modes
+
+(pco/defresolver error-resolver []
+  {:error (throw (ex-info "Error" {}))})
+
+(comment
+  (let [sm (-> (pci/register error-resolver)
+               (psm/with-error-mode ::psm/error-mode-loud)
+               (psm/smart-map))]
+    (:error sm)))
+; => Execution error (ExceptionInfo) at com.wsscode3.pathom.docs.smart-maps-demo/error-resolver (smart_maps_demo.cljc:151).
+;    Error

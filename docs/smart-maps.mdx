@@ -264,3 +264,26 @@ function to return the run stats of the process:
 ;                                                :com.wsscode.pathom3.connect.planner/node-id 2}},
 ; :com.wsscode.pathom3.connect.runner.stats/resolver-accumulated-duration-ms 0.015876948833465576}
 ```
+
+## Error modes
+
+By default, if some error happens during the Pathom process, the Smart Map is going
+to be silent about it. You can allow the errors to flow up by using the `psm/with-error-mode`
+helper:
+
+```clojure
+(pco/defresolver error-resolver []
+  {:error (throw (ex-info "Error" {}))})
+
+(let [sm (-> (pci/register error-resolver)
+             (psm/with-error-mode ::psm/error-mode-loud)
+             (psm/smart-map))]
+  (:error sm))
+; => Execution error (ExceptionInfo) at ...
+;    Error
+```
+
+The options for error mode are:
+
+`::psm/error-mode-silent` (default): Return `nil` as the value, don't throw errors.
+`::error-mode-loud`: Throw the errors on read.
