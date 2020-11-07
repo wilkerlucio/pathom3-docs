@@ -6,7 +6,7 @@ module.exports = {
   onBrokenLinks: 'throw',
   favicon: 'img/favicon.ico',
   organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
-  projectName: 'pathom3', // Usually your repo name.
+  projectName: 'pathom3-docs', // Usually your repo name.
   themeConfig: {
     sidebarCollapsible: true,
     colorMode: {
