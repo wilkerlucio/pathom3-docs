@@ -90,20 +90,6 @@ this graph:
 
 Visually we can represent this plan as:
 
-import {PlanCytoscapeJS} from './assets/cljs-components/com.wsscode.pathom3.viz.plan.js'
-
-<div className="pathom-plan-view">
-  <PlanCytoscapeJS
-    oir="{:a {#{} #{a}}
-          :b {#{:g} #{b}}
-          :c {#{} #{c}}
-          :e {#{} #{e}}
-          :f {#{:e} #{f}}
-          :g {#{:c :f} #{g}}
-          :h {#{:a :b} #{h}}}"
-    query="[:h]"/>
-</div>
-
 
 Time to break down some of the attributes here:
 
