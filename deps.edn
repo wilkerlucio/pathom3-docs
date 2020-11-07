@@ -7,7 +7,8 @@
   com.fulcrologic/guardrails {:mvn/version "0.0.12"}
   com.wsscode/async          {:mvn/version "1.0.11"}
   com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop" :sha "ca861d607da8cf63208e296b0250eae225d9a10c"}
-  com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "3eeb310c36590117e8df8af2f02da7d4f232b02b"}
+  com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "284d4b589b8334f205a93daae6d64f4591ec4b1c"}
+  com.wsscode/pathom3-viz    {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "c995019d7cc8f7f0a1244281745554862a1449df"}
   lilactown/helix            {:local/root "/Users/wilkerlucio/Development/helix"}
   org.clojure/clojure        {:mvn/version "1.10.1"}
   org.clojure/clojurescript  {:mvn/version "1.10.764"}
