@@ -7,21 +7,22 @@ resolvers to call, in which order to fulfill the data demand.
 
 ## What is a plan?
 
-The Pathom plan is a [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), and it
-looks like this:
+The Pathom plan is a [DAG](https://en.wikipedia.org/wiki/Directed_acyclic_graph), and
+always has a single root.
 
-GRAPH HERE
+Now we are going to a series of examples to understand how the planner does its job,
+and what it outputs.
 
+To understand the planner we going to walk though a series of examples
 
+### The simplest plan
 
 To compute the plan, Pathom requires:
 
 - [Indexes](indexes.mdx)
 - [EQL AST](https://edn-query-language.org/eql/1.0.0/specification.html) of the demand
 
-Pathom represents the plan DAG using plain Clojure maps.
-
-Here you can see an example to get a more concrete sense of what a plan looks like:
+For our first example, it's going to be a simple request that calls a single resolver:
 
 ```clojure
 (ns com.wsscode.pathom3.docs.planner
@@ -34,17 +35,18 @@ Here you can see an example to get a more concrete sense of what a plan looks li
 (pco/defresolver answer []
   {::answer-to-everything 42})
 
-; create indexes
-(def indexes (pci/register answer))
+; create environment with the indexes
+(def env (pci/register answer))
 
 ; generate execution DAG
 (let [ast (eql/query->ast [::answer-to-everything])]
   (pcp/compute-run-graph
-    (assoc indexes
+    (assoc env
       :edn-query-language.ast/node ast)))
 ```
 
-Generates this plan:
+Pathom represents the plan DAG using plain Clojure maps. Our previous example generate
+this graph:
 
 ```clojure
 {::pcp/nodes
@@ -86,7 +88,24 @@ Generates this plan:
  {:com.wsscode.pathom3.docs.planner/answer-to-everything 1}}
 ```
 
-Time to break down the attributes here:
+Visually we can represent this plan as:
+
+import {PlanCytoscapeJS} from './assets/cljs-components/com.wsscode.pathom3.viz.plan.js'
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{} #{a}}
+          :b {#{:g} #{b}}
+          :c {#{} #{c}}
+          :e {#{} #{e}}
+          :f {#{:e} #{f}}
+          :g {#{:c :f} #{g}}
+          :h {#{:a :b} #{h}}}"
+    query="[:h]"/>
+</div>
+
+
+Time to break down some of the attributes here:
 
 #### `::pcp/nodes`
 
@@ -99,4 +118,22 @@ take that in consideration when formulating the plan.
 It can also take optionally a [Shape Descriptor](shape-descriptor.mdx) with the available
 attributes.
 
-## The simplest plan
+#### `::pcp/index-resolver->nodes`
+
+Index pointing to the nodes for a given resolver.
+
+#### `::pcp/root`
+
+The start node of the plan.
+
+#### `::pcp/index-attrs`
+
+This index knows which node is responsible for a given attribute.
+
+### Dependencies
+
+### AND nodes
+
+### OR nodes
+
+
