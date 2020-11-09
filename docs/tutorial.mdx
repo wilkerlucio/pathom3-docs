@@ -69,7 +69,7 @@ Now we can run:
 clj -X:ip-weather :ip '"198.29.213.3"'
 ```
 
-Scaffolding is done. Time to start writing some resolvers.
+Scaffolding is done. Time to start writing some application logic.
 
 ### Start from the tail
 
@@ -129,6 +129,8 @@ service, I find it a great source to look for open API's to play.
 :::
 
 ### Resolvers
+
+In Pathom, resolvers are the main building blocks express attribute relationships.
 
 To implement the resolvers, I'll start with the one to fetch the latitude and longitude
 from the IP:
