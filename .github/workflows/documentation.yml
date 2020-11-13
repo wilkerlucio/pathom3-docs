@@ -15,6 +15,19 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '12.x'
+      - uses: DeLaGuardo/setup-clojure@2.0
+        with:
+          tools-deps: '1.10.1.469'
+
+      - name: Cache maven
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: m2-${{ hashFiles('deps.edn') }}
+          restore-keys: |
+            m2-
+      - name: Compile CLJS
+        run: shadow-cljs compile docs
       - name: Test Build
         run: |
           if [ -e yarn.lock ]; then
@@ -46,6 +59,20 @@ jobs:
           HostName github.com
           IdentityFile ~/.ssh/id_rsa
           EOT
+      - uses: DeLaGuardo/setup-clojure@2.0
+        with:
+          tools-deps: '1.10.1.469'
+
+      - name: Cache maven
+        uses: actions/cache@v1
+        with:
+          path: ~/.m2
+          key: m2-${{ hashFiles('deps.edn') }}
+          restore-keys: |
+            m2-
+      - name: Compile CLJS
+        run: shadow-cljs compile docs
+
       - name: Release to GitHub Pages
         env:
           USE_SSH: true

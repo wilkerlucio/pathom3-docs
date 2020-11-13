@@ -2,6 +2,10 @@
 title: Planner
 ---
 
+:::caution
+This page is a draft.
+:::
+
 Welcome to the heart of Pathom. The planner is the part of Pathom that figures which
 resolvers to call, in which order to fulfill the data demand.
 
@@ -13,7 +17,7 @@ always has a single root.
 Now we are going to a series of examples to understand how the planner does its job,
 and what it outputs.
 
-To understand the planner we going to walk though a series of examples
+To understand the planner we going to walk though a series of examples:
 
 ### The simplest plan
 
@@ -21,6 +25,10 @@ To compute the plan, Pathom requires:
 
 - [Indexes](indexes.mdx)
 - [EQL AST](https://edn-query-language.org/eql/1.0.0/specification.html) of the demand
+
+In case you already have some data available, you can tell the planner about it using
+the [Shape Descriptor](shape-descriptor.mdx), so it will take that in consideration when
+formulating the plan.
 
 For our first example, it's going to be a simple request that calls a single resolver:
 
@@ -88,10 +96,24 @@ this graph:
  {:com.wsscode.pathom3.docs.planner/answer-to-everything 1}}
 ```
 
-Visually we can represent this plan as:
+To generate the plan, Pathom starts scanning the AST, for each attribute it sees it
+looks it up in the index. In case the attribute requires other dependencies, Pathom will
+recursively walk the `index-oir` until it finds the matches or reach a dead end.
 
-change
+Now it's time to introduce the planner viz. This is a tool that lets you visualize a
+Pathom execution plan visually. This is also a tool to understand and debug how Pathom
+builds up a plan, using the items on the left you can navigate though the graph building
+process:
 
+import {PlanCytoscapeJS} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:answer {#{} #{answer}}}"
+    query="[:answer]"/>
+</div>
+
+Our current case is simple, a single resolver node.
 
 Time to break down some of the attributes here:
 
@@ -100,11 +122,20 @@ Time to break down some of the attributes here:
 Contains a map with all the nodes from this graph, indexed by `node-id`. The `node-id`
 is a monotonic incremental value, the first node gets the ID 1.
 
-In case you already have some data available, you can tell the planner about it so it will
-take that in consideration when formulating the plan.
+In the planner graph there are 3 types of possible nodes:
 
-It can also take optionally a [Shape Descriptor](shape-descriptor.mdx) with the available
-attributes.
+##### Resolver nodes
+
+Represent a call to a resolver
+
+##### AND nodes
+
+Represent the call of multiple resolvers, also, being a sibling node in
+a AND node, means the runner can call those nodes in parallel.
+
+##### OR nodes
+
+Represent that one of the nodes must get the required data.
 
 #### `::pcp/index-resolver->nodes`
 
@@ -112,16 +143,215 @@ Index pointing to the nodes for a given resolver.
 
 #### `::pcp/root`
 
-The start node of the plan.
+The start node of the plan. In the visualization, the root node has a black border.
 
 #### `::pcp/index-attrs`
 
-This index knows which node is responsible for a given attribute.
+This index knows which node is responsible for a given attribute. This is important
+for internal optimizations, when some dependency appears repeated, Pathom can use
+this index to connect strait to node, avoiding re-processing.
 
-### Dependencies
+## Dependencies
 
-### AND nodes
+The next case we are going to look at is what happens when there are attribute dependencies.
 
-### OR nodes
+```clojure
+(ns com.wsscode.pathom3.docs.planner
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.connect.planner :as pcp]
+            [edn-query-language.core :as eql]))
 
+(pco/defresolver pi []
+  {::pi Math/PI})
 
+; TAU depends on PI
+(pco/defresolver tau [{::keys [pi]}]
+  {::tau (* pi 2)})
+
+(def env (pci/register [pi tau]))
+
+; generate execution DAG
+(let [ast (eql/query->ast [::tau])]
+  (pcp/compute-run-graph
+    (assoc env
+      :edn-query-language.ast/node ast)))
+```
+
+To make these examples shorter, from now on I'm going to use the `index-oir` representation
+of the graph instead of writing the full resolvers. To start, lets look at our previous
+example using the `index-oir` format:
+
+:::note
+In the `index-oir` I'm going to use short names for the convenience of the demonstration,
+but keep in mind for real systems its recommended to stick with long names.
+:::
+
+```clojure
+{:pi  {#{} #{pi}}
+ :tau {#{:pi} #{tau}}}
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:pi  {#{} #{pi}}
+          :tau {#{:pi} #{tau}}}"
+    query="[:tau]"/>
+</div>
+
+The black arrow means the node `tau` will run after the node for `pi`.
+
+## AND nodes
+
+AND nodes represent a set of nodes that all need to run. Also, the planner designs
+the graph in a way that the runner can run all the nodes from an AND node in parallel
+if desired. To see an example of that, here is a plan for a query that asks for three
+different attributes: `:a`, `:b:` and `:c`:
+
+```clojure
+; indexes
+
+{:a {#{} #{a}}
+ :b {#{} #{b}}
+ :c {#{} #{c}}}
+
+; query
+
+[:a :b :c]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{} #{a}}
+          :b {#{} #{b}}
+          :c {#{} #{c}}}"
+    query="[:a :b :c]"/>
+</div>
+
+Now, to see a combination of AND node and chaining, let's ask for a single attribute
+`:d` that requires `:a`, `:b:` and `:c`:
+
+```clojure
+; indexes
+
+{:a {#{} #{a}}
+ :b {#{} #{b}}
+ :c {#{} #{c}}
+ :d {#{:a :b :c} #{d}}}
+
+; query
+
+[:d]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{} #{a}}
+          :b {#{} #{b}}
+          :c {#{} #{c}}
+          :d {#{:a :b :c} #{d}}}"
+    query="[:d]"/>
+</div>
+
+## OR nodes
+
+Sometimes there is more than one option to fetch an attribute. In those cases, Pathom
+uses the `OR` node to express that. For this example we will have 3 different resolvers
+to the attribute `:a`:
+
+```clojure
+; indexes
+
+{:a {#{} #{a1 a2 a3}}}
+
+; query
+
+[:a]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{} #{a1 a2 a3}}}"
+    query="[:a]"/>
+</div>
+
+In the next example we can see how Pathom deals with graphs that require different
+input paths:
+
+```clojure
+; index-oir
+
+{:a {#{:b} #{a1 a2 a3}
+     #{:c :d} #{a9}}
+ :b {#{} #{b}}
+ :c {#{:d} #{c}}
+ :d {#{} #{d}}}
+
+; query
+
+[:a]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{:b} #{a1 a2 a3}
+              #{:c :d} #{a9}}
+          :b {#{} #{b}}
+          :c {#{:d} #{c}}
+          :d {#{} #{d}}}"
+    query="[:a]"/>
+</div>
+
+## Other examples
+
+### Combined OR and AND
+
+When combining those you can see that
+
+```clojure
+; index-oir
+
+{:a {#{} #{a1 a2}}
+ :b {#{} #{b1 b2}}}
+
+; query
+
+[:a :b]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{} #{a1 a2}}
+          :b {#{} #{b1 b2}}}"
+    query="[:a :b]"/>
+</div>
+
+And a more complex example:
+
+```clojure
+; index-oir
+
+{:a {#{} #{a}}
+ :b {#{:g} #{b}}
+ :c {#{} #{c}}
+ :e {#{} #{e e1}}
+ :f {#{:e} #{f}}
+ :g {#{:c :f} #{g}}
+ :h {#{:a :b} #{h}}}
+
+; query
+
+[:h]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{} #{a}}
+          :b {#{:g} #{b}}
+          :c {#{} #{c}}
+          :e {#{} #{e e1}}
+          :f {#{:e} #{f}}
+          :g {#{:c :f} #{g}}
+          :h {#{:a :b} #{h}}}"
+    query="[:h]"/>
+</div>

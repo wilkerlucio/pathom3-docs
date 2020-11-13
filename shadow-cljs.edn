@@ -1,4 +1,5 @@
 {:deps   true
  :builds {:docs {:target     :npm-module
-                 :entries    [com.wsscode.pathom3.viz.plan]
+                 :entries    [com.wsscode.pathom3.viz.plan
+                              com.wsscode.pathom3.docs.components]
                  :output-dir "docs/assets/cljs-components"}}}

@@ -19,7 +19,7 @@ module.exports = {
     {
       'How Pathom Works': [
         'indexes',
-        // 'planner',
+        'planner',
         // 'runner',
         'shape-descriptor',
       ]
