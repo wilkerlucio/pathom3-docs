@@ -19,6 +19,18 @@ module.exports = {
     gtag: {
       trackingID: 'G-GZFCYV0DXN',
     },
+    algolia: {
+      apiKey: '000878ddd4911b382989562da17a99dd',
+      indexName: 'phantom3',
+
+      // Optional: see doc section bellow
+      contextualSearch: true,
+
+      // Optional: Algolia search parameters
+      searchParameters: {},
+
+      //... other Algolia params
+    },
     navbar: {
       title: 'Pathom 3',
       logo: {
