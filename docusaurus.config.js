@@ -1,7 +1,7 @@
 module.exports = {
   title: 'Pathom 3',
   tagline: 'A library to model and process attribute relationships.',
-  url: 'https://pathom.wsscode.com',
+  url: 'https://pathom3.wsscode.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   favicon: 'img/favicon.ico',
