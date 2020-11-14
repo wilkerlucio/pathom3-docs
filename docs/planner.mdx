@@ -110,7 +110,8 @@ import {PlanCytoscapeJS} from './assets/cljs-components/com.wsscode.pathom3.docs
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
     oir="{:answer {#{} #{answer}}}"
-    query="[:answer]"/>
+    query="[:answer]"
+    displayType="display-type-node-id"/>
 </div>
 
 Our current case is simple, a single resolver node.
@@ -209,7 +210,7 @@ if desired. To see an example of that, here is a plan for a query that asks for 
 different attributes: `:a`, `:b:` and `:c`:
 
 ```clojure
-; indexes
+; index-oir
 
 {:a {#{} #{a}}
  :b {#{} #{b}}
@@ -232,7 +233,7 @@ Now, to see a combination of AND node and chaining, let's ask for a single attri
 `:d` that requires `:a`, `:b:` and `:c`:
 
 ```clojure
-; indexes
+; index-oir
 
 {:a {#{} #{a}}
  :b {#{} #{b}}
@@ -260,7 +261,7 @@ uses the `OR` node to express that. For this example we will have 3 different re
 to the attribute `:a`:
 
 ```clojure
-; indexes
+; index-oir
 
 {:a {#{} #{a1 a2 a3}}}
 
@@ -354,4 +355,13 @@ And a more complex example:
           :g {#{:c :f} #{g}}
           :h {#{:a :b} #{h}}}"
     query="[:h]"/>
+</div>
+
+### Failed OR
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:b {#{} #{bc bc2}}
+          :c {#{} #{bc bc2}}}"
+    query="[:b :c]"/>
 </div>
