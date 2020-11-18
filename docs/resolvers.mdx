@@ -442,6 +442,31 @@ looking up the key, for example:
 (psm/sm-preload! sm '[(::todos {::todo-done? false})])
 
 (::todos sm) ; => cached filtered li
+```
+
+:::tip
+Example implementation using a more generic function to filter data:
+
+```clojure
+(defn filter-matches [match coll]
+  (let [match-keys (keys match)]
+    (if (seq match)
+      (filter
+        #(= match
+            (select-keys % match-keys))
+        coll)
+      coll)))
+
+(pco/defresolver todos-resolver [env _]
+  {::pco/output
+   [{::todos
+     [::todo-message
+      ::todo-done?]}]}
+
+  {::todos
+   (filter-matches (pco/params env) mock-todos-db)})
+```
+:::
 
 ## Using `resolver`
 

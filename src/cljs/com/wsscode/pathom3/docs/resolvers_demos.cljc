@@ -122,18 +122,6 @@
 ; params
 
 ; helper fn to filter coll based on the params for the current context
-(defn filter-matches [match coll]
-  (let [match-keys (keys match)]
-    (if (seq match)
-      (filter
-        #(= match
-            (select-keys % match-keys))
-        coll)
-      coll)))
-
-(defn filter-params-match [env coll]
-  (filter-matches (pco/params env) coll))
-
 (defn map->query-params [m]
   (str/join "&" (map (fn [[k v]] (str (name k) "=" v)) m)))
 
@@ -177,6 +165,15 @@
    {::todo-message "Pathom in Rust"
     ::todo-done?   false}])
 
+(defn filter-matches [match coll]
+  (let [match-keys (keys match)]
+    (if (seq match)
+      (filter
+        #(= match
+            (select-keys % match-keys))
+        coll)
+      coll)))
+
 (pco/defresolver todos-resolver [env _]
   {::pco/output
    [{::todos
@@ -184,10 +181,7 @@
       ::todo-done?]}]}
 
   {::todos
-   (if-some [done? (get (pco/params env) ::todo-done?)]
-     (->> mock-todos-db
-          (filter #(= done? (::todo-done? %))))
-     mock-todos-db)})
+   (filter-matches (pco/params env) mock-todos-db)})
 
 (def env (pci/register todos-resolver))
 
