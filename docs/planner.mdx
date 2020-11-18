@@ -152,6 +152,11 @@ This index knows which node is responsible for a given attribute. This is import
 for internal optimizations, when some dependency appears repeated, Pathom can use
 this index to connect strait to node, avoiding re-processing.
 
+#### Other attributes
+
+You can find spec definitions with descriptions for every property of the planner at the
+[planner source code](https://github.com/wilkerlucio/pathom3/blob/master/src/main/com/wsscode/pathom3/connect/planner.cljc#L19-L170).
+
 ## Dependencies
 
 The next case we are going to look at is what happens when there are attribute dependencies.
@@ -256,7 +261,7 @@ Now, to see a combination of AND node and chaining, let's ask for a single attri
 
 ## OR nodes
 
-Sometimes there is more than one option to fetch an attribute. In those cases, Pathom
+For cases when there is more than one option to fetch an attribute. In those cases, Pathom
 uses the `OR` node to express that. For this example we will have 3 different resolvers
 to the attribute `:a`:
 
