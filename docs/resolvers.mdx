@@ -352,6 +352,97 @@ Here are a couple of examples to illustrate:
 
 To learn more details about the indexes, check the [indexes page](indexes.mdx).
 
+## Parameters
+
+Parameters are a secondary layer to send information to a resolver. One main difference
+between params and inputs is that params do not participate in the graph traversal; they
+come as-is.
+
+You can use parameters to allow the user to configure the request for some attribute.
+
+To illustrate, lets start with a resolver that pulls todo from some mock memory data:
+
+```clojure
+(def mock-todos-db
+  [{::todo-message "Write demo on params"
+    ::todo-done?   true}
+   {::todo-message "Pathom in Rust"
+    ::todo-done?   false}])
+
+(pco/defresolver todos-resolver [env _]
+  ; express nested shape
+  {::pco/output
+   [{::todos
+     [::todo-message
+      ::todo-done?]}]}
+  {::todos mock-todos-db})
+
+(def env (pci/register todos-resolver))
+
+; list all todos
+(pf.eql/process env [::todos])
+```
+
+:::note
+We are using explicit output in the `todos-resolver` so Pathom has more information about
+the structured shape. Although the resolver works without the nested specification, having
+it makes it possible for tools to auto-complete better, and this is important when
+trying to integrate Pathom indexes, so as a general practice, when resolvers have nested
+data, it's better always to specify it.
+:::
+
+To add params to a query attribute, we can use [EQL params](https://edn-query-language.org/eql/1.0.0/specification.html#_parameters),
+for example:
+
+```clojure
+; list undone todos:
+(pf.eql/process env ['(::todos {::todo-done? false})])
+```
+
+If we just ran the previous code, nothing happens. To make this work, we need to use
+the parameters to filter the data in the resolver code.
+
+To pull the params we can use the helper `(pco/params env)`, then filter the list based
+on it:
+
+```clojure {14-18,22-24}
+(def mock-todos-db
+  [{::todo-message "Write demo on params"
+    ::todo-done?   true}
+   {::todo-message "Pathom in Rust"
+    ::todo-done?   false}])
+
+(pco/defresolver todos-resolver [env _]
+  {::pco/output
+   [{::todos
+     [::todo-message
+      ::todo-done?]}]}
+
+  {::todos
+   ; pull params and filter
+   (if-some [done? (get (pco/params env) ::todo-done?)]
+     (->> mock-todos-db
+          (filter #(= done? (::todo-done? %))))
+     mock-todos-db)})
+
+(def env (pci/register todos-resolver))
+
+; list undone todos
+(pf.eql/process env
+  '[(::todos {::todo-done? false})])
+```
+
+To use parameters with [Smart Maps](smart-maps.mdx) you need to call `sm-preload!` before
+looking up the key, for example:
+
+```clojure
+(def sm (psm/smart-map env {}))
+
+; preload using EQL params
+(psm/sm-preload! sm '[(::todos {::todo-done? false})])
+
+(::todos sm) ; => cached filtered li
+
 ## Using `resolver`
 
 You can also create a resolver using the `resolver` helper. This is more useful when

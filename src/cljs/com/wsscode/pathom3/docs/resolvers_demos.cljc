@@ -5,7 +5,10 @@
             [com.wsscode.pathom3.connect.operation :as pco]
             [com.wsscode.pathom3.interface.eql :as p.eql]
             [com.wsscode.pathom3.interface.smart-map :as psm]
-            [com.wsscode.pathom3.entity-tree :as p.ent]))
+            [com.wsscode.pathom3.entity-tree :as p.ent]
+            [clojure.data.json :as json]
+            [com.fulcrologic.guardrails.core :refer [<- => >def >defn >fdef ? |]]
+            [com.wsscode.pathom3.format.eql :as pf.eql]))
 
 ;; what is a resolver?
 
@@ -115,3 +118,96 @@
   [(-> sm (assoc :foo-m 169) :foo-ft)
    (-> sm (assoc :foo-ft 358) :foo-m)])
 ; => [554.489 109.11307528192624]
+
+; params
+
+; helper fn to filter coll based on the params for the current context
+(defn filter-matches [match coll]
+  (let [match-keys (keys match)]
+    (if (seq match)
+      (filter
+        #(= match
+            (select-keys % match-keys))
+        coll)
+      coll)))
+
+(defn filter-params-match [env coll]
+  (filter-matches (pco/params env) coll))
+
+(defn map->query-params [m]
+  (str/join "&" (map (fn [[k v]] (str (name k) "=" v)) m)))
+
+(>def :public-apis.entry/auth
+  #{"" "apiKey" "OAuth" "X-Mashape-Key" "No" "null"})
+
+(>def :public-apis.entry/cors
+  #{"no" "unknown" "yes"})
+
+(>def :public-apis.entry/https boolean?)
+
+(pco/defresolver public-api-entries [env _]
+  {::pco/output
+   [{:public.apis/entries
+     [:public-apis.entry/api
+      :public-apis.entry/auth
+      :public-apis.entry/category
+      :public-apis.entry/cors
+      :public-apis.entry/description
+      :public-apis.entry/https
+      :public-apis.entry/link]}]
+
+   ::pco/params
+   [:public-apis.entry/auth
+    :public-apis.entry/category
+    :public-apis.entry/cors
+    :public-apis.entry/description
+    :public-apis.entry/https
+    :public-apis.entry/title]}
+  {:public.apis/entries
+   (let [params (pco/params env)]
+     (-> (slurp (str "https://api.publicapis.org/entries?" (map->query-params params)))
+         (json/read-str :key-fn #(keyword "public-apis.entry" (str/lower-case %)))
+         (:public-apis.entry/entries)))})
+
+(def params-env (pci/register public-api-entries))
+
+(def mock-todos-db
+  [{::todo-message "Write demo on params"
+    ::todo-done?   true}
+   {::todo-message "Pathom in Rust"
+    ::todo-done?   false}])
+
+(pco/defresolver todos-resolver [env _]
+  {::pco/output
+   [{::todos
+     [::todo-message
+      ::todo-done?]}]}
+
+  {::todos
+   (if-some [done? (get (pco/params env) ::todo-done?)]
+     (->> mock-todos-db
+          (filter #(= done? (::todo-done? %))))
+     mock-todos-db)})
+
+(def env (pci/register todos-resolver))
+
+; list all todos
+(pf.eql/process env
+  [::todos])
+
+; list undone todos
+(pf.eql/process env
+  '[(::todos {::todo-done? false})])
+
+(comment
+  (->> (p.eql/process params-env
+         ['(:public.apis/entries)])
+       :public.apis/entries
+       (map :public-apis.entry/https)
+       distinct)
+  (pf.eql/data->query
+    (public-api-entries (pco/with-node-params {:category "animals"}) {}))
+
+  (-> (slurp "https://api.publicapis.org/entries?auth=null")
+      (json/read-str :key-fn #(keyword "public-apis.entry" (str/lower-case %)))
+      (:public-apis.entry/entries)))
