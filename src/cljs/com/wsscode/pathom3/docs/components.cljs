@@ -5,11 +5,12 @@
             [com.wsscode.pathom3.connect.indexes :as pci]
             [edn-query-language.core :as eql]))
 
-(h/defnc ^:export PlanCytoscapeJS [{:keys [oir query displayType]}]
+(h/defnc ^:export PlanCytoscapeJS [{:keys [oir query displayType available]}]
   (h/$ p.plan/PlanCytoscape
     {:frames
-     (->> (p.plan/compute-frames {::pci/index-oir (read-string oir)
-                                  ::eql/query     (read-string query)})
+     (->> (p.plan/compute-frames {::pci/index-oir                                     (read-string oir)
+                                  ::eql/query                                         (read-string query)
+                                  :com.wsscode.pathom3.connect.planner/available-data (or (some-> available read-string) {})})
           (mapv (juxt identity p.plan/c-nodes-edges)))
 
      :display
