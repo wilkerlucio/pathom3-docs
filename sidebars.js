@@ -10,6 +10,7 @@ module.exports = {
         'smart-maps',
         'eql',
         'environment',
+        'placeholders',
         // 'plugins',
       ]
     },
