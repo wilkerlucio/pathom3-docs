@@ -51,6 +51,10 @@ module.exports = {
         //   position: 'right',
         // },
         {
+          to: 'media',
+          label: 'Media',
+        },
+        {
           href: 'https://github.com/wilkerlucio/pathom3',
           label: 'GitHub',
           position: 'right',
