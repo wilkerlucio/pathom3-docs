@@ -11,6 +11,7 @@ module.exports = {
         'eql',
         'environment',
         'placeholders',
+        'mutations',
         // 'plugins',
       ]
     },
