@@ -126,8 +126,8 @@ Now we also want to display the user name, so we change it to:
   (str "Send to " full-name " at: " street ", " number ", " zipcode))
 ```
 
-If we use the previous combined query (without changing the `address-eql`), this
-code "accidentally works", because of `header-view-eql`. This can turn into
+If we use the previous combined query, without changing the `address-eql` to also ask for `:acme.customer/full-name`, this
+code "accidentally works", because `header-view-eql` was asking for `:acme.customer/full-name`. This can turn into
 big headaches in the long run because by changing one component, you may affect other components.
 
 ### Solving with placeholders
