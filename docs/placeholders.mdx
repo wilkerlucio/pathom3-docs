@@ -72,11 +72,12 @@ the same customer, but different data about it. You might be tempted to just con
 the queries, something like:
 
 ```clojure
-(into [] (concat header-view-eql latest-orders-eql addresses-eql))
+(into [] (concat header-view-eql latest-orders-eql address-eql))
 ; [:acme.customer/full-name
 ;  {:acme.customer/orders [:acme.order/id :acme.order/description]}
-;  {:acme.customer/addresses
-;   [:acme.address/street :acme.address/number :acme.address/zipcode]}]
+;  :acme.address/street
+;  :acme.address/number
+;  :acme.address/zipcode]
 ```
 
 Then run this query and send the full result to all the components, and for this specific

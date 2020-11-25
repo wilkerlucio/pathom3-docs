@@ -37,11 +37,12 @@
    :acme.address/number
    :acme.address/zipcode])
 
-(into [] (concat header-view-eql latest-orders-eql addresses-eql))
+(into [] (concat header-view-eql latest-orders-eql address-eql))
 ; [:acme.customer/full-name
 ;  {:acme.customer/orders [:acme.order/id :acme.order/description]}
-;  {:acme.customer/addresses
-;   [:acme.address/street :acme.address/number :acme.address/zipcode]}]
+;  :acme.address/street
+;  :acme.address/number
+;  :acme.address/zipcode]
 (def expensive-orders-eql
   [{'(:acme.customer/orders {::filter-price-gt 100})
     [:acme.order/id
