@@ -3,7 +3,7 @@ title: Placeholders
 ---
 
 Placeholders allow the user to add structure to some EQL request. They work as a special
-attribute namespace, by default Pathom recognize any attribute with the namespace `>` as
+attribute namespace, by default, Pathom recognize any attribute with the namespace `>` as
 a placeholder attribute.
 
 :::note
@@ -11,11 +11,11 @@ You can configure the placeholder namespaces by setting the option `com.wsscode.
 in the env, the default value is `#{">"}`.
 :::
 
-In this guide you will go over a few examples on how to use placeholders.
+In this guide, you will go over a few examples of how to use placeholders.
 
 ## Provide initial data
 
-You can use placeholders to provide in-query data for Pathom processing. To do this lets
+You can use placeholders to provide in-query data for Pathom processing. To do this, lets
 get back to our famous full name example, the way to provide data is to send it to
 a placeholder key as [EQL parameters](https://edn-query-language.org/eql/1.0.0/specification.html#_parameters):
 
@@ -46,18 +46,96 @@ the params data to it, to illustrate let's make a nested example of it:
 ;    {:com.wsscode.pathom3.docs.placeholder/full-name "Bard Victor"}}}
 ```
 
-## Dashboard case - Spreading data in different paths
+## Compose different views
 
-Consider a dashboard screen, like the following:
+For this example, consider a system where you make a UI out of components, and each
+component has its query to express its data needs. Here are some of these
+component queries:
 
+```clojure
+(def header-view-eql
+  [:acme.customer/full-name])
 
+(def latest-orders-eql
+  [{:acme.customer/orders
+    [:acme.order/id
+     :acme.order/description]}])
 
-## Data Provider case
+(def address-eql
+  [:acme.address/street
+   :acme.address/number
+   :acme.address/zipcode])
+```
 
-## Different parameters case
+One thing these queries have in common, is that they are "about" the same entity, always
+the same customer, but different data about it. You might be tempted to just concatenate
+the queries, something like:
 
+```clojure
+(into [] (concat header-view-eql latest-orders-eql addresses-eql))
+; [:acme.customer/full-name
+;  {:acme.customer/orders [:acme.order/id :acme.order/description]}
+;  {:acme.customer/addresses
+;   [:acme.address/street :acme.address/number :acme.address/zipcode]}]
+```
 
+Then run this query and send the full result to all the components, and for this specific
+example that would work, but I need to point some problems with this approach to you:
 
-Reasons to want placeholders:
+### Conflict params
 
-- Provide some extra data in-context.
+Let's add a new component to this system that breaks the previous solution, this is the
+new component:
+
+```clojure
+(def expensive-orders-eql
+  [{'(:acme.customer/orders {::filter-price-gt 100})
+    [:acme.order/id
+     :acme.order/description]}])
+```
+
+Note this component uses the same attribute that `latest-orders-eql` did, but it uses
+EQL parameters to affect the request. Now we have two components that need the same
+attribute but with different data. This is not possible and causes an attribute
+conflict for the planner.
+
+To have those two points of data in the same response, they need to be at different
+places.
+
+### Isolation break
+
+Another problem with merging the queries is that the code gets data it didn't ask for. To
+illustrate this, let's imagine the following code to display the data from the address
+component:
+
+```clojure
+(defn render-address [{:acme.address/keys [street number zipcode]}]
+  (str "Send to: " street ", " number ", " zipcode))
+```
+
+Now we also want to display the user name, so we change it to:
+
+```clojure
+(defn render-address [{:acme.address/keys  [street number zipcode]
+                       :acme.customer/keys [full-name]}]
+  (str "Send to " full-name " at: " street ", " number ", " zipcode))
+```
+
+If we use the previous combined query (without changing the `address-eql`), this
+code "accidentally works", because of `header-view-eql`. This can turn into
+big headaches in the long run because by changing one component, you may affect other components.
+
+### Solving with placeholders
+
+The solution to fix the previous issues is to put each component into a different
+placeholder path, this way each one gets full isolation from each other:
+
+```clojure
+[{:>/header header-view-eql}
+ {:>/latest latest-orders-eql}
+ {:>/address address-eql}
+ {:>/expensive expensive-orders-eql}]
+```
+
+This way, Pathom guarantees isolation for each path, no more shared data, and each
+component can ask different params, and Pathom knows how to deal with it.
