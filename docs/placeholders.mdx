@@ -2,8 +2,49 @@
 title: Placeholders
 ---
 
-Placeholders allow the user to add structure to some EQL request. In this guide you will
-go over a few examples on how to use placeholders:
+Placeholders allow the user to add structure to some EQL request. They work as a special
+attribute namespace, by default Pathom recognize any attribute with the namespace `>` as
+a placeholder attribute.
+
+:::note
+You can configure the placeholder namespaces by setting the option `com.wsscode.pathom3.placeholder/placeholder-prefixes`
+in the env, the default value is `#{">"}`.
+:::
+
+In this guide you will go over a few examples on how to use placeholders.
+
+## Provide initial data
+
+You can use placeholders to provide in-query data for Pathom processing. To do this lets
+get back to our famous full name example, the way to provide data is to send it to
+a placeholder key as [EQL parameters](https://edn-query-language.org/eql/1.0.0/specification.html#_parameters):
+
+```clojure
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  {::full-name (str first-name " " last-name)})
+
+(def env (pci/register full-name))
+
+(p.eql/process env
+  [{'(:>/bret {::first-name "Bret" ::last-name "Victor"})
+    [::full-name]}])
+; => {:>/bret {:com.wsscode.pathom3.docs.placeholder/full-name "Bret Victor"}}
+```
+
+When moving to a placeholder context, Pathom inherits the same parent data and merges
+the params data to it, to illustrate let's make a nested example of it:
+
+```clojure
+(p.eql/process env
+  [{'(:>/bret {::first-name "Bret" ::last-name "Victor"})
+    [::full-name
+     {'(:>/bard {::first-name "Bard"})
+      [::full-name]}]}])
+; {:>/bret
+;   {:com.wsscode.pathom3.docs.placeholder/full-name "Bret Victor",
+;    :>/bard
+;    {:com.wsscode.pathom3.docs.placeholder/full-name "Bard Victor"}}}
+```
 
 ## Dashboard case - Spreading data in different paths
 
