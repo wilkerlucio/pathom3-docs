@@ -5,3 +5,102 @@ title: Mutations
 Mutations are a mechanism to run procedures through EQL. For a syntax review please
 check the [EQL Mutations specification](https://edn-query-language.org/eql/1.0.0/specification.html#_mutations).
 
+## Using `defmutation`
+
+To create mutations you can use the `defmacro` helper, which is similar to the `defresolver` macro.
+
+Here is a mutation to save a file on disk:
+
+```clojure
+(pco/defmutation save-file [{::keys [file-path file-content] :as file}]
+  (spit file-path file-content)
+  file)
+```
+
+Just like `defresolver`, one difference here is that in mutations there is no `input`,
+mutations always use `parameters`.
+
+This is a subtle difference, but you can see it by inspecting the mutation:
+
+```clojure
+save-file
+=>
+; #com.wsscode.pathom3.connect.operation.Mutation
+;     {:config #:com.wsscode.pathom3.connect.operation
+;                  {:params  [:com.wsscode.pathom3.docs.mutations/file-path
+;                             :com.wsscode.pathom3.docs.mutations/file-content],
+;                   :op-name com.wsscode.pathom3.docs.mutations/save-file},
+;      :mutate #object[...]}
+```
+
+Note what would be `::pco/input` on a `defresolver`, it's now `::pco/params` in mutation.
+
+Different from `inputs`, parameters don't have auto-resolution, they always come as-is,
+but having this information can help on creating extensions (to support auto-resolution
+if wanted) and help to understand the system (documentation).
+
+To run the mutation you need to use the [EQL](eql.mdx) interface:
+
+```clojure
+(def env (pci/register save-file))
+
+(p.eql/process env
+  [`(save-file {::file-path "./file.txt" ::file-content "contents here"})])
+; => {com.wsscode.pathom3.docs.mutations/save-file
+;     {:com.wsscode.pathom3.docs.mutations/file-path "./file.txt",
+;      :com.wsscode.pathom3.docs.mutations/file-content "contents here"}}
+```
+
+The result of the mutation result comes in the same key as the mutation name.
+
+:::important
+By default the mutation symbol is the fully qualified var name of the mutation. Note
+we use the backtick to use the complete name.
+:::
+
+:::tip
+Mutations are the first thing the runner executes, this way you know the reads from
+the query will have update values, in case the mutation affects something related to
+them.
+:::
+
+## Mutation joins
+
+You can also make a join in the mutation to specify what you want from the result. For
+this example we will write a resolver to get the file size, and use it as part of the
+mutation request:
+
+```clojure {5-6,8,11-13}
+(pco/defmutation save-file [{::keys [file-path file-content] :as file}]
+  (spit file-path file-content)
+  file)
+
+(pco/defresolver file-size [{::keys [file-path]}]
+  {::file-size (.length (io/file file-path))})
+
+(def env (pci/register [save-file file-size]))
+
+(p.eql/process env
+  [{`(save-file {::file-path "./file.txt" ::file-content "contents here"})
+    [::file-path
+     ::file-size]}])
+; => {com.wsscode.pathom3.docs.mutations/save-file
+;     {:com.wsscode.pathom3.docs.mutations/file-path "./file.txt",
+;      :com.wsscode.pathom3.docs.mutations/file-size 13}}
+```
+
+## Changing mutation symbol
+
+I recommend sticking to fully qualified names, but in case you need a different name
+you can use the `::pco/op-name` to make it something else:
+
+```clojure
+(pco/defmutation save-file [{::keys [file-path file-content] :as file}]
+  {::pco/op-name 'io/save-my-file}
+  (spit file-path file-content)
+  file)
+
+; then you can use this name to call the mutation
+(p.eql/process env
+  ['(io/save-my-file {::file-path "./file.txt" ::file-content "contents here"})])
+```
