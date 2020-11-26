@@ -91,6 +91,43 @@ data from. Here is an example using the revolvers we created before:
 In this example, given `PI` is `2.3`, `Tau` becomes `4.6`, since it's defined as the
 double of PI.
 
+### Providing data with placeholders
+
+You can use placeholders to provide in-query data for Pathom processing. To do this, lets
+get back to our famous full name example, the way to provide data is to send it to
+a placeholder key as [EQL parameters](https://edn-query-language.org/eql/1.0.0/specification.html#_parameters):
+
+```clojure
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  {::full-name (str first-name " " last-name)})
+
+(def env (pci/register full-name))
+
+(p.eql/process env
+  [{'(:>/bret {::first-name "Bret" ::last-name "Victor"})
+    [::full-name]}])
+; => {:>/bret {:com.wsscode.pathom3.docs.placeholder/full-name "Bret Victor"}}
+```
+
+When moving to a placeholder context, Pathom inherits the same parent data and merges
+the params data to it, to illustrate let's make a nested example of it:
+
+```clojure
+(p.eql/process env
+  [{'(:>/bret {::first-name "Bret" ::last-name "Victor"})
+    [::full-name
+     {'(:>/bard {::first-name "Bard"})
+      [::full-name]}]}])
+; {:>/bret
+;   {:com.wsscode.pathom3.docs.placeholder/full-name "Bret Victor",
+;    :>/bard
+;    {:com.wsscode.pathom3.docs.placeholder/full-name "Bard Victor"}}}
+```
+
+:::note
+Placeholders data parameters is a new feature of Pathom 3, not available in Pathom 2.
+:::
+
 ## Fetching run status
 
 To debug a EQL process, add the attribute `:com.wsscode.pathom3.connect.runner/run-stats`
