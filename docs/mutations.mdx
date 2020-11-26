@@ -115,7 +115,7 @@ Mutation errors come as is in the mutation value result:
 (def env (pci/register error))
 
 (p.eql/process env
-  [`(error {::file-path "./file.txt" ::file-content "contents here"})])
+  [`(error)])
 ; => {com.wsscode.pathom3.docs.mutations/error
 ;     {:com.wsscode.pathom3.connect.runner/mutation-error #error {
 ;     :cause "Error"

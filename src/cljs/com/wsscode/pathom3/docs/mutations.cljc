@@ -27,5 +27,5 @@
        ::file-size]}]))
 
 (p.eql/process env
-  [`(error {::file-path "./file.txt" ::file-content "contents here"})])
+  [`(error)])
 
