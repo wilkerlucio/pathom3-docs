@@ -128,6 +128,45 @@ the params data to it, to illustrate let's make a nested example of it:
 Placeholders data parameters is a new feature of Pathom 3, not available in Pathom 2.
 :::
 
+### Union queries
+
+Union queries provide a way to archive polymorphism in with EQL, for a review on the
+union syntax refer to the [EQL Union specification page](https://edn-query-language.org/eql/1.0.0/specification.html#_unions).
+
+Consider you want to request information for some user feed. In our feed example, there
+are three types of entries: posts, ads and videos. Each type requires different attributes
+to render. This is how we can write some resolvers to fetch each type:
+
+```clojure
+(def union-env
+  (pci/register
+    [(pbir/static-table-resolver `posts :acme.post/id
+       {1 {:acme.post/text "Foo"}})
+     (pbir/static-table-resolver `ads :acme.ad/id
+       {1 {:acme.ad/backlink "http://marketing.is-bad.com"
+           :acme.ad/title    "Promotion thing"}})
+     (pbir/static-table-resolver `videos :acme.video/id
+       {1 {:acme.video/title "Some video"}})
+     (pbir/constantly-resolver :acme/feed
+       [{:acme.post/id 1}
+        {:acme.ad/id 1}
+        {:acme.video/id 1}])]))
+
+(p.eql/process union-env
+  [{:acme/feed
+    {:acme.post/id  [:acme.post/text]
+     :acme.ad/id    [:acme.ad/backlink :acme.ad/title]
+     :acme.video/id [:acme.video/title]}}])
+; => {:acme/feed
+;     [{:acme.post/text "Foo"}
+;      {:acme.ad/backlink "http://marketing.site.com",
+;       :acme.ad/title "Promotion thing"}
+;      {:acme.video/title "Some video"}]}
+```
+
+To decide which path to take, Pathom looks if the entry data contains the key mentioned
+in the union entry key. When they match Pathom picks that path option.
+
 ## Fetching run status
 
 To debug a EQL process, add the attribute `:com.wsscode.pathom3.connect.runner/run-stats`

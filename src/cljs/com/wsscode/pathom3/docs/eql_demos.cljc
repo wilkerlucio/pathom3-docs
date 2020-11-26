@@ -84,3 +84,29 @@
 ;        ::pi  3.1415}
 ;       {::tau 50
 ;        ::pi  10}]}
+
+(def union-env
+  (pci/register
+    [(pbir/static-table-resolver `posts :acme.post/id
+       {1 {:acme.post/text "Foo"}})
+     (pbir/static-table-resolver `ads :acme.ad/id
+       {1 {:acme.ad/backlink "http://marketing.is-bad.com"
+           :acme.ad/title    "Promotion thing"}})
+     (pbir/static-table-resolver `videos :acme.video/id
+       {1 {:acme.video/title "Some video"}})
+     (pbir/constantly-resolver :acme/feed
+       [{:acme.post/id 1}
+        {:acme.ad/id 1}
+        {:acme.video/id 1}])]))
+
+(p.eql/process union-env
+  [{:acme/feed
+    {:acme.post/id  [:acme.post/text]
+     :acme.ad/id    [:acme.ad/backlink
+                     :acme.ad/title]
+     :acme.video/id [:acme.video/title]}}])
+; => {:acme/feed
+;     [{:acme.post/text "Foo"}
+;      {:acme.ad/backlink "http://marketing.site.com",
+;       :acme.ad/title "Promotion thing"}
+;      {:acme.video/title "Some video"}]}
