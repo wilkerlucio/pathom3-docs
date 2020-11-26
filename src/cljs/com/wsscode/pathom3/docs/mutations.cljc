@@ -9,15 +9,23 @@
   (spit file-path file-content)
   file)
 
+(pco/defmutation error [] (throw (ex-info "Error" {:data true})))
+
 (pco/defresolver file-size [{::keys [file-path]}]
   {::file-size (.length (io/file file-path))})
 
-(def env (pci/register [save-file file-size]))
+(def env (pci/register [save-file file-size error]))
+
+(comment
+
+  (p.eql/process env
+    ['(io/save-my-file {::file-path "./file.txt" ::file-content "contents here"})])
+
+  (p.eql/process env
+    [{`(save-file {::file-path "./file.txt" ::file-content "contents here"})
+      [::file-path
+       ::file-size]}]))
 
 (p.eql/process env
-  ['(io/save-my-file {::file-path "./file.txt" ::file-content "contents here"})])
+  [`(error {::file-path "./file.txt" ::file-content "contents here"})])
 
-(p.eql/process env
-  [{`(save-file {::file-path "./file.txt" ::file-content "contents here"})
-    [::file-path
-     ::file-size]}])
