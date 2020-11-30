@@ -42,7 +42,10 @@ module.exports = {
           to: 'docs/',
           activeBasePath: 'docs',
           label: 'Docs',
-          position: 'left',
+        },
+        {
+          href: 'https://blog.wsscode.com',
+          label: 'Blog',
         },
         // {to: 'blog', label: 'Blog', position: 'left'},
         // {
