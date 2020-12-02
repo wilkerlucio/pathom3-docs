@@ -5,7 +5,7 @@ title: Resolvers
 Resolvers are the primary building blocks in Pathom. They are the constructs to express
 relationships between attributes.
 
-On this page, you will learn how to create resolvers and use then. After that you
+On this page, you will learn how to create resolvers and use them. After that you
 will learn about the built-in resolvers that come with Pathom.
 
 ## What is a resolver in Pathom?
@@ -43,7 +43,7 @@ In Pathom, resolvers represent edges in a graph. As illustrated in the following
 </div>
 
 :::note
-I made the names short on the diagrams for space, but [keep your domain qualifiers long](modeling-guides.mdx#attribute-domain-size)!
+I made the names short on the diagrams for space, but keep your domain qualifiers long.
 :::
 
 This example was a simplification; most systems will store the full birth date instead,
@@ -467,6 +467,146 @@ Example implementation using a more generic function to filter data:
    (filter-matches (pco/params env) mock-todos-db)})
 ```
 :::
+
+## Batch resolvers
+
+Batch in Pathom is the process of calling a resolver once with a batch of inputs. So
+instead of running the resolver once for each item, it runs the resolver one time with
+a sequence of inputs.
+
+:::tip
+Another way to put it: it's how Pathom deals with the [N+1 problem](https://duckduckgo.com/?q=n%2B1+problem&t=h_&ia=web).
+:::
+
+Here is a resolver that simulates a delay, let's run in a list and check the time:
+
+```clojure
+(pco/defresolver fetch-v [{:keys [id]}]
+  (Thread/sleep 300)
+  {:v (* 10 id)})
+
+(time
+  (p.eql/process
+    (-> (pci/register fetch-v)
+        (p.ent/with-entity
+          {:list [{:id 1}
+                  {:id 2}
+                  {:id 3}]}))
+    [{:list [:v]}]))
+; "Elapsed time: 903.389738 msecs"
+; => {:list [{:v 10} {:v 20} {:v 30}]}
+```
+
+As we can see, the ~900ms is expected since the resolver ran once for each item.
+
+Consider a case where some API has a batching feature; in this case, would be ideal
+to reduce the number of round trips, you can do it by writing a batch resolver. The main
+the difference is that, instead of an input map, you will get a sequence of maps, with all
+the inputs collected for batching. Use this to return a list (of the same input size)
+and Pathom does the merging in place:
+
+```clojure {5-21}
+(pco/defresolver fetch-v [{:keys [id]}]
+  (Thread/sleep 300)
+  {:v (* 10 id)})
+
+(pco/defresolver batch-fetch-v [items]
+  {::pco/input  [:id]
+   ::pco/output [:v]
+   ::pco/batch? true}
+  (Thread/sleep 300)
+  (mapv #(hash-map :v (* 10 (:id %))) items))
+
+(time
+  (p.eql/process
+    (-> (pci/register batch-fetch-v)
+        (p.ent/with-entity
+          {:list [{:id 1}
+                  {:id 2}
+                  {:id 3}]}))
+    [{:list [:v]}]))
+; "Elapsed time: 302.606045 msecs"
+; => {:list [{:v 10} {:v 20} {:v 30}]}
+```
+
+### Matching results
+
+It's important that the output sequence of a batch resolver has the size and order as
+the input. Sometimes API's return things out of order, sometimes it misses items. To
+see an example, let's shuffle the order of our batch results and see what happens to
+the results:
+
+```clojure
+(pco/defresolver batch-fetch-v-reorder [items]
+  {::pco/input  [:id]
+   ::pco/output [:v]
+   ::pco/batch? true}
+  (Thread/sleep 300)
+  (let [results
+        (->> items
+             ; note we add the id again so the re-order function can match this item with the source
+             (mapv #(hash-map :id (:id %) :v (* 10 (:id %))))
+             ; make the order random
+             (shuffle))]
+    results))
+
+(p.eql/process
+  (p.ent/with-entity (pci/register batch-fetch-v-reorder)
+    {:list [{:id 1}
+            {:id 2}
+            {:id 3}]})
+  [{:list [:id :v]}])
+; => {:list [{:id 1, :v 20} {:id 2, :v 30} {:id 3, :v 10}]}
+```
+
+Another thing that can ruin the matching is if there are missing records, but if that
+happens Pathom will trigger an error
+
+```clojure
+(pco/defresolver batch-fetch-v-reorder [items]
+  {::pco/input  [:id]
+   ::pco/output [:v]
+   ::pco/batch? true}
+  (Thread/sleep 300)
+  (let [results
+        (->> items
+             ; note we add the id again so the re-order function can match this item with the source
+             (mapv #(hash-map :id (:id %) :v (* 10 (:id %))))
+             ; make the order random
+             (shuffle)
+             ; drop some item
+             (drop 1))]
+    results))
+```
+
+To fix these problems you can use the helper `restore-order` from
+[cljc misc](https://cljdoc.org/d/com.wsscode/cljc-misc/2020.12.01/api/com.wsscode.misc.coll#restore-order):
+
+:::note
+In the following example we alias `[com.wsscode.misc.coll :as coll]`.
+:::
+
+```clojure
+(pco/defresolver batch-fetch-v-reorder-fixed [items]
+  {::pco/input  [:id]
+   ::pco/output [:v]
+   ::pco/batch? true}
+  (Thread/sleep 300)
+  (let [results
+        (->> items
+             ; note we add the id again so the re-order function can match this item with the source
+             (mapv #(hash-map :id (:id %) :v (* 10 (:id %))))
+             ; make the order random
+             (shuffle)
+             ; drop some item
+             (drop 1))]
+    (coll/restore-order items :id results)))
+```
+
+### When not to batch
+
+Don't batch when the resolver operation is quick. If there is no IO in the
+resolver, consider keeping it non-batched.
 
 ## Using `resolver`
 
