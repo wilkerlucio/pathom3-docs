@@ -105,7 +105,7 @@ Pathom execution plan visually. This is also a tool to understand and debug how 
 builds up a plan, using the items on the left you can navigate though the graph building
 process:
 
-import {PlanCytoscapeJS} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
+import {PlanCytoscapeJS, PlannerExplorer} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
@@ -370,3 +370,23 @@ And a more complex example:
           :c {#{} #{bc bc2}}}"
     query="[:b :c]"/>
 </div>
+
+## Explorer
+
+You can use the following tool to play around with indexes and queries, and see how
+the planner will compute the plan for it:
+
+<div className="pathom-plan-view">
+  <PlannerExplorer />
+</div>
+
+:::tip
+You can pull the Index OIR from some environment:
+
+```clojure
+(def env (pci/register [some resolvers here]))
+
+; print index oir
+(clojure.pprint/pprint (::pci/index-oir env))
+```
+:::
