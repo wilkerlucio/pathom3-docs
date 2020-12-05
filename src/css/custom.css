@@ -8,6 +8,7 @@
 /* You can override the default Infima variables here. */
 :root {
   --pathom-background: #031e3e;
+  --pathom-admonition-size: 6px;
 }
 
 .hero {--ifm-hero-text-color: #fff}
@@ -58,6 +59,8 @@ h4 a code {
   margin-bottom: 1em;
   padding: 15px 30px 15px 15px;
   color: #fff;
+  border: none;
+  border-radius: 0;
 }
 
 .admonition-heading svg {
@@ -90,7 +93,7 @@ h4 a code {
 /* default for custom types */
 .admonition {
   background-color: rgba(118, 51, 219, 0.1);
-  border-left: 8px solid #7633db;
+  border-left: var(--pathom-admonition-size) solid #7633db;
 }
 
 .admonition h5 {
@@ -104,7 +107,7 @@ h4 a code {
 
 /** native types */
 .admonition-caution {
-  border-left: 8px solid #e67e22;
+  border-left: var(--pathom-admonition-size) solid #e67e22;
 }
 
 .admonition-caution h5 {
@@ -117,7 +120,7 @@ h4 a code {
 }
 
 .admonition-tip {
-  border-left: 8px solid #2ecc71;
+  border-left: var(--pathom-admonition-size) solid #2ecc71;
 }
 
 .admonition-tip h5 {
@@ -130,7 +133,7 @@ h4 a code {
 }
 
 .admonition-danger {
-  border-left: 8px solid #e74c3c;
+  border-left: var(--pathom-admonition-size) solid #e74c3c;
 }
 
 .admonition-danger h5 {
@@ -143,7 +146,7 @@ h4 a code {
 }
 
 .admonition-important {
-  border-left: 8px solid #3498db;
+  border-left: var(--pathom-admonition-size) solid #3498db;
 }
 
 .admonition-important h5 {
@@ -156,7 +159,7 @@ h4 a code {
 }
 
 .admonition-note {
-  border-left: 8px solid #b36cdb;
+  border-left: var(--pathom-admonition-size) solid #b36cdb;
   --ifm-alert-border-color: #b36cdb;
 }
 
