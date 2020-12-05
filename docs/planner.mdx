@@ -3,7 +3,7 @@ title: Planner
 ---
 
 :::caution
-This page is a draft.
+This page is a draft. Feedback is welcome.
 :::
 
 Welcome to the heart of Pathom. The planner is the part of Pathom that figures which
@@ -194,8 +194,12 @@ but keep in mind for real systems its recommended to stick with long names.
 :::
 
 ```clojure
+; index-oir
 {:pi  {#{} #{pi}}
  :tau {#{:pi} #{tau}}}
+
+; query
+[:tau]
 ```
 
 <div className="pathom-plan-view">
@@ -309,6 +313,51 @@ input paths:
 </div>
 
 ## Other examples
+
+### Impossible paths
+
+Here you can see what happens when some request tries to find dependencies and reach
+a dead end:
+
+```clojure
+; index-oir
+
+; :a depends on :b, there is no path for :b
+{:a {#{:b} #{a}}}
+
+; query
+
+[:a]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{:b} #{a}}}"
+    query="[:a]"/>
+</div>
+
+Now a partial dead end, note how it discards the dead cluster on `ab` and `ab2`:
+
+```clojure
+; index-oir
+
+; :a depends on :b, there is no path for :b
+{:a {#{:c} #{ac}
+     #{:b} #{ab ab2}}
+ :c {#{} #{c}}}
+
+; query
+
+[:a]
+```
+
+<div className="pathom-plan-view">
+  <PlanCytoscapeJS
+    oir="{:a {#{:c} #{ac}
+              #{:b} #{ab ab2}}
+          :c {#{} #{c}}}"
+    query="[:a]"/>
+</div>
 
 ### Combined OR and AND
 
