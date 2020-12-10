@@ -17,7 +17,7 @@ always has a single root.
 Now we are going to a series of examples to understand how the planner does its job,
 and what it outputs.
 
-To understand the planner we going to walk though a series of examples:
+To understand the planner, we going to walk though a series of examples:
 
 ### The simplest plan
 
@@ -27,7 +27,7 @@ To compute the plan, Pathom requires:
 - [EQL AST](https://edn-query-language.org/eql/1.0.0/specification.html) of the demand
 
 In case you already have some data available, you can tell the planner about it using
-the [Shape Descriptor](shape-descriptor.mdx), so it will take that in consideration when
+the [Shape Descriptor](shape-descriptor.mdx), so it will consider that when
 formulating the plan.
 
 For our first example, it's going to be a simple request that calls a single resolver:
@@ -43,7 +43,7 @@ For our first example, it's going to be a simple request that calls a single res
 (pco/defresolver answer []
   {::answer-to-everything 42})
 
-; create environment with the indexes
+; create an environment with the indexes
 (def env (pci/register answer))
 
 ; generate execution DAG
@@ -96,14 +96,18 @@ this graph:
  {:com.wsscode.pathom3.docs.planner/answer-to-everything 1}}
 ```
 
-To generate the plan, Pathom starts scanning the AST, for each attribute it sees it
+To generate the plan, Pathom starts scanning the AST. For each attribute it sees, it
 looks it up in the index. In case the attribute requires other dependencies, Pathom will
 recursively walk the `index-oir` until it finds the matches or reach a dead end.
 
-Now it's time to introduce the planner viz. This is a tool that lets you visualize a
+Now it's time to introduce the planner, viz. This is a tool that lets you visualize a
 Pathom execution plan visually. This is also a tool to understand and debug how Pathom
-builds up a plan, using the items on the left you can navigate though the graph building
+builds up a plan. Using the items on the left, you can navigate through the graph building
 process:
+
+:::note
+This tool still in the early stages. Expect changes to it.
+:::
 
 import {PlanCytoscapeJS, PlannerExplorer} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
 
@@ -120,10 +124,10 @@ Time to break down some of the attributes here:
 
 #### `::pcp/nodes`
 
-Contains a map with all the nodes from this graph, indexed by `node-id`. The `node-id`
+It contains a map with all the nodes from this graph, indexed by `node-id`. The `node-id`
 is a monotonic incremental value, the first node gets the ID 1.
 
-In the planner graph there are 3 types of possible nodes:
+In the planner graph, there are three types of possible nodes:
 
 ##### Resolver nodes
 
@@ -132,7 +136,7 @@ Represent a call to a resolver
 ##### AND nodes
 
 Represent the call of multiple resolvers, also, being a sibling node in
-a AND node, means the runner can call those nodes in parallel.
+a AND node means the runner can call those nodes in parallel.
 
 ##### OR nodes
 
@@ -150,7 +154,7 @@ The start node of the plan. In the visualization, the root node has a black bord
 
 This index knows which node is responsible for a given attribute. This is important
 for internal optimizations, when some dependency appears repeated, Pathom can use
-this index to connect strait to node, avoiding re-processing.
+this index to connect straight to a node, avoiding re-processing.
 
 #### Other attributes
 
@@ -184,13 +188,13 @@ The next case we are going to look at is what happens when there are attribute d
       :edn-query-language.ast/node ast)))
 ```
 
-To make these examples shorter, from now on I'm going to use the `index-oir` representation
-of the graph instead of writing the full resolvers. To start, lets look at our previous
+To make these examples shorter, from now on, I'm going to use the `index-oir` representation
+of the graph instead of writing the full resolvers. To start, let's look at our previous
 example using the `index-oir` format:
 
 :::note
 In the `index-oir` I'm going to use short names for the convenience of the demonstration,
-but keep in mind for real systems its recommended to stick with long names.
+but keep in mind for real systems, its recommended to stick with long names.
 :::
 
 ```clojure
@@ -215,7 +219,7 @@ The black arrow means the node `tau` will run after the node for `pi`.
 
 AND nodes represent a set of nodes that all need to run. Also, the planner designs
 the graph in a way that the runner can run all the nodes from an AND node in parallel
-if desired. To see an example of that, here is a plan for a query that asks for three
+if desired. To see an example of that here is a plan for a query that asks for three
 different attributes: `:a`, `:b:` and `:c`:
 
 ```clojure
@@ -239,7 +243,7 @@ different attributes: `:a`, `:b:` and `:c`:
 </div>
 
 Now, to see a combination of AND node and chaining, let's ask for a single attribute
-`:d` that requires `:a`, `:b:` and `:c`:
+`:d` that requires `:a`, `:b` and `:c`:
 
 ```clojure
 ; index-oir
@@ -263,10 +267,13 @@ Now, to see a combination of AND node and chaining, let's ask for a single attri
     query="[:d]"/>
 </div>
 
+Note there are orange arrows and black arrows. The orange arrows run first (possibly in
+parallel), the black arrow only runs after all the orange arrows finish.
+
 ## OR nodes
 
 For cases when there is more than one option to fetch an attribute. In those cases, Pathom
-uses the `OR` node to express that. For this example we will have 3 different resolvers
+uses the `OR` node to express that. For this example, we will have three different resolvers
 to the attribute `:a`:
 
 ```clojure
@@ -285,7 +292,10 @@ to the attribute `:a`:
     query="[:a]"/>
 </div>
 
-In the next example we can see how Pathom deals with graphs that require different
+Note the `OR` also uses orange arrows, but this time they mean at least once of the
+edges must run, instead of all of them.
+
+In the next example, we can see how Pathom deals with graphs that require different
 input paths:
 
 ```clojure
@@ -317,7 +327,7 @@ input paths:
 ### Impossible paths
 
 Here you can see what happens when some request tries to find dependencies and reach
-a dead end:
+a dead-end:
 
 ```clojure
 ; index-oir
@@ -336,7 +346,7 @@ a dead end:
     query="[:a]"/>
 </div>
 
-Now a partial dead end, note how it discards the dead cluster on `ab` and `ab2`:
+Now a partial dead-end, note how it discards the dead cluster on `ab` and `ab2`:
 
 ```clojure
 ; index-oir
@@ -361,7 +371,7 @@ Now a partial dead end, note how it discards the dead cluster on `ab` and `ab2`:
 
 ### Combined OR and AND
 
-When combining those you can see that
+When combining those, you will see the `OR` nodes get processed before the AND nodes.
 
 ```clojure
 ; index-oir
