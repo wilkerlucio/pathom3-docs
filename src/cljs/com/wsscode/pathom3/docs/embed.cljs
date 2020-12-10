@@ -11,7 +11,7 @@
             [cljs.spec.alpha :as s]))
 
 (h/defnc ^:export PlanCytoscapeJS [{:keys [oir query displayType available]}]
-  (dom/div {:style {:height "500px"}}
+  (dom/div {:style {:flex "1"}}
     (h/$ p.plan/PlanCytoscape
       {:frames
        (->> (p.plan/compute-frames {::pci/index-oir                                     oir
@@ -37,7 +37,7 @@
         [gd set-gd!] (hooks/use-state nil)
         valid-oir?   (s/valid? ::pci/index-oir (safe-read-string oir))
         valid-query? (s/valid? ::eql/query (safe-read-string query))]
-    (dom/div
+    (dom/div {:style {:flex "1" :display "flex" :flex-direction "column"}}
       (dom/div {:style {:display "flex"}}
         (dom/div {:style {:flex "1"}}
           (dom/div "Index OIR")
@@ -62,7 +62,7 @@
           "Render Graph"))
 
       (if gd
-        (dom/div {:style {:height "500px"}}
+        (dom/div {:style {:flex 1}}
           (h/$ p.plan/PlanCytoscape
             {:frames
              (->> (p.plan/compute-frames gd)
@@ -74,17 +74,25 @@
 (defn listen-window-messages [f]
   (js/window.addEventListener "message"
     (fn [^js msg]
-      (f (read-string (.-data msg))))))
+      (try
+        (f (read-string (.-data msg)))
+        (catch :default _)))))
 
 (def component-map
   {"plan-cytoscape"   PlanCytoscapeJS
    "planner-explorer" PlannerExplorer})
 
+(defn start-component [{:keys [component] :as msg}]
+  (if-let [Comp (component-map component)]
+    (react-dom/render (h/$ Comp {:& msg}) (js/document.getElementById "component"))
+    (js/console.warn "Component not found:" component)))
+
 (defn start []
-  (listen-window-messages
-    (fn [{:keys [component] :as msg}]
-      (if-let [Comp (component-map component)]
-        (react-dom/render (h/$ Comp {:& msg}) (js/document.getElementById "component"))
-        (js/console.warn "Component not found:" component)))))
+  (listen-window-messages start-component)
+  (if-let [msg (some-> js/window.location.search (js/URLSearchParams.) (.get "msg"))]
+    (try
+      (start-component (read-string msg))
+      (catch :default e
+        (js/console.error "Error parsing query msg:" msg e)))))
 
 (start)
