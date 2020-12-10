@@ -9,7 +9,7 @@
   com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop" :sha "ca861d607da8cf63208e296b0250eae225d9a10c"}
   com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "fe66c21ad37cba48c6ceba3cdc240a0092f78fe8"}
   com.wsscode/pathom3-viz    {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "b9fbe36d0aa866e275c65c07d435a5fadea6fe5c"}
-  lilactown/helix            {:local/root "/Users/wilkerlucio/Development/helix"}
+  lilactown/helix            {:git/url "https://github.com/lilactown/helix" :sha "5785e9332534cb16da749699634556d573e44bb2"}
   org.clojure/clojure        {:mvn/version "1.10.1"}
   org.clojure/clojurescript  {:mvn/version "1.10.764"}
   thheller/shadow-cljs       {:mvn/version "2.11.4"}}}
