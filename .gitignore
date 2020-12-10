@@ -20,5 +20,6 @@ yarn-debug.log*
 yarn-error.log*
 
 docs/assets/cljs-components
+docs/assets/embed/js
 .nrepl-port
 .shadow-cljs/

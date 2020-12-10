@@ -1,4 +1,10 @@
 {:deps   true
- :builds {:docs {:target     :npm-module
-                 :entries    [com.wsscode.pathom3.viz.plan]
-                 :output-dir "docs/assets/cljs-components"}}}
+ :builds {:docs  {:target     :npm-module
+                  :entries    [com.wsscode.pathom3.viz.plan
+                               com.wsscode.pathom3.docs.components]
+                  :output-dir "docs/assets/cljs-components"}
+
+          :embed {:target     :browser
+                  :modules    {:main {:entries [com.wsscode.pathom3.docs.embed]}}
+                  :output-dir "static/embed/js"
+                  :asset-path "/embed/js"}}}
