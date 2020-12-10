@@ -19,9 +19,10 @@
                     (.-contentWindow)
                     (post-message args)))))))
 
-    (dom/iframe {:src   "/embed.html"
-                 :ref   iframe-ref
-                 :style {:width "100%" :height height :border "0"}})))
+    (dom/iframe {:src     "/embed.html"
+                 :ref     iframe-ref
+                 :loading "lazy"
+                 :style   {:width "100%" :height height :border "0"}})))
 
 (h/defnc ^:export PlanCytoscapeJS [{:keys [oir query displayType available] :as args}]
   (h/$ EmbedComponent {:args   (-> args
