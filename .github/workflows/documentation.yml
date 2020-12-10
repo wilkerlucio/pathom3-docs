@@ -26,11 +26,8 @@ jobs:
           key: m2-${{ hashFiles('deps.edn') }}
           restore-keys: |
             m2-
-      - name: Compile CLJS
-        run: npx shadow-cljs compile docs
-      - name: Compile Embed
-        run: npx shadow-cljs release embed
-      - name: Test Build
+
+      - name: Yarn Install
         run: |
           if [ -e yarn.lock ]; then
           yarn install --frozen-lockfile
@@ -39,7 +36,15 @@ jobs:
           else
           npm i
           fi
-          npm run build
+
+      - name: Compile CLJS
+        run: npx shadow-cljs compile docs
+
+      - name: Compile Embed
+        run: npx shadow-cljs release embed
+
+      - name: Test Build
+        run: npm run build
   gh-release:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -72,8 +77,20 @@ jobs:
           key: m2-${{ hashFiles('deps.edn') }}
           restore-keys: |
             m2-
+
+      - name: Yarn Install
+        run: |
+          if [ -e yarn.lock ]; then
+          yarn install --frozen-lockfile
+          elif [ -e package-lock.json ]; then
+          npm ci
+          else
+          npm i
+          fi
+
       - name: Compile CLJS
         run: npx shadow-cljs compile docs
+
       - name: Compile Embed
         run: npx shadow-cljs release embed
 
@@ -84,11 +101,4 @@ jobs:
         run: |
           git config --global user.email "actions@gihub.com"
           git config --global user.name "gh-actions"
-          if [ -e yarn.lock ]; then
-          yarn install --frozen-lockfile
-          elif [ -e package-lock.json ]; then
-          npm ci
-          else
-          npm i
-          fi
           npx docusaurus deploy
