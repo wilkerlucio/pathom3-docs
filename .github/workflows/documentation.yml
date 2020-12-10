@@ -27,9 +27,9 @@ jobs:
           restore-keys: |
             m2-
       - name: Compile CLJS
-        run: shadow-cljs compile docs
+        run: npx shadow-cljs compile docs
       - name: Compile Embed
-        run: shadow-cljs release embed
+        run: npx shadow-cljs release embed
       - name: Test Build
         run: |
           if [ -e yarn.lock ]; then
@@ -73,9 +73,9 @@ jobs:
           restore-keys: |
             m2-
       - name: Compile CLJS
-        run: shadow-cljs compile docs
+        run: npx shadow-cljs compile docs
       - name: Compile Embed
-        run: shadow-cljs release embed
+        run: npx shadow-cljs release embed
 
       - name: Release to GitHub Pages
         env:
