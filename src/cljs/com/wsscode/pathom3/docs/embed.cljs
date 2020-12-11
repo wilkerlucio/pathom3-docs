@@ -10,17 +10,25 @@
             ["react-dom" :as react-dom]
             [cljs.spec.alpha :as s]))
 
-(h/defnc ^:export PlanCytoscapeJS [{:keys [oir query displayType available]}]
+(h/defnc ^:export PlanHistory [{:keys [oir query displayType available]}]
   (dom/div {:style {:flex "1"}}
     (h/$ p.plan/PlanCytoscape
       {:frames
        (->> (p.plan/compute-frames {::pci/index-oir                                     oir
                                     ::eql/query                                         query
                                     :com.wsscode.pathom3.connect.planner/available-data available})
-            (mapv (juxt identity p.plan/c-nodes-edges)))
+            (mapv (juxt identity p.plan/compute-plan-elements)))
 
        :display
        (some-> (or displayType "display-type-label") (#(keyword "com.wsscode.pathom3.viz.plan" %)))})))
+
+(h/defnc ^:export PlanView [{:keys [plan]}]
+  (let [elements (hooks/use-memo [plan] (-> plan
+                                            (p.plan/smart-plan)
+                                            (p.plan/compute-plan-elements)))]
+    (h/$ p.plan/PlanGraphView
+      {:elements     elements
+       :display-type ::p.plan/display-type-label})))
 
 (def area-style
   {:height  "200px"
@@ -66,7 +74,7 @@
           (h/$ p.plan/PlanCytoscape
             {:frames
              (->> (p.plan/compute-frames gd)
-                  (mapv (juxt identity p.plan/c-nodes-edges)))
+                  (mapv (juxt identity p.plan/compute-plan-elements)))
 
              :display
              ::p.plan/display-type-label}))))))
@@ -79,7 +87,8 @@
         (catch :default _)))))
 
 (def component-map
-  {"plan-cytoscape"   PlanCytoscapeJS
+  {"plan-history"     PlanHistory
+   "plan-view"        PlanView
    "planner-explorer" PlannerExplorer})
 
 (defn start-component [{:keys [component] :as msg}]
