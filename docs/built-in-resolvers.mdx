@@ -130,7 +130,7 @@ You can use static tables to provide extra data for some entities, given some id
 
 This helper infers the output from the table data.
 
-## Attribute Map
+## Static Attribute Map
 
 This one is similar to static tables, but to provide a single attribute for each entity
 instead of many:
@@ -138,7 +138,7 @@ instead of many:
 ```clojure
 (def registry
   [; simple attribute table
-   (pbir/attribute-map-resolver :song/id :song/name
+   (pbir/static-attribute-map-resolver :song/id :song/name
      {1 "Marchinha Psicotica de Dr. Soup"
       2 "There's Enough"})
 
