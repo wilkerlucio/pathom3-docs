@@ -3,6 +3,8 @@ id: smart-maps
 title: Smart Maps
 ---
 
+import {YoutubeVideo} from "../src/js/components/youtube";
+
 Smart maps are a custom map type powered by Pathom resolvers.
 
 With smart maps, you can leverage the power of Pathom processing using the accessible
@@ -287,3 +289,17 @@ function to return the run stats of the process:
 ;                                                :com.wsscode.pathom3.connect.planner/node-id 2}},
 ; :com.wsscode.pathom3.connect.runner.stats/resolver-accumulated-duration-ms 0.015876948833465576}
 ```
+
+## Datafy
+
+Smart Maps support the Clojure Datafy / Navigate protocols. This means if you use a REPL
+visualizer like [Reveal](https://vlaaad.github.io/reveal/) or [REBL](https://docs.datomic.com/cloud/other-tools/REBL.html)
+you can navigate the projected data from the Smart Map lazily.
+
+To demonstrate I'll be showing its usage with Reveal in the following video:
+
+<YoutubeVideo videoId="n_MJOKEqqnM" />
+
+Also in REBL:
+
+<YoutubeVideo videoId="v4vzdLRrkr8" />
