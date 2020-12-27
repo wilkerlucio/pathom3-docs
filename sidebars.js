@@ -13,7 +13,7 @@ module.exports = {
         'cache',
         'placeholders',
         'mutations',
-        // 'plugins',
+        'plugins',
       ]
     },
     // 'modeling-guides',
