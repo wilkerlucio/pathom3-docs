@@ -16,9 +16,15 @@ When there is a query, Pathom [computes the plan](planner.mdx) and then runs it.
 The plan can be simple or complex. It takes into consideration the query, indexes, and
 available data. Given those are the same, it hits the cache.
 
+This cache is set in the key `::pcp/plan-cache*` in the environment. You can set it
+with the helper `pcp/with-plan-cache`.
+
 ### Resolver call
 
 Pathom caches the resolver result based on the resolver name, input, and parameters.
+
+This cache is set in the key `::pcr/resolver-cache*` in the environment. You can set it
+with the helper `pcp/with-resolver-cache`.
 
 ## Cache lifecycle
 
