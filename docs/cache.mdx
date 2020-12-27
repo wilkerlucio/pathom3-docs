@@ -1,0 +1,138 @@
+---
+id: cache
+title: Cache
+---
+
+Pathom uses caching to optimize the speed of critical points in the resolution process.
+
+## What Pathom caches
+
+There are two things that Pathom caches:
+
+### Planning computation
+
+When there is a query, Pathom [computes the plan](planner.mdx) and then runs it.
+
+The plan can be simple or complex. It takes into consideration the query, indexes, and
+available data. Given those are the same, it hits the cache.
+
+### Resolver call
+
+Pathom caches the resolver result based on the resolver name, input, and parameters.
+
+## Cache lifecycle
+
+By default, the environment has no cache, but the standard interfaces have their own
+cache definitions.
+
+### EQL Process
+
+When you use the EQL interface, the runner automatically creates caches for planning
+and resolvers, these caches live for that transaction process and then are discarded.
+
+### Smart Maps
+
+Smart maps use a durable form of the cache by default. The smart maps add the caches
+at initialization, and they are persisted when variations of that Smart Map are created.
+
+This means, for example, when you `assoc` on a Smart Map, the new returned Smart Map still shares the same plan and resolver caches.
+
+## The cache protocol
+
+In the namespace `com.wsscode.pathom3.cache` you can find the `CacheStore` protocol.
+
+```clojure
+(defprotocol CacheStore
+  (-cache-lookup-or-miss [this cache-key f]))
+```
+
+This protocol is implemented by Pathom to `Atom` and `Volatile`, so you can use any
+of those as a cache-store.
+
+## Persistent caching
+
+There are cases in which a persistent cache can same some processing time in the application.
+
+For example, a Pathom server handling API requests for serving some UI. This kind of
+service tends to receive the same queries over and over. Instead of re-planning on every
+query, you can use a more persistent cache to re-use this computation across requests.
+
+Here is an example of making such a configuration:
+
+```clojure
+; define the query, use atom to ensure proper concurrent access
+(defonce persistent-cache-plan* (atom {}))
+
+(def env
+  (-> (pci/register my-resolvers)
+      (pcp/with-plan-cache persistent-cache-plan*)))
+
+(defn handle-request [tx]
+  (p.eql/process env tx))
+```
+
+This way, Pathom will re-use that same cache.
+
+:::tip
+If you are sure your application won't try to concurrently write to the cache, you can
+use a `(volatile! {})` instead of the atom to gain some performance.
+:::
+
+A concern with this approach is that this cache will grow forever, and depending on
+how variadic the requests are, that can turn into an issue. To solve this, we can
+use a more robust cache strategy.
+
+### Using `core.cache`
+
+If you are running Pathom on the JVM, you use the excellent [core.cache](https://github.com/clojure/core.cache/)
+library to implement more robust cache stores.
+
+To demonstrate it, we will make a persistent cache using a `LRUCache` from core.cached:
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.cache
+  (:require [clojure.core.cache.wrapped :as cc]
+            [com.wsscode.pathom3.cache :as p.cache]
+            [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.connect.planner :as pcp]
+            [com.wsscode.pathom3.interface.eql :as p.eql]))
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  {::full-name (str first-name " " last-name)})
+
+; create a new record type to use core.cache implementation
+(defrecord CoreCacheStore [cache-atom]
+  p.cache/CacheStore
+  (-cache-lookup-or-miss [_ cache-key f]
+    (cc/lookup-or-miss cache-atom cache-key (fn [_] (f)))))
+
+; helper to start a new LRU cache
+(defn lru-cache [base threshold]
+  (-> (cc/lru-cache-factory base :threshold threshold)
+      (->CoreCacheStore)))
+
+; create a cache holds only the latest 100 read plans
+(def plan-cache* (lru-cache {} 100))
+
+(def env
+  (-> (pci/register full-name)
+      (pcp/with-plan-cache plan-cache*)))
+
+(defn handle [tx]
+  (p.eql/process env tx))
+```
+
+## Disable cache
+
+If you want to disable the cache, here is how.
+
+### Turn cache off
+
+To completely turn off a cache, set it with a `nil` value. This way, Pathom will keep the
+`nil` value, and on an attempt to use the cache, it will skip it.
+
+### Per resolver
+
+You can disable the resolver cache per resolver. To do so, set `::pco/cache? false` in
+the resolver configuration.

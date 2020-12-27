@@ -290,6 +290,13 @@ function to return the run stats of the process:
 ; :com.wsscode.pathom3.connect.runner.stats/resolver-accumulated-duration-ms 0.015876948833465576}
 ```
 
+## Smart Maps caching
+
+Smart maps use a durable form of the cache by default. The smart maps add the caches
+at initialization, and they are persisted when variations of that Smart Map are created.
+
+This means, for example, when you `assoc` on a Smart Map, the new returned Smart Map still shares the same plan and resolver caches.
+
 ## Datafy
 
 Smart Maps support the Clojure Datafy / Navigate protocols. This means if you use a REPL

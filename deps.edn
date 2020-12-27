@@ -12,4 +12,9 @@
   lilactown/helix            {:git/url "https://github.com/lilactown/helix" :sha "5785e9332534cb16da749699634556d573e44bb2"}
   org.clojure/clojure        {:mvn/version "1.10.1"}
   org.clojure/clojurescript  {:mvn/version "1.10.764"}
-  thheller/shadow-cljs       {:mvn/version "2.11.4"}}}
+  thheller/shadow-cljs       {:mvn/version "2.11.4"}}
+
+ :aliases
+ {:demos
+  {:extra-deps
+   {org.clojure/core.cache {:mvn/version "1.0.207"}}}}}
