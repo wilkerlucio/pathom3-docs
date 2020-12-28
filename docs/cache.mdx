@@ -119,7 +119,7 @@ To demonstrate it, we will make a persistent cache using a `LRUCache` from core.
       (->CoreCacheStore)))
 
 ; create a cache holds only the latest 100 read plans
-(def plan-cache* (lru-cache {} 100))
+(defonce plan-cache* (lru-cache {} 100))
 
 (def env
   (-> (pci/register full-name)
