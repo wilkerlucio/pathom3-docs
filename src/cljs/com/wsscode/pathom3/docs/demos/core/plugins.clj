@@ -8,7 +8,7 @@
 (def protected-attributes
   #{:user/password})
 
-(defn protect-attributes-wrapper [mst]
+(defn protect-attributes-wrapper [mse]
   (fn [env source {:keys [key] :as ast}]
     (if (and (contains? source key)
              (contains? protected-attributes key))
@@ -16,7 +16,7 @@
       ; a vector with two elements would also work, but creating a map entry is
       ; more efficient
       (coll/make-map-entry key ::protected-value)
-      (mst env source ast))))
+      (mse env source ast))))
 
 (p.plugin/defplugin protect-attributes-plugin
   {:com.wsscode.pathom3.format.eql/wrap-map-select-entry
