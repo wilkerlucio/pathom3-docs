@@ -129,6 +129,25 @@ To demonstrate it, we will make a persistent cache using a `LRUCache` from core.
   (p.eql/process env tx))
 ```
 
+## Custom cache store per resolver
+
+You may want to have different caches for different resolvers, for this case you can
+set the `::pco/cache-store` configuration on your resolver, and it will try to use
+the cache from the keyword mentioned there.
+
+```clojure
+(pco/defresolver on-custom-cache [{:keys [foo]}]
+  {::pco/cache-store ::my-cache*}
+  {:bar "baz"})
+
+(def env
+  (-> (pci/register on-custom-cache)
+      (assoc ::my-cache* (atom {}))))
+```
+
+You need to provide this custom cache, otherwise it will fallback to the default
+resolver cache.
+
 ## Disable cache
 
 If you want to disable the cache, here is how.
