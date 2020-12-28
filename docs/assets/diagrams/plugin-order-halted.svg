@@ -18,7 +18,7 @@
       </g>
     </marker>
   </defs>
-  <metadata> Produced by OmniGraffle 7.18.1\n2020-12-27 20:14:57 +0000</metadata>
+  <metadata> Produced by OmniGraffle 7.18.1\n2020-12-28 00:54:20 +0000</metadata>
   <g id="Plugin_Order_1" fill="none" stroke="none" fill-opacity="1" stroke-dasharray="none" stroke-opacity="1">
     <title>Plugin Order 1</title>
     <g id="Plugin_Order_1_Layer_1">
@@ -72,7 +72,7 @@
         </text>
       </g>
       <g id="Graphic_14">
-        <rect x="1040" y="611.5803" width="275" height="36.89178" fill="#ff8080"/>
+        <rect x="1040" y="611.5803" width="275" height="36.89178" fill="#999"/>
         <rect x="1040" y="611.5803" width="275" height="36.89178" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
       <g id="Graphic_15">
@@ -91,7 +91,7 @@
         </text>
       </g>
       <g id="Graphic_18">
-        <rect x="1040" y="809.0523" width="275" height="42.974" fill="#ff8080"/>
+        <rect x="1040" y="809.0523" width="275" height="42.974" fill="#999"/>
         <rect x="1040" y="809.0523" width="275" height="42.974" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
         <text transform="translate(1045 821.3153)" fill="black">
           <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="101.38" y="15">Function</tspan>
@@ -117,14 +117,14 @@
         <line x1="1260.189" y1="501.763" x2="1260.189" y2="460.9" marker-end="url(#FilledArrow_Marker)" stroke="white" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
       </g>
       <g id="Graphic_27">
-        <rect x="1056.0305" y="693" width="67.5" height="62" fill="#ff8080"/>
+        <rect x="1056.0305" y="693" width="67.5" height="62" fill="#999"/>
         <rect x="1056.0305" y="693" width="67.5" height="62" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
         <text transform="translate(1061.0305 714.776)" fill="black">
           <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="12.534" y="15">Args</tspan>
         </text>
       </g>
       <g id="Graphic_29">
-        <rect x="1218.4695" y="693" width="80.5" height="62" fill="#ff8080"/>
+        <rect x="1218.4695" y="693" width="80.5" height="62" fill="#999"/>
         <rect x="1218.4695" y="693" width="80.5" height="62" stroke="black" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
         <text transform="translate(1223.4695 714.776)" fill="black">
           <tspan font-family="Helvetica Neue" font-size="16" font-weight="400" fill="black" x="10.49" y="15">Output</tspan>
