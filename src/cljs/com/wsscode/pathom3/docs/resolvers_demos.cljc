@@ -186,11 +186,11 @@
 (def env (pci/register todos-resolver))
 
 ; list all todos
-(pf.eql/process env
+(p.eql/process env
   [::todos])
 
 ; list undone todos
-(pf.eql/process env
+(p.eql/process env
   '[(::todos {::todo-done? false})])
 
 (comment
@@ -205,3 +205,35 @@
   (-> (slurp "https://api.publicapis.org/entries?auth=null")
       (json/read-str :key-fn #(keyword "public-apis.entry" (str/lower-case %)))
       (:public-apis.entry/entries)))
+
+; region nested inputs demo
+
+(pco/defresolver top-players
+  "Return maps with ids for the top players in a given game."
+  []
+  {:game/top-players
+   [{:player/id 1}
+    {:player/id 20}
+    {:player/id 8}
+    {:player/id 2}]})
+
+(pco/defresolver player-by-id
+  "Get player by id, in our case just generate some data based on the id."
+  [{:keys [player/id]}]
+  {:player/name  (str "Player " id)
+   :player/score (* id 50)})
+
+(pco/defresolver top-players-avg
+  "Compute the average score for the top players using nested inputs."
+  [{:keys [game/top-players]}]
+  ; we have to make the nested input explicit
+  {::pco/input [{:game/top-players [:player/score]}]}
+  {:game/top-players-avg-score
+   (let [score-sum (transduce (map :player/score) + 0 top-players)]
+     (double (/ score-sum (count top-players))))})
+
+(p.eql/process (pci/register [top-players player-by-id top-players-avg])
+  [:game/top-players-avg-score])
+; => #:game{:top-players-avg-score 387.5}
+
+; endregion

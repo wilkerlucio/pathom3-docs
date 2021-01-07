@@ -106,6 +106,13 @@ The main pieces of a resolver are:
 - `::pco/output` - a EQL expression that informs the attributes **provided** by this resolver.
 - `::pco/input` - a EQL expression that informs the attributes **required** by this resolver.
 
+:::important
+Both input and output can express flat or nested queries, you should always strive to
+be as precise with these descriptions as you can (matching the shapes of your inputs and
+outputs), Pathom leverages this information in many ways during transaction processing,
+and as more accurate you get, the more Pathom can do with it.
+:::
+
 Let's start with a verbose usage of `defresolver` to go over these main pieces:
 
 ```clojure
@@ -351,6 +358,52 @@ Here are a couple of examples to illustrate:
 ```
 
 To learn more details about the indexes, check the [indexes page](indexes.mdx).
+
+## Nested inputs
+
+Pathom supports requiring nested inputs on a resolver. This feature is handy when you
+need to make data aggregation based on indirect data.
+
+To illustrate this, consider the following setup:
+
+```clojure
+(pco/defresolver top-players
+  "Return maps with ids for the top players in a given game."
+  []
+  {:game/top-players
+   [{:player/id 1}
+    {:player/id 20}
+    {:player/id 8}
+    {:player/id 2}]})
+
+(pco/defresolver player-by-id
+  "Get player by id, in our case just generate some data based on the id."
+  [{:keys [player/id]}]
+  {:player/name (str "Player " id)
+   :player/score (* id 50)})
+```
+
+Now, for the task: how to make a resolver that computes the average score from the top
+players?
+
+If you use the flat inputs as we did before and ask for `:game/top-players` it will
+contain the ids, but not the scores. To make the scores available, a nested processing
+is required in this case, and this where nested inputs come to rescue:
+
+```clojure
+(pco/defresolver top-players-avg
+  "Compute the average score for the top players using nested inputs."
+  [{:keys [game/top-players]}]
+  ; we have to make the nested input explicit
+  {::pco/input [{:game/top-players [:player/score]}]}
+  {:game/top-players-avg-score
+   (let [score-sum (transduce (map :player/score) + 0 top-players)]
+     (double (/ score-sum (count top-players))))})
+
+(p.eql/process (pci/register [top-players player-by-id top-players-avg])
+  [:game/top-players-avg-score])
+; => #:game{:top-players-avg-score 387.5}
+```
 
 ## Parameters
 
