@@ -81,7 +81,7 @@ this graph:
  #{}
 
  ::pcp/unreachable-attrs
- #{}
+ {}
 
  ::pcp/index-ast
  {:com.wsscode.pathom3.docs.planner/answer-to-everything
@@ -199,8 +199,8 @@ but keep in mind for real systems, its recommended to stick with long names.
 
 ```clojure
 ; index-oir
-{:pi  {#{} #{pi}}
- :tau {#{:pi} #{tau}}}
+{:pi  {{} #{pi}}
+ :tau {{:pi {}} #{tau}}}
 
 ; query
 [:tau]
@@ -225,9 +225,9 @@ different attributes: `:a`, `:b:` and `:c`:
 ```clojure
 ; index-oir
 
-{:a {#{} #{a}}
- :b {#{} #{b}}
- :c {#{} #{c}}}
+{:a {{} #{a}}
+ :b {{} #{b}}
+ :c {{} #{c}}}
 
 ; query
 
@@ -248,10 +248,10 @@ Now, to see a combination of AND node and chaining, let's ask for a single attri
 ```clojure
 ; index-oir
 
-{:a {#{} #{a}}
- :b {#{} #{b}}
- :c {#{} #{c}}
- :d {#{:a :b :c} #{d}}}
+{:a {{} #{a}}
+ :b {{} #{b}}
+ :c {{} #{c}}
+ :d {{:a {} :b {} :c {}} #{d}}}
 
 ; query
 
@@ -279,7 +279,7 @@ to the attribute `:a`:
 ```clojure
 ; index-oir
 
-{:a {#{} #{a1 a2 a3}}}
+{:a {{} #{a1 a2 a3}}}
 
 ; query
 
@@ -301,11 +301,11 @@ input paths:
 ```clojure
 ; index-oir
 
-{:a {#{:b} #{a1 a2 a3}
-     #{:c :d} #{a9}}
- :b {#{} #{b}}
- :c {#{:d} #{c}}
- :d {#{} #{d}}}
+{:a {{:b {}} #{a1 a2 a3}
+     {:c {} :d {}} #{a9}}
+ :b {{} #{b}}
+ :c {{:d {}} #{c}}
+ :d {{} #{d}}}
 
 ; query
 
@@ -333,7 +333,7 @@ a dead-end:
 ; index-oir
 
 ; :a depends on :b, there is no path for :b
-{:a {#{:b} #{a}}}
+{:a {{:b {}} #{a}}}
 
 ; query
 
@@ -352,9 +352,9 @@ Now a partial dead-end, note how it discards the dead cluster on `ab` and `ab2`:
 ; index-oir
 
 ; :a depends on :b, there is no path for :b
-{:a {#{:c} #{ac}
-     #{:b} #{ab ab2}}
- :c {#{} #{c}}}
+{:a {{:c {}} #{ac}
+     {:b {}} #{ab ab2}}
+ :c {{} #{c}}}
 
 ; query
 
@@ -376,8 +376,8 @@ When combining those, you will see the `OR` nodes get processed before the AND n
 ```clojure
 ; index-oir
 
-{:a {#{} #{a1 a2}}
- :b {#{} #{b1 b2}}}
+{:a {{} #{a1 a2}}
+ :b {{} #{b1 b2}}}
 
 ; query
 
@@ -396,13 +396,13 @@ And a more complex example:
 ```clojure
 ; index-oir
 
-{:a {#{} #{a}}
- :b {#{:g} #{b}}
- :c {#{} #{c}}
- :e {#{} #{e e1}}
- :f {#{:e} #{f}}
- :g {#{:c :f} #{g}}
- :h {#{:a :b} #{h}}}
+{:a {{} #{a}}
+ :b {{:g {}} #{b}}
+ :c {{} #{c}}
+ :e {{} #{e e1}}
+ :f {{:e {}} #{f}}
+ :g {{:c {} :f {}} #{g}}
+ :h {{:a {} :b {}} #{h}}}
 
 ; query
 

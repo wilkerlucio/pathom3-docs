@@ -28,16 +28,16 @@ Let's look at an example and talk over it:
 
 ; we get this index-oir
 {:com.wsscode.pathom3.connect.indexes/index-oir
- {:acme.product/name      {#{:acme.product/id} #{product-by-id}}
-  :acme.product/price     {#{:acme.product/id} #{product-by-id}}
-  :acme.product/in-stock? {#{:acme.product/id} #{product-by-id}}}}
+ {:acme.product/name      {{:acme.product/id {}} #{product-by-id}}
+  :acme.product/price     {{:acme.product/id {}} #{product-by-id}}
+  :acme.product/in-stock? {{:acme.product/id {}} #{product-by-id}}}}
 ```
 
 With this index, Pathom can ask: How can I fetch `:acme.product/price` in the system?
 For which the answer is:
 
 ```clojure
-{#{:acme.product/id} #{product-by-id}}
+{{:acme.product/id {}} #{product-by-id}}
 ```
 
 Or in plain english: The index says you can fetch the product price, given you provide some
@@ -135,18 +135,20 @@ In this index you can lookup resolvers by their name. Using both `product-by-id`
  {product-by-id
   #com.wsscode.pathom3.connect.operation.Resolver
   {:config  {:com.wsscode.pathom3.connect.operation/input    [:acme.product/id]
+             :com.wsscode.pathom3.connect.operation/requires {:acme.product/id {}}
+             :com.wsscode.pathom3.connect.operation/output   [:acme.product/name :acme.product/price :acme.product/in-stock?]
              :com.wsscode.pathom3.connect.operation/provides {:acme.product/name      {}
                                                               :acme.product/price     {}
                                                               :acme.product/in-stock? {}}
-             :com.wsscode.pathom3.connect.operation/output   [:acme.product/name :acme.product/price :acme.product/in-stock?]
              :com.wsscode.pathom3.connect.operation/op-name  product-by-id}
    :resolve product-by-id--23075}
 
   full-name
   #com.wsscode.pathom3.connect.operation.Resolver
   {:config  {:com.wsscode.pathom3.connect.operation/input    [::first-name ::last-name]
-             :com.wsscode.pathom3.connect.operation/provides {::full-name {}}
+             :com.wsscode.pathom3.connect.operation/requires {::first-name {} ::last-name {}}
              :com.wsscode.pathom3.connect.operation/output   [::full-name]
+             :com.wsscode.pathom3.connect.operation/provides {::full-name {}}
              :com.wsscode.pathom3.connect.operation/op-name  full-name}
    :resolve full-name--23079}}}
 ```
