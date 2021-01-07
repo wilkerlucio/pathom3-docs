@@ -106,6 +106,13 @@ The main pieces of a resolver are:
 - `::pco/output` - a EQL expression that informs the attributes **provided** by this resolver.
 - `::pco/input` - a EQL expression that informs the attributes **required** by this resolver.
 
+:::important
+Both input and output can express flat or nested queries, you should always strive to
+be as precise with these descriptions as you can (matching the shapes of your inputs and
+outputs), Pathom leverages this information in many ways during transaction processing,
+and as more accurate you get, the more Pathom can do with it.
+:::
+
 Let's start with a verbose usage of `defresolver` to go over these main pieces:
 
 ```clojure
