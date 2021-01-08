@@ -720,6 +720,105 @@ In the following example we alias `[com.wsscode.misc.coll :as coll]`.
 Don't batch when the resolver operation is quick. If there is no IO in the
 resolver, consider keeping it non-batched.
 
+## Prioritization
+
+There are cases where multiple paths are available to get the same data.
+
+### Priority number
+
+You can use the attribute `::pco/priority` to indicate to Pathom that a resolver is
+preferred. The value of `::pco/priority` is an integer. If not set, the default value
+is zero. Negative values are allowed.
+
+To demonstrate the usage of priority, the following example shows two versions
+to get the name, one from cache (preferred), but falling back to the standard db
+one when the cache is unable to deliver.
+
+```clojure
+(pco/defresolver db-user-by-id [{:user/keys [id]}]
+  {:user/name (str "Name from DB " id)})
+
+(pco/defresolver cache-server-user-by-id [{:user/keys [id]}]
+  ; here we increase the priority of the external cache resolver
+  {::pco/priority 1}
+  {:user/name
+   (if (even? id)
+     (str "Name from Cache " id)
+     ::pco/unknown-value)})
+
+(p.eql/process (pci/register [db-user-by-id cache-server-user-by-id])
+  [{[:user/id 1] [:user/name]}])
+; => {[:user/id 1] #:user{:name "Name from DB 1"}}
+
+(p.eql/process (pci/register [db-user-by-id cache-server-user-by-id])
+  [{[:user/id 2] [:user/name]}])
+; => {[:user/id 2] #:user{:name "Name from Cache 2"}}
+```
+
+:::tip
+You can see that the cached resolver returns `::pco/unknown-value`. This is equivalent to not having
+that key in the response. Doing this way, we can leverage the output inference while expressing this value is unknown, which triggers the next option.
+:::
+
+### Custom priority algorithm
+
+If you need fine control over prioritization, you can set the key `::pcr/choose-path`
+in the env, to provide your custom function.
+
+To understand how to make a custom priority function, you must first understand
+how the Pathom planner works. Especially the part on `OR` nodes, [you can find it here](planner.mdx#or-nodes-1).
+
+This is the default `choose-path` implementation:
+
+```clojure
+(defn default-choose-path [env or-node node-ids]
+  (-> (priority-sort env node-ids)
+      first))
+```
+
+It takes an environment (which has the graph inside at `::pcp/graph`), the `OR` node
+in process and a set of `node-ids`, from which you should pick one.
+
+Sometimes, the `OR` node branches could be as simple as two resolvers to choose
+from. In other cases, it can be huge, with a complex run graph underneath. So you must
+consider this if you are writing a custom prioritization function.
+
+To illustrate this, let's see how Pathom implements `priority-sort`. The algorithm traverses each of the `OR` branches to find their leaf nodes for priority sort. This way
+we compare the edges (which does what you would expect).
+
+After comparing the edges, we need to return the original branch node, so we store it as
+part of the data.
+
+Some leaf nodes may be other branch nodes. In those cases, we run the prioritization
+again against those nodes, and take the winner to compare also with the parent items.
+
+To finish up, compare the now generates leaves and take the winner path.
+
+```clojure
+(defn priority-sort [{::pcp/keys [graph] :as env} node-ids]
+                        ; start from the node ids
+  (let [nodes-data (->> node-ids
+                        ; map over, navigating to the leaf nodes, and associating back the original id,
+                        (map #(-> graph
+                                  (pcp/find-leaf-node (pcp/get-node graph %))
+                                  ; adding the source information to use in the end
+                                  (assoc ::source-node-path %)))
+                        ; this map takes care of expanding branch nodes
+                        (map (fn [{::keys [source-node-path] :as node}]
+                               (if-let [branches (pcp/node-branches node)]
+                                 (-> graph
+                                     (pcp/get-node (first (priority-sort env branches)))
+                                     (assoc ::source-node-path source-node-path))
+                                 node)))
+                        ; load the config of the reached nodes
+                        (keep #(pcp/node-with-resolver-config graph env %)))]
+    ; sort by priority
+    (mapv ::source-node-path (sort-by #(or (::pco/priority %) 0) #(compare %2 %) nodes-data))))
+```
+
+When you override `::pcr/choose-path`, you can start by copying the `default-choose-path`
+you saw before here, and adjust it for your needs.
+
 ## Using `resolver`
 
 You can also create a resolver using the `resolver` helper. This is more useful when

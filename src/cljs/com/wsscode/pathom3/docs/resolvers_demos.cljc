@@ -266,3 +266,26 @@
 ; => #:game{:top-players-avg-score 387.5}
 
 ; endregion
+
+; region prioritization
+
+(pco/defresolver db-user-by-id [{:user/keys [id]}]
+  {:user/name (str "Name from DB " id)})
+
+(pco/defresolver cache-server-user-by-id [{:user/keys [id]}]
+  ; here we increase the priority of the external cache resolver
+  {::pco/priority 1}
+  {:user/name
+   (if (even? id)
+     (str "Name from Cache " id)
+     ::pco/unknown-value)})
+
+(p.eql/process (pci/register [db-user-by-id cache-server-user-by-id])
+  [{[:user/id 1] [:user/name]}])
+; => {[:user/id 1] #:user{:name "Name from DB 1"}}
+
+(p.eql/process (pci/register [db-user-by-id cache-server-user-by-id])
+  [{[:user/id 2] [:user/name]}])
+; => {[:user/id 2] #:user{:name "Name from Cache 2"}}
+
+; endregion
