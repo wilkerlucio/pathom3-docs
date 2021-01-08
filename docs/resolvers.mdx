@@ -312,7 +312,7 @@ is the main thing that Pathom brings to you, **it removes the chore of knowing t
 function names**, so you can focus on the data you have and need, instead of how to
 get it.
 
-## Generate the indexes
+### Using the indexes
 
 Here we will cover in more detail the process to generate the indexes from resolvers.
 
@@ -351,13 +351,25 @@ Here are a couple of examples to illustrate:
 (def with-indexes (pci/register [some-resolvers many-registry]))
 
 ; all together now
-(def all-together
+(def env
   (pci/register [[resolver-a resolver-b]
                  some-resolvers
                  many-registry]))
 ```
 
 To learn more details about the indexes, check the [indexes page](indexes.mdx).
+
+With the `indexes` at hand you can leverage the Pathom engine to call the resolvers for you.
+
+:::tip
+The `indexes` are part of the Pathom environment, for some operations just the indexes
+are enough. When you see `indexes` or `env`, consider they expect to have at least
+the indexes for the resolvers in the map.
+:::
+
+For this you may use one of the Pathom 3 interfaces like [Smart Maps](smart-maps.mdx) or
+[EQL](eql.mdx). Visit those pages if you like to see examples of how to use the Pathom
+engine.
 
 ## Optional inputs
 
