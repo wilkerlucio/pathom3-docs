@@ -206,6 +206,35 @@
       (json/read-str :key-fn #(keyword "public-apis.entry" (str/lower-case %)))
       (:public-apis.entry/entries)))
 
+; region optional inputs
+
+(pco/defresolver user-display-name
+  [{:user/keys [email name]}]
+  {::pco/input [:user/email (pco/? :user/name)]}
+  {:user/display-name (or name email)})
+
+(def opt-env
+  (pci/register
+    [(pbir/static-table-resolver :user/id
+       {1 {:user/email "user@example.com"}
+        2 {:user/email "another@example.com"
+           :user/name  "Sam"}})
+     (pbir/constantly-resolver :all-users
+       [{:user/id 1}
+        {:user/id 2}
+        {:user/id 3}])
+     user-display-name]))
+
+(p.eql/process opt-env
+  [{:all-users [:user/display-name]}])
+; => {:all-users
+;     [{:user/display-name "user@example.com"} ; no name, use email
+;      {:user/display-name "Sam"} ; has name (the optional), use it
+;      {} ; user 3 doesn't exist, so resolver didn't get called
+;     ]}
+
+; endregion
+
 ; region nested inputs demo
 
 (pco/defresolver top-players
