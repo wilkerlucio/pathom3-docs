@@ -599,11 +599,10 @@ Here is a resolver that simulates a delay, let's run in a list and check the tim
 
 (time
   (p.eql/process
-    (-> (pci/register fetch-v)
-        (p.ent/with-entity
-          {:list [{:id 1}
-                  {:id 2}
-                  {:id 3}]}))
+    (pci/register fetch-v)
+    {:list [{:id 1}
+            {:id 2}
+            {:id 3}]}
     [{:list [:v]}]))
 ; "Elapsed time: 903.389738 msecs"
 ; => {:list [{:v 10} {:v 20} {:v 30}]}
@@ -631,11 +630,10 @@ and Pathom does the merging in place:
 
 (time
   (p.eql/process
-    (-> (pci/register batch-fetch-v)
-        (p.ent/with-entity
-          {:list [{:id 1}
-                  {:id 2}
-                  {:id 3}]}))
+    (pci/register batch-fetch-v)
+    {:list [{:id 1}
+            {:id 2}
+            {:id 3}]}
     [{:list [:v]}]))
 ; "Elapsed time: 302.606045 msecs"
 ; => {:list [{:v 10} {:v 20} {:v 30}]}
@@ -663,10 +661,10 @@ the results:
     results))
 
 (p.eql/process
-  (p.ent/with-entity (pci/register batch-fetch-v-reorder)
-    {:list [{:id 1}
-            {:id 2}
-            {:id 3}]})
+  (pci/register batch-fetch-v-reorder)
+  {:list [{:id 1}
+          {:id 2}
+          {:id 3}]}
   [{:list [:id :v]}])
 ; => {:list [{:id 1, :v 20} {:id 2, :v 30} {:id 3, :v 10}]}
 ```
