@@ -284,27 +284,31 @@
 (pco/defresolver user-data-hickory [{:keys [hacker-news.user/id]}]
   {::pco/cache-store ::durable-cache*}
   {:hacker-news.page/user-hickory
-   (some-> (slurp (str "https://news.ycombinator.com/user?id=" id))
-     hc/parse hc/as-hickory)})
+   (try
+     (some-> (slurp (str "https://news.ycombinator.com/user?id=" id))
+       hc/parse hc/as-hickory)
+     (catch Throwable _ nil))})
 
 (pco/defresolver user-data [{:hacker-news.page/keys [user-hickory]}]
-  {:hacker-news.user/karma
-   (->> user-hickory
-        (hs/select
-          (hs/and
-            (hs/tag "tr")
-            (hs/has-child (hs/find-in-text #"karma:"))))
-        first :content second :content select-number)
+  {::pco/output [:hacker-news.user/karma :hacker-news.user/join-date]}
+  (if user-hickory
+    {:hacker-news.user/karma
+     (->> user-hickory
+          (hs/select
+            (hs/and
+              (hs/tag "tr")
+              (hs/has-child (hs/find-in-text #"karma:"))))
+          first :content second :content select-number)
 
-   :hacker-news.user/join-date
-   (let [str (->> user-hickory
-                  (hs/select
-                    (hs/and
-                      (hs/tag "tr")
-                      (hs/has-child (hs/find-in-text #"created:"))))
-                  first :content second :content first :attrs :href)
-         [_ date] (re-find #"(\d{4}-\d{2}-\d{2})" str)]
-     date)})
+     :hacker-news.user/join-date
+     (let [str (->> user-hickory
+                    (hs/select
+                      (hs/and
+                        (hs/tag "tr")
+                        (hs/has-child (hs/find-in-text #"created:"))))
+                    first :content second :content first :attrs :href)
+           [_ date] (re-find #"(\d{4}-\d{2}-\d{2})" str)]
+       date)}))
 
 ; endregion
 
@@ -316,22 +320,23 @@
 (def env
   (-> {::durable-cache* cache*}
       (pci/register
-        [news-page-html-string
+        [(pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
+         (pbir/alias-resolver :hacker-news.comment/author-name :hacker-news.user/id)
+         news-page-html-string
          news-page-hickory
          news-page
          news-next-page
+         all-news-pages
          user-data-hickory
          user-data
-         (pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
-         (pbir/alias-resolver :hacker-news.comment/author-name :hacker-news.user/id)
          item-page-hickory
          item-data
          item-comments-flat
-         item-comments
-         all-news-pages])))
+         item-comments])))
 
 (comment
   (keys @cache*)
+  (reset! cache* {})
 
   (p.eql/process env
     {:hacker-news.user/id "wilkerlucios"}
@@ -435,3 +440,32 @@
   (->> (p.eql/process env
          [{:hacker-news.page/news-all-pages
            [:hacker-news.item/title]}])))
+
+(comment
+  (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+      :hacker-news.item/title)
+
+  (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+      :hacker-news.user/karma)
+
+  (p.eql/process env
+    {:hacker-news.comment/author-name "wilkerlucios"}
+    [:hacker-news.user/join-date])
+
+  (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+      :hacker-news.item/comments
+      first
+      (select-keys [:hacker-news.comment/author-name
+                    :hacker-news.comment/content
+                    :hacker-news.user/join-date]))
+
+  (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+      (clojure.datafy/datafy)))
+(-> (psm/smart-map env {})
+    :hacker-news.page/news
+    first
+    :hacker-news.item/comments
+    first
+    (select-keys [:hacker-news.comment/author-name
+                  :hacker-news.comment/content
+                  :hacker-news.user/join-date]))

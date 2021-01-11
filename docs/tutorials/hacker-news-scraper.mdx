@@ -832,16 +832,16 @@ Usage demo:
 (def env
   (-> {::durable-cache* cache*}
       (pci/register
-        [news-page-html-string
+        [(pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
+         ; add this new one to also alias from comment author name
+         (pbir/alias-resolver :hacker-news.comment/author-name :hacker-news.user/id)
+         news-page-html-string
          news-page-hickory
          news-page
          news-next-page
          all-news-pages
          user-data-hickory
          user-data
-         (pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
-         ; add this new one to also alias from comment author name
-         (pbir/alias-resolver :hacker-news.comment/author-name :hacker-news.user/id)
          item-page-hickory
          item-data
          item-comments-flat
@@ -865,10 +865,8 @@ Usage demo:
        {:hacker-news.comment/responses '...}]}]))
 
 (comment
-  ; WARNING: maybe you can't finish running this before HN throttle you, when I tried
-  ; to run too many things I started getting 403 from Hacker News, which makes sense.
-  ; if you can, this gets data from all users from all items and comments in the first
-  ; page of news
+  ; WARNING: this will trigger a lot of requests, may take some time, also HN may
+  ; throttle or block some accesses from you.
   (p.eql/process env
     [{:hacker-news.page/news
       [:hacker-news.item/age
@@ -898,6 +896,77 @@ Usage demo:
          {:hacker-news.comment/responses '...}]}]}]))
 ```
 
-## Other pages
+## Playing with Smart Maps
 
-## Recursive nested inputs, scanning it all
+Let's do a pause on implementing HN things and play a bit with what we have.
+
+In the previous examples we requested information using the [EQL interface](eql.mdx). The
+EQL is the most efficient and precise way to use Pathom, because in this way Pathom
+can look at a full size request and optimize as much as possible.
+
+I'll now introduce [Smart Maps](smart-maps.mdx) for our play here, which is a different interface to use
+Pathom 3. Smart Maps are a data structure that works like Clojure maps, but when you
+access some key that the map doesn't know the value, it uses the Pathom resolvers to
+figure out (when possible).
+
+To this demo I'll start with some item id and fetch some data:
+
+```clojure
+(-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+    :hacker-news.item/title)
+=> "OpenSocial Specification"
+```
+
+Cool right?! You may be asking now: how do you I know what can I access?
+
+To answer that you can leverage the `datafy` protocol implemented by Pathom Smart Maps:
+
+```clojure
+(let [sm (psm/smart-map env {:hacker-news.item/id "25733200"})]
+  (clojure.datafy/datafy sm))
+=>
+{:hacker-news.item/age :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/author-name :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/comments :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/comments-count :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/comments-flat :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/id "25733200"
+ :hacker-news.item/score :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/source :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/title :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.item/url :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/item-hickory :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/news :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/news-all-pages :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/news-hickory :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/news-next-page :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/news-raw-html :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.page/user-hickory :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.user/id :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.user/join-date :com.wsscode.pathom3.connect.operation/unknown-value
+ :hacker-news.user/karma :com.wsscode.pathom3.connect.operation/unknown-value}
+```
+
+There we can see a lot of data related to the item (given we provided an item id). Also,
+you can see all the pages, and some user data (because of the relationship from item to
+the user).
+
+To some REPL play with it, here are some suggestions:
+
+```clojure
+; author karma
+(-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+    :hacker-news.user/karma)
+; => 1834
+
+; author and content of first comment of the first post on news
+(-> (psm/smart-map env {})
+    :hacker-news.page/news
+    first
+    :hacker-news.item/comments
+    first
+    (select-keys [:hacker-news.comment/author-name
+                  :hacker-news.comment/content]))
+```
+
+## Other pages
