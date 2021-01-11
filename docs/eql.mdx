@@ -166,3 +166,71 @@ to render. This is how we can write some resolvers to fetch each type:
 
 To decide which path to take, Pathom looks if the entry data contains the key mentioned
 in the union entry key. When they match Pathom picks that path option.
+
+### Recursive queries
+
+Some data shapes are trees. For example, if we like to map a file system with Pathom.
+
+I'll start writing a few resolvers to handle paths and directory navigation:
+
+```clojure
+(pco/defresolver file-from-path [{:keys [path]}]
+  {:file (io/file path)})
+
+(pco/defresolver file-name [{:keys [^File file]}]
+  {:file-name (.getName file)})
+
+(pco/defresolver directory? [{:keys [^File file]}]
+  {:directory? (.isDirectory file)})
+
+(pco/defresolver directory-files [{:keys [^File file directory?]}]
+  {:files
+   (if directory?
+     (mapv #(hash-map :file %) (.listFiles file))
+     ::pco/unknown-value)})
+
+(def file-env
+  (pci/register
+    [file-from-path
+     file-name
+     directory?
+     directory-files]))
+```
+
+To demonstrate the recursive property of it, I'll write the same nested query a few times
+to show it up:
+
+```clojure
+(comment
+  (p.eql/process file-env
+    {:path "src"}
+    [:file-name
+     {:files [:file-name
+              {:files [:file-name
+                       {:files []}]}]}]))
+```
+
+But instead of doing that, we can use [EQL recursive queries](https://edn-query-language.org/eql/1.0.0/specification.html#_recursive_queries)
+to handle it:
+
+```clojure
+(comment
+  (p.eql/process file-env
+    {:path "src"}
+    [:file-name
+     {:files '...}]))
+```
+
+The previous example creates an unbounded recursion, it's going to keep going until
+there is no more depth to go.
+
+You can also limit this using bounded recursive queries:
+
+```clojure
+(comment
+  (p.eql/process file-env
+    {:path "src"}
+    [:file-name
+     ; max of 2 depths
+     {:files 2}]))
+```
