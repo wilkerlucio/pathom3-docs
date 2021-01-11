@@ -130,11 +130,45 @@
                    :hacker-news.item/source
                    :hacker-news.item/title
                    :hacker-news.item/url]}]}
+  (clojure.pprint/pprint input)
   {:hacker-news.page/news-all-pages
    (->> input
         (tree-seq :hacker-news.page/news-next-page
           (comp vector :hacker-news.page/news-next-page))
         (into [] (mapcat :hacker-news.page/news)))})
+
+(comment
+  ; WARNING: this can take really long time to finish, but you effectively scrape all
+  ; the news, with comments and user details with this one:
+  (time
+    (p.eql/process env
+      {:hacker-news.page/news-page-url "https://news.ycombinator.com/news?p=18"}
+      [{:hacker-news.page/news
+        [:hacker-news.item/age
+         :hacker-news.item/author-name
+         :hacker-news.item/id
+         :hacker-news.item/comments-count
+         :hacker-news.item/score
+         :hacker-news.item/rank-in-page
+         :hacker-news.item/source
+         :hacker-news.item/title
+         :hacker-news.item/url
+
+         :hacker-news.user/id
+         :hacker-news.user/karma
+         :hacker-news.user/join-date
+
+         {:hacker-news.item/comments
+          [:hacker-news.comment/author-name
+           :hacker-news.comment/age
+           :hacker-news.comment/content
+           :hacker-news.comment/id
+
+           ;:hacker-news.user/id
+           ;:hacker-news.user/karma
+           ;:hacker-news.user/join-date
+
+           {:hacker-news.comment/responses '...}]}]}])))
 
 ; endregion
 
@@ -166,7 +200,7 @@
   {:hacker-news.comment/id          (-> el :attrs :id)
    :hacker-news.comment/age         (class-text el "age")
    :hacker-news.comment/author-name (class-text el "hnuser")
-   :hacker-news.comment/ident       (comment-ident-level el)
+   :hacker-news.comment/indent      (comment-ident-level el)
    :hacker-news.comment/content     (->> (hs/select (hs/class "comment") el)
                                          first :content (keep find-text) (str/join "\n"))})
 
@@ -176,13 +210,19 @@
                    :hacker-news.comment/age
                    :hacker-news.comment/content
                    :hacker-news.comment/id
-                   :hacker-news.comment/ident]}]}
+                   :hacker-news.comment/indent]}]}
   {:hacker-news.item/comments-flat
    (->> item-hickory
         (hs/select (hs/class "comtr"))
         (mapv extract-comment))})
 
-(pco/defresolver item-comments [{:hacker-news.page/keys [item-hickory]}]
+(comment
+  (p.eql/process env
+    {:hacker-news.item/id "25733200"}
+    [{:hacker-news.item/comments-flat
+      [:hacker-news.comment/author-name]}]))
+
+(pco/defresolver item-comments [{:hacker-news.item/keys [comments-flat]}]
   {::pco/output
    [{:hacker-news.item/comments
      [:hacker-news.comment/author-name
@@ -191,31 +231,28 @@
       :hacker-news.comment/id
       {:hacker-news.comment/responses '...}]}]}
   (let [{:keys [roots index]}
-        (->> item-hickory
-             (hs/select (hs/class "comtr"))
+        (->> comments-flat
              (reduce
-               (fn [{:keys [level prev] :as acc} el]
-                 (let [el-level   (comment-ident-level el)
-                       id         (-> el :attrs :id)
-                       {:keys [stack] :as acc} (cond-> acc
-                                                 (> el-level level)
+               (fn [{:keys [level prev] :as acc} {:hacker-news.comment/keys [id indent] :as comment}]
+                 (let [{:keys [stack] :as acc} (cond-> acc
+                                                 (> indent level)
                                                  (update :stack conj prev)
 
-                                                 (< el-level level)
+                                                 (< indent level)
                                                  (update :stack pop))
-                       stack-head (peek stack)
-                       entry      (assoc (extract-comment el) :id id)]
+                       stack-head (peek stack)]
                    (cond-> acc
                      true
-                     (-> (update :index assoc id entry)
-                         (assoc :level el-level)
+                     (-> (update :index assoc id comment)
+                         (assoc :level indent)
                          (assoc :prev id))
 
-                     (zero? el-level)
-                     (update :roots conj entry)
+                     (zero? indent)
+                     (update :roots conj comment)
 
-                     (pos? el-level)
-                     (update-in [:index stack-head :hacker-news.comment/responses] coll/vconj {:id id}))))
+                     (pos? indent)
+                     (update-in [:index stack-head :hacker-news.comment/responses]
+                       coll/vconj {:hacker-news.comment/id id}))))
                {:stack []
                 :roots []
                 :index {}
@@ -223,7 +260,7 @@
                 :prev  nil}))]
     (if (seq index)
       (->> (p.eql/process
-             (pci/register [(pbir/static-table-resolver :id index)
+             (pci/register [(pbir/static-table-resolver :hacker-news.comment/id index)
                             (pbir/constantly-resolver :roots roots)])
              [{:roots [:hacker-news.comment/author-name
                        :hacker-news.comment/age
@@ -233,6 +270,12 @@
            :roots
            (hash-map :hacker-news.item/comments))
       {:hacker-news.item/comments []})))
+
+(comment
+  (p.eql/process env
+    {:hacker-news.item/id "25733200"}
+    [{:hacker-news.item/comments
+      [:hacker-news.comment/author-name]}]))
 
 ; endregion
 
@@ -266,6 +309,9 @@
 ; endregion
 
 (defonce cache* (atom {}))
+
+(comment
+  (keys @cache*))
 
 (def env
   (-> {::durable-cache* cache*}

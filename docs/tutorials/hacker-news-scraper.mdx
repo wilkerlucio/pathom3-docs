@@ -688,10 +688,214 @@ spacings to convey the nesting.
 For us this means we need to do more work to reconstruct the tree from a flat structure.
 
 Let's do that in parts, first lets extract it in a way that is closer to what we have,
-that is a flat structure.
+that is a flat structure. On top of the data I mentioned in the image, we now will
+also add a `:hacker-news.comment/ident`, which tells us the indentation level of that
+row. Later I'll use this transform the list in a tree.
 
 ```clojure
+(defn comment-ident-level [el]
+  (-> (hs/select (hs/and (hs/tag "img") (hs/attr "src" #{"s.gif"})) el)
+      first :attrs :width select-number (/ 40)))
 
+(defn extract-comment [el]
+  {:hacker-news.comment/id          (-> el :attrs :id)
+   :hacker-news.comment/age         (class-text el "age")
+   :hacker-news.comment/author-name (class-text el "hnuser")
+   :hacker-news.comment/indent       (comment-ident-level el)
+   :hacker-news.comment/content     (->> (hs/select (hs/class "comment") el)
+                                         first :content (keep find-text) (str/join "\n"))})
+
+(pco/defresolver item-comments-flat [{:hacker-news.page/keys [item-hickory]}]
+  {::pco/output [{:hacker-news.item/comments-flat
+                  [:hacker-news.comment/author-name
+                   :hacker-news.comment/age
+                   :hacker-news.comment/content
+                   :hacker-news.comment/id
+                   :hacker-news.comment/indent]}]}
+  {:hacker-news.item/comments-flat
+   (->> item-hickory
+        (hs/select (hs/class "comtr"))
+        (mapv extract-comment))})
+```
+
+We can test that with (remember to add all resolvers to the env):
+
+```clojure
+(comment
+  ; get all comments author names
+  (p.eql/process env
+    {:hacker-news.item/id "25733200"}
+    [{:hacker-news.item/comments-flat
+      [:hacker-news.comment/author-name]}]))
+```
+
+Now it's time to transform the list in a tree.
+
+To think about this process, let's use make up some example data and how it should be
+transformed:
+
+```clojure
+; first, visually it looks like this:
+; 1
+; | 2
+; | 3
+; 4
+; | 5
+; | | 6
+
+; we have a list like this, with ids and indentations, the rest of the data we can ignore
+; for the purpose of this transformation
+[{:id 1 :ident 0}
+ {:id 2 :ident 1}
+ {:id 3 :ident 1}
+ {:id 4 :ident 0}
+ {:id 5 :ident 1}
+ {:id 6 :ident 2}]
+
+; and our goal is to transform that into:
+[{:id 1
+  :children [{:id 2}
+             {:id 3}]}
+ {:id 4
+  :children [{:id 5
+              :children [{:id 6}]}]}]
+```
+
+To do this, we have to go over the list, and remember past items. My idea to remember the
+current level, when it goes up, add an item to a stack, when goes down, remove from the
+stack. The stack will contain the ids of the parent items. As I scan I'll also add
+the items to a list, indexed by ID. This way I can modify any item any time with ease.
+
+I decided would be fun to use Pathom as part of this process too, and it's nice the
+things I discussed already feel like a graph.
+
+This is the code:
+
+```clojure
+(pco/defresolver item-comments [{:hacker-news.item/keys [comments-flat]}]
+  {::pco/output
+   [{:hacker-news.item/comments
+     [:hacker-news.comment/author-name
+      :hacker-news.comment/age
+      :hacker-news.comment/content
+      :hacker-news.comment/id
+      {:hacker-news.comment/responses '...}]}]}
+  (let [{:keys [roots index]}
+        (->> comments-flat
+             (reduce
+               (fn [{:keys [level prev] :as acc} {:hacker-news.comment/keys [id indent] :as comment}]
+                 (let [{:keys [stack] :as acc} (cond-> acc
+                                                 (> indent level)
+                                                 (update :stack conj prev)
+
+                                                 (< indent level)
+                                                 (update :stack pop))
+                       stack-head (peek stack)]
+                   (cond-> acc
+                     true
+                     (-> (update :index assoc id comment)
+                         (assoc :level indent)
+                         (assoc :prev id))
+
+                     (zero? indent)
+                     (update :roots conj comment)
+
+                     (pos? indent)
+                     (update-in [:index stack-head :hacker-news.comment/responses]
+                       coll/vconj {:hacker-news.comment/id id}))))
+               {:stack []
+                :roots []
+                :index {}
+                :level 0
+                :prev  nil}))]
+    ; empty index when there are no comments
+    (if (seq index)
+      ; use pathom to transform the query in a tree
+      (->> (p.eql/process
+             (pci/register [(pbir/static-table-resolver :hacker-news.comment/id index)
+                            (pbir/constantly-resolver :roots roots)])
+             [{:roots [:hacker-news.comment/author-name
+                       :hacker-news.comment/age
+                       :hacker-news.comment/content
+                       :hacker-news.comment/id
+                       {:hacker-news.comment/responses '...}]}])
+           :roots
+           ; always remember to wrap the sequence in the named output
+           (hash-map :hacker-news.item/comments))
+      {:hacker-news.item/comments []})))
+```
+
+Usage demo:
+
+```clojure
+; lets recap what our env is like with all of the things
+(def env
+  (-> {::durable-cache* cache*}
+      (pci/register
+        [news-page-html-string
+         news-page-hickory
+         news-page
+         news-next-page
+         all-news-pages
+         user-data-hickory
+         user-data
+         (pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
+         ; add this new one to also alias from comment author name
+         (pbir/alias-resolver :hacker-news.comment/author-name :hacker-news.user/id)
+         item-page-hickory
+         item-data
+         item-comments-flat
+         item-comments])))
+
+(comment
+  ; the same we did before, but this time we will only see the top level comments
+  (p.eql/process env
+    {:hacker-news.item/id "25733200"}
+    [{:hacker-news.item/comments
+      [:hacker-news.comment/author-name]}]))
+
+(comment
+  ; now, get the whole structured comments, and also include the karma of each user
+  ; on it
+  (p.eql/process env
+    {:hacker-news.item/id "25733200"}
+    [{:hacker-news.item/comments
+      [:hacker-news.comment/author-name
+       :hacker-news.user/karma
+       {:hacker-news.comment/responses '...}]}]))
+
+(comment
+  ; WARNING: maybe you can't finish running this before HN throttle you, when I tried
+  ; to run too many things I started getting 403 from Hacker News, which makes sense.
+  ; if you can, this gets data from all users from all items and comments in the first
+  ; page of news
+  (p.eql/process env
+    [{:hacker-news.page/news
+      [:hacker-news.item/age
+       :hacker-news.item/author-name
+       :hacker-news.item/id
+       :hacker-news.item/comments-count
+       :hacker-news.item/score
+       :hacker-news.item/rank-in-page
+       :hacker-news.item/source
+       :hacker-news.item/title
+       :hacker-news.item/url
+
+       :hacker-news.user/id
+       :hacker-news.user/karma
+       :hacker-news.user/join-date
+
+       {:hacker-news.item/comments
+        [:hacker-news.comment/author-name
+         :hacker-news.comment/age
+         :hacker-news.comment/content
+         :hacker-news.comment/id
+
+         :hacker-news.user/id
+         :hacker-news.user/karma
+         :hacker-news.user/join-date
+
+         {:hacker-news.comment/responses '...}]}]}]))
 ```
 
 ## Other pages
