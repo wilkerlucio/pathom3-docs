@@ -22,6 +22,12 @@ Here is a quick guide you can follow to help in this process:
 2. For data points, add some entity context in the name. In the case of Hacker News I see they call it `item`.
 3. If you mean to read collections, give each collection a name.
 
+:::note
+If you are developing a product on a company, use the company name for the step one.
+Avoid having short names like `:user/name` since they have higher chance of collision.
+This makes your names much harder to integrate with other names.
+:::
+
 Let's see what are the interesting data points to extract from the Hacker News front
 page:
 
@@ -341,7 +347,7 @@ Now if you keep running that expression, it only does the IO on the first time.
 To clear the cache, run `(reset! cache* {})` in the REPL.
 :::
 
-## Navigate the history
+## Traversing pagination
 
 So far we only read the first page of the news, but there is a `More` button at the
 end. Now we are going to scan though these pages.
@@ -377,6 +383,13 @@ will expose the attribute `:hacker-news.page/news-next-page` that contains the k
        {:hacker-news.page/news-page-url
         (str "https://news.ycombinator.com/" link)}})))
 ```
+
+:::tip
+You can look at this resolver as an implementation of a linked list. The attribute
+`:hacker-news.page/news-next-page` is a link to the next page item. In terms of Pathom,
+we make that happen providing the `:hacker-news.page/news-page-url` in that context; which can navigate
+to the next `:hacker-news.page/news-next-page` and so on...
+:::
 
 I check if there is a `More` link, otherwise we don't return any data, to tell Pathom
 this is unavailable.
@@ -503,7 +516,7 @@ I tested there were 21 pages. If you try, it may take some time to finish.
 Pathom also supports [nested inputs](../resolvers.mdx#nested-inputs), this means we can create a resolver to make that
 same process we did with the query before:
 
-```clojure
+```clojure {12-13}
 (pco/defresolver all-news-pages [input]
   {::pco/input  [{:hacker-news.page/news
                   [:hacker-news.item/age
@@ -617,14 +630,14 @@ Let's see who has the most karma from the front-page:
 (def env
   (-> {::durable-cache* cache*}
       (pci/register
-        [news-page-html-string
+        [; alias the author name to id
+         (pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
+         news-page-html-string
          news-page-hickory
          news-page
          news-next-page
          user-data-hickory
-         user-data
-         ; alias the attributes
-         (pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)])))
+         user-data])))
 
 (comment
   (->> (p.eql/process env
@@ -700,7 +713,7 @@ row. Later I'll use this transform the list in a tree.
   {:hacker-news.comment/id          (-> el :attrs :id)
    :hacker-news.comment/age         (class-text el "age")
    :hacker-news.comment/author-name (class-text el "hnuser")
-   :hacker-news.comment/indent       (comment-ident-level el)
+   :hacker-news.comment/indent      (comment-ident-level el)
    :hacker-news.comment/content     (->> (hs/select (hs/class "comment") el)
                                          first :content (keep find-text) (str/join "\n"))})
 
@@ -922,7 +935,7 @@ To answer that you can leverage the `datafy` protocol implemented by Pathom Smar
 
 ```clojure
 (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
-    (clojure.datafy/datafy))
+    clojure.datafy/datafy)
 =>
 {:hacker-news.item/age :com.wsscode.pathom3.connect.operation/unknown-value
  :hacker-news.item/author-name :com.wsscode.pathom3.connect.operation/unknown-value
@@ -982,7 +995,7 @@ are available, for example:
 (-> (psm/smart-map env {})
     :hacker-news.page/news
     first
-    (clojure.datafy/datafy))
+    clojure.datafy/datafy)
 ```
 :::
 
