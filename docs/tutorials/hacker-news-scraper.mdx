@@ -385,7 +385,7 @@ You may notice we now have two resolvers that get the HTML string for the news p
 and parse it. Each resolver is doing its own parsing, we can make then share this
 by breaking this step in a new resolver.
 
-```clojure
+```clojure {1-6,8-9,34-35}
 ; get the html string and compute hickory
 (pco/defresolver news-page-hickory [{:hacker-news.page/keys [news-raw-html]}]
   {:hacker-news.page/news-hickory
