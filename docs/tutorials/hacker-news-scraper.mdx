@@ -357,7 +357,7 @@ for it:
    (slurp (or news-page-url "https://news.ycombinator.com/news"))})
 ```
 
-I used an [optional input](resolvers.mdx#optional-inputs) named `:hacker-news.page/news-page-url` to allow the
+I used an [optional input](../resolvers.mdx#optional-inputs) named `:hacker-news.page/news-page-url` to allow the
 customization, but still have a default.
 
 To provide the data with the URL for the next page, I'll add a new resolver. This resolver
@@ -500,7 +500,7 @@ unbounded it's going to pull pages until Hacker News is over with them. During t
 I tested there were 21 pages. If you try, it may take some time to finish.
 :::
 
-Pathom also supports [nested inputs](resolvers.mdx#nested-inputs), this means we can create a resolver to make that
+Pathom also supports [nested inputs](../resolvers.mdx#nested-inputs), this means we can create a resolver to make that
 same process we did with the query before:
 
 ```clojure
@@ -601,7 +601,7 @@ to `:hacker-news.user/id`. This would work, but this reduces the accuracy of thi
 semantics. `:hacker-news.item/author-name` have a very specific meaning, it's the author
 name in an item.
 
-To reconcile this situation we can create an [alias-resolver](built-in-resolvers.mdx#aliasing),
+To reconcile this situation we can create an [alias-resolver](../built-in-resolvers.mdx#aliasing),
 that allows Pathom from navigate from one name to another. This is what I'm going to
 use next.
 
@@ -657,7 +657,6 @@ Let's start writing a resolver that can read this information given some item id
   {:hacker-news.page/item-hickory
    (->> (slurp (str "https://news.ycombinator.com/item?id=" id))
         hc/parse hc/as-hickory)})
-
 
 (pco/defresolver item-data [{:hacker-news.page/keys [item-hickory]}]
   {::pco/output
@@ -900,11 +899,11 @@ Usage demo:
 
 Let's do a pause on implementing HN things and play a bit with what we have.
 
-In the previous examples we requested information using the [EQL interface](eql.mdx). The
+In the previous examples we requested information using the [EQL interface](../eql.mdx). The
 EQL is the most efficient and precise way to use Pathom, because in this way Pathom
 can look at a full size request and optimize as much as possible.
 
-I'll now introduce [Smart Maps](smart-maps.mdx) for our play here, which is a different interface to use
+I'll now introduce [Smart Maps](../smart-maps.mdx) for our play here, which is a different interface to use
 Pathom 3. Smart Maps are a data structure that works like Clojure maps, but when you
 access some key that the map doesn't know the value, it uses the Pathom resolvers to
 figure out (when possible).
@@ -922,8 +921,8 @@ Cool right?! You may be asking now: how do you I know what can I access?
 To answer that you can leverage the `datafy` protocol implemented by Pathom Smart Maps:
 
 ```clojure
-(let [sm (psm/smart-map env {:hacker-news.item/id "25733200"})]
-  (clojure.datafy/datafy sm))
+(-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+    (clojure.datafy/datafy))
 =>
 {:hacker-news.item/age :com.wsscode.pathom3.connect.operation/unknown-value
  :hacker-news.item/author-name :com.wsscode.pathom3.connect.operation/unknown-value
@@ -954,10 +953,9 @@ the user).
 To some REPL play with it, here are some suggestions:
 
 ```clojure
-; author karma
+; author karma from item 25733200
 (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
     :hacker-news.user/karma)
-; => 1834
 
 ; author and content of first comment of the first post on news
 (-> (psm/smart-map env {})
@@ -966,7 +964,21 @@ To some REPL play with it, here are some suggestions:
     :hacker-news.item/comments
     first
     (select-keys [:hacker-news.comment/author-name
-                  :hacker-news.comment/content]))
+                  :hacker-news.comment/content
+                  :hacker-news.user/join-date]))
 ```
+
+:::tip
+Value responses of smart maps are also smart maps. This is what allow the navigation
+like you seen before. This also means you can datafy at any point to see what paths
+are available, for example:
+
+```clojure
+(-> (psm/smart-map env {})
+    :hacker-news.page/news
+    first
+    (clojure.datafy/datafy))
+```
+:::
 
 ## Other pages

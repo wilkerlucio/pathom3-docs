@@ -459,8 +459,9 @@
                     :hacker-news.comment/content
                     :hacker-news.user/join-date]))
 
-  (-> (psm/smart-map env {:hacker-news.item/id "25733200"})
-      (clojure.datafy/datafy)))
+  )
+(-> (psm/smart-map env {:hacker-news.item/id "25733200"})
+    (clojure.datafy/datafy))
 (-> (psm/smart-map env {})
     :hacker-news.page/news
     first
