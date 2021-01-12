@@ -2,7 +2,7 @@
 title: Hacker News Scraper
 ---
 
-In this tutorial we are going to write a scraper to extract information from hacker
+In this tutorial, we are going to write a scraper to extract information from hacker
 news pages.
 
 This scraper will be capable of:
@@ -14,17 +14,17 @@ This scraper will be capable of:
 
 ## Attribute mapping
 
-The first step is to make names for every attribute we want to deal with.
+The first step is to make names for every attribute we want to handle.
 
 Here is a quick guide you can follow to help in this process:
 
-1. Pick a general prefix, usually the product/service name, for this case I'll pick: `hacker-news`.
-2. For data points, add some entity context in the name. In the case of Hacker News I see they call it `item`.
+1. Pick a general prefix, usually the product/service name. For this case, I'll pick: `hacker-news`.
+2. For data points, add some entity context in the name. In the case of Hacker News, I see they call it `item`.
 3. If you mean to read collections, give each collection a name.
 
 :::note
-If you are developing a product on a company, use the company name for the step one.
-Avoid having short names like `:user/name` since they have higher chance of collision.
+If you are developing a product for a company, use the company name for step one.
+Avoid having short names like `:user/name` since they have a higher collision chance.
 This makes your names much harder to integrate with other names.
 :::
 
@@ -37,7 +37,7 @@ page:
 
 </div>
 
-The circle cursors point to visible points of data, the open diamond means the data
+The circle cursors point to visible points of data. The open diamond means the data
 is hidden (inside the markup).
 
 I used the name `:hacker-news.page/news` to name the collection of items for this page.
@@ -62,14 +62,14 @@ Here is a text version of all the declared attributes:
 
 ## Reading the news page
 
-For the implementation I'll use the [Hickory](https://github.com/davidsantiago/hickory) library to parse the HTML and extract
+For the implementation, I'll use the [Hickory](https://github.com/davidsantiago/hickory) library to parse the HTML and extract
 the data.
 
 To start, we need to explore and figure the code to extract the information fragments
 from the HTML page.
 
-I like to start reading the raw html and saving on a `defonce`, so I can keep reloading
-the REPL while have a cached version of sample data:
+I like to start reading the raw HTML and saving it on a `defonce`, so I can keep reloading
+the REPL while has a cached version of sample data:
 
 ```clojure
 (ns com.wsscode.pathom3.docs.demos.tutorials.hacker-news-scrapper)
@@ -77,7 +77,7 @@ the REPL while have a cached version of sample data:
 (defonce sample-html (slurp (str "https://news.ycombinator.com/news")))
 ```
 
-It's time to learn about the HTML structure of Hacker News page, I like to use the
+It's time to learn about the HTML structure of Hacker News page. I like to use the
 Chrome inspector to navigate. I can see there is a table with the class `itemlist`
 wrapping the item elements.
 
@@ -108,10 +108,10 @@ you follow along in your REPL:
        first))
 ```
 
-Now we can extract the rows out. Hacker News doesn't make it strait forward. When I
-look at the rows I see each item uses two table rows. Then it has a spacer row between
-the next two with the class `spacer`. To add more details, in the end there is a
-different row with the class `morespace`.
+Now we can extract the rows out. Hacker News doesn't make it straight forward. When I
+look at the rows, I see each item uses two table rows. Then it has a spacer row between
+the next two with the class `spacer`. To add more details, there is a
+different row with the class `morespace` in the end.
 
 To deal with this, we are going to query for rows, removing the ones with the class `spacer`
 or `morespace`.
@@ -134,7 +134,7 @@ This is how we can do it with Hickory:
        (mapv #(hash-map :type :element :tag :tbody :content (vec %)))))
 ```
 
-Now we have collection where each item represent a row in Hacker News.
+Now we have a collection where each item represents a row in Hacker News.
 
 :::note
 After the `partition` the `mapv` is making a fake element for Hickory, this way we
@@ -143,7 +143,7 @@ can threat the two rows as a single element for querying in.
 
 ### Read item details
 
-Now for each item we need to extract the attributes we want. Here are a few helpers
+Now for each item, we need to extract the attributes we want. Here are a few helpers
 we will use for it:
 
 ```clojure
@@ -210,7 +210,7 @@ Let's use it to extract the data from our previous process:
        (mapv extract-item-from-hickory)))
 ```
 
-Now you should see the plain nice plain data in the output, with one map for each
+Now you should see the nice plain data in the output, with one map for each
 item entry.
 
 ## Make a resolver
@@ -317,8 +317,8 @@ outputs in the editor.
 
 ### Caching the request for development
 
-When we run the process now, it does the request to hacker news every time. For development
-its useful if we can cache that to have a faster iteration.
+When we run the process now, it requests hacker news every time. For development
+it's useful if we can cache that to have a faster iteration.
 
 You may have noticed I used a separated resolver to fetch the HTML string. We can make
 this resolver use a durable cache to speed up the iteration:
@@ -341,7 +341,7 @@ this resolver use a durable cache to speed up the iteration:
          news-page])))
 ```
 
-Now if you keep running that expression, it only does the IO on the first time.
+Now, if you keep running that expression, it only does the IO on the first time.
 
 :::tip
 To clear the cache, run `(reset! cache* {})` in the REPL.
@@ -349,8 +349,8 @@ To clear the cache, run `(reset! cache* {})` in the REPL.
 
 ## Traversing pagination
 
-So far we only read the first page of the news, but there is a `More` button at the
-end. Now we are going to scan though these pages.
+So far, we only read the first page of the news, but there is a `More` button at the
+end. Now we are going to scan through these pages.
 
 First we need to adapt the resolver that loads the page html to accept a custom URL
 for it:
@@ -387,16 +387,16 @@ will expose the attribute `:hacker-news.page/news-next-page` that contains the k
 :::tip
 You can look at this resolver as an implementation of a linked list. The attribute
 `:hacker-news.page/news-next-page` is a link to the next page item. In terms of Pathom,
-we make that happen providing the `:hacker-news.page/news-page-url` in that context; which can navigate
+we make that happen by providing the `:hacker-news.page/news-page-url` in that context, which can navigate
 to the next `:hacker-news.page/news-next-page` and so on...
 :::
 
-I check if there is a `More` link, otherwise we don't return any data, to tell Pathom
+I check if there is a `More` link. Otherwise, we don't return any data to tell Pathom
 this is unavailable.
 
 You may notice we now have two resolvers that get the HTML string for the news page
-and parse it. Each resolver is doing its own parsing, we can make then share this
-by breaking this step in a new resolver.
+and parse it. Each resolver is doing its parsing. We can make them share this
+by breaking this step into a new resolver.
 
 ```clojure {1-6,8-9,34-35}
 ; get the html string and compute hickory
@@ -447,11 +447,11 @@ by breaking this step in a new resolver.
         (str "https://news.ycombinator.com/" link)}})))
 ```
 
-This is an important design choice when you write Pathom resolvers. How much you want
-to break, as you add more resolvers you expand the connection points to other resolvers.
+This is a crucial design choice when you write Pathom resolvers. How much you want
+to break, as you add more resolvers, you expand the connection points to other resolvers.
 
-In general is a good practice to keep spread, but it's also fine to provide many items
-in a resolver when they share close process. This reduces the amount of work Pathom
+In general, it is a good practice to keep spread, but it's fine to provide many items
+in a resolver when they share a close process. This reduces the amount of work Pathom
 has to do to integrate.
 
 Let's play with our new resolvers:
@@ -509,7 +509,7 @@ To flat the items out we can use `tree-seq`:
 
 :::note
 Recursive queries can be numbers (bounded) or a symbol ... (unbounded). If you use the
-unbounded it's going to pull pages until Hacker News is over with them. During the time
+unbounded, it will pull pages until Hacker News is over with them. During the time
 I tested there were 21 pages. If you try, it may take some time to finish.
 :::
 
@@ -602,20 +602,19 @@ Here are the resolvers to parse this:
 ```
 
 Note we also use the durable cache, so we can keep playing it. When I created this I
-was just hitting the same cache entry until I got the extraction code right.
+was hitting the same cache entry until I got the extraction code right.
 
 :::important
-You may have notice that we now have two different attributes that mean user id.
-We have `:hacker-news.item/author-name` and now `:hacker-news.user/id`. This means
-if we try to load the karma for the user in the HN item, it won't be able to get there.
+You may have noticed that we now have two different attributes that mean user id.
+We have `:hacker-news.item/author-name` and now `:hacker-news.user/id`. If we try to load the karma for the user in the HN item, it won't be able to get there.
 
 One idea is to change our previous resolver and rename `:hacker-news.item/author-name`
 to `:hacker-news.user/id`. This would work, but this reduces the accuracy of this name
-semantics. `:hacker-news.item/author-name` have a very specific meaning, it's the author
+semantics. `:hacker-news.item/author-name` has a precise meaning. It's the author's
 name in an item.
 
-To reconcile this situation we can create an [alias-resolver](../built-in-resolvers.mdx#aliasing),
-that allows Pathom from navigate from one name to another. This is what I'm going to
+To reconcile this situation, we can create an [alias-resolver](../built-in-resolvers.mdx#aliasing),
+that allows Pathom to navigate from one name to another. This is what I'm going to
 use next.
 
 It's also good to point out that aliases are directional. We are allowing
@@ -659,7 +658,7 @@ Let's map the comments section:
 </div>
 
 We can see at the top we have almost the same data as we did on the news list, except
-the rank position (which makes sense, since its relative to that page).
+the rank position (which makes sense since it's relative to that page).
 
 Let's start writing a resolver that can read this information given some item id:
 
@@ -686,7 +685,7 @@ Let's start writing a resolver that can read this information given some item id
                                   first)))
 ```
 
-That's easy enough, time for the comments.
+That's easy enough—time for the comments.
 
 By looking at the page we can see comments are nested, and altough this example isn't
 showing, they also support deep nesting.
@@ -694,15 +693,13 @@ showing, they also support deep nesting.
 Most of the time, the HTML will follow the structure of the data, but this isn't the
 case here.
 
-Try inspecting the page, you will see they use a flat table, and manually add the
+Try inspecting the page. You will see they use a flat table and manually add the
 spacings to convey the nesting.
 
-For us this means we need to do more work to reconstruct the tree from a flat structure.
+This means we need to do more work to reconstruct the tree from a flat structure.
 
-Let's do that in parts, first lets extract it in a way that is closer to what we have,
-that is a flat structure. On top of the data I mentioned in the image, we now will
-also add a `:hacker-news.comment/ident`, which tells us the indentation level of that
-row. Later I'll use this transform the list in a tree.
+Let's do that in parts. First, let's extract it in a closer way to what we have: a flat structure. On top of the data I mentioned in the image, we now will
+also add a `:hacker-news.comment/ident`, which tells us the row's indentation level. Later I'll use this to transform the list into a tree.
 
 ```clojure
 (defn comment-ident-level [el]
@@ -741,13 +738,13 @@ We can test that with (remember to add all resolvers to the env):
       [:hacker-news.comment/author-name]}]))
 ```
 
-Now it's time to transform the list in a tree.
+Now it's time to transform the list into a tree.
 
 To think about this process, let's use make up some example data and how it should be
 transformed:
 
 ```clojure
-; first, visually it looks like this:
+; first, visually, it looks like this:
 ; 1
 ; | 2
 ; | 3
@@ -773,12 +770,12 @@ transformed:
               :children [{:id 6}]}]}]
 ```
 
-To do this, we have to go over the list, and remember past items. My idea to remember the
-current level, when it goes up, add an item to a stack, when goes down, remove from the
-stack. The stack will contain the ids of the parent items. As I scan I'll also add
-the items to a list, indexed by ID. This way I can modify any item any time with ease.
+To do this, we have to go over the list and remember past items. My idea to remember the
+current level is: When it goes up, add an item to a stack. When it goes down, remove it from the
+stack. The stack will contain the ids of the parent items. As I scan, I'll also add
+the items to a list, indexed by ID. This way, I can modify any item at any time with ease.
 
-I decided would be fun to use Pathom as part of this process too, and it's nice the
+I decided it would be fun to use Pathom as part of this process too, and it's nice the
 things I discussed already feel like a graph.
 
 This is the code:
@@ -877,7 +874,7 @@ Usage demo:
        {:hacker-news.comment/responses '...}]}]))
 
 (comment
-  ; WARNING: this will trigger a lot of requests, may take some time, also HN may
+  ; WARNING: this will trigger a lot of requests, may take some time. Also, HN may
   ; throttle or block some accesses from you.
   (p.eql/process env
     [{:hacker-news.page/news
@@ -913,8 +910,8 @@ Usage demo:
 Let's do a pause on implementing HN things and play a bit with what we have.
 
 In the previous examples we requested information using the [EQL interface](../eql.mdx). The
-EQL is the most efficient and precise way to use Pathom, because in this way Pathom
-can look at a full size request and optimize as much as possible.
+EQL is the most efficient and precise way to use Pathom because in this way, Pathom
+can look at a full-size request and optimize as much as possible.
 
 I'll now introduce [Smart Maps](../smart-maps.mdx) for our play here, which is a different interface to use
 Pathom 3. Smart Maps are a data structure that works like Clojure maps, but when you
@@ -929,7 +926,7 @@ To this demo I'll start with some item id and fetch some data:
 => "OpenSocial Specification"
 ```
 
-Cool right?! You may be asking now: how do you I know what can I access?
+Cool right?! You may be asking now: how do you know what is accessible?
 
 To answer that you can leverage the `datafy` protocol implemented by Pathom Smart Maps:
 
@@ -959,7 +956,7 @@ To answer that you can leverage the `datafy` protocol implemented by Pathom Smar
  :hacker-news.user/karma :com.wsscode.pathom3.connect.operation/unknown-value}
 ```
 
-There we can see a lot of data related to the item (given we provided an item id). Also,
+There we can see many attributes related to the item (given we provided an item id). Also,
 you can see all the pages, and some user data (because of the relationship from item to
 the user).
 
@@ -987,8 +984,8 @@ To some REPL play with it, here are some suggestions:
 ```
 
 :::tip
-Value responses of smart maps are also smart maps. This is what allow the navigation
-like you seen before. This also means you can datafy at any point to see what paths
+Value responses to smart maps are also smart maps. This is what allows the navigation
+like you have seen before. This also means you can datafy at any point to see what paths
 are available, for example:
 
 ```clojure
@@ -1001,10 +998,10 @@ are available, for example:
 
 ## Other pages
 
-So far we extracted some details, and the news page. Other pages like `past` and `ask`
+So far, we extracted some details and the news page. Other pages like `past` and `ask`
 are quite similar.
 
-This is the list of resolvers we have to deal with the news page:
+This is the list of resolvers we have to deal with on the news page:
 
 ```clojure
 news-page-html-string
@@ -1014,8 +1011,8 @@ news-next-page
 all-news-pages
 ```
 
-For the `past` page I'll simplify that, make the same resolver request the HTML and
-parse it, like we did for comments and user details.
+For the `past` page, I'll simplify that, make the same resolver request the HTML and
+parse it, as we did for comments and user details.
 
 ```clojure
 (defn extract-items-from-list [hickory]
@@ -1085,12 +1082,12 @@ parse it, like we did for comments and user details.
 If we compare with the news resolvers, they are almost the same. The differences are:
 
 - The resolver names are different
-- The attribute names they are use for the collection node are different
+- The attribute names they are used for the collection node are different
 - The initial page uses a different URL
-- The table with items has some stuff before the actual first item, our new implementation skips those.
+- The table with items has some stuff before the actual first item. Our new implementation skips those.
 
-This similarity can make you feel like there is some higher order thing to do here.
-Even more when we consider that the `ask` page will be another instance of the same
+This similarity can make you feel like there is some higher-order thing to do here.
+Especially when we consider that the `ask` page will be another instance of the same
 situation.
 
 We can generalize this by writing a function that returns some resolvers, let's replace
@@ -1182,7 +1179,7 @@ define some pages:
 ```
 
 :::note
-`pci/register` accepts nested vectors as definitions, it flattens the structure out
+`pci/register` accepts nested vectors as definitions. It flattens the structure out
 in the process of registration.
 :::
 
@@ -1208,6 +1205,6 @@ I hope you learned some new things about Pathom 3 in the process.
 If you like to keep playing, here are some suggestions to add:
 
 - Parse comments back, linking back to the items they point to
-- Make relationships from the user to its submissions, comments and favorites
-- Support logging in user, and they use mutations to implement voting or submission of new entries
+- Make relationships from the user to its submissions, comments, and favorites
+- Support logging in user and they use mutations to implement voting or submission of new entries
 - Replace the HTML parsing implementation with the [Hacker News API](https://github.com/HackerNews/API)
