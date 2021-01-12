@@ -1000,3 +1000,214 @@ are available, for example:
 :::
 
 ## Other pages
+
+So far we extracted some details, and the news page. Other pages like `past` and `ask`
+are quite similar.
+
+This is the list of resolvers we have to deal with the news page:
+
+```clojure
+news-page-html-string
+news-page-hickory
+news-page
+news-next-page
+all-news-pages
+```
+
+For the `past` page I'll simplify that, make the same resolver request the HTML and
+parse it, like we did for comments and user details.
+
+```clojure
+(defn extract-items-from-list [hickory]
+  (let [tbody (->> hickory
+                   (hs/select (hs/class "itemlist"))
+                   first
+                   (hs/select (hs/tag "tbody"))
+                   first)
+        tbody (update tbody :content
+                #(into []
+                       (drop-while
+                         (fn [e]
+                           (let [cls (some-> e :attrs :class)]
+                             (not= cls "athing"))))
+                       %))]
+
+    (->> tbody
+         (hs/select (hs/and
+                      (hs/tag "tr")
+                      (hs/not (hs/or
+                                (hs/class "spacer")
+                                (hs/class "morespace")))))
+         (partition 2)
+         (mapv #(hash-map :type :element :tag :tbody :content (vec %)))
+         (mapv extract-item-from-hickory))))
+
+(defn extract-more-link [hickory]
+  (some->> hickory
+    (hs/select (hs/class "morelink"))
+    first :attrs :href))
+
+(pco/defresolver past-page-hickory [{:hacker-news.page/keys [past-page-url]}]
+  {::pco/cache-store ::durable-cache*
+   ::pco/input       [(pco/? :hacker-news.page/past-page-url)]}
+  {:hacker-news.page/past-hickory
+   (-> (or past-page-url "https://news.ycombinator.com/front")
+       slurp
+       (hc/parse)
+       (hc/as-hickory))})
+
+(pco/defresolver past-page [{:hacker-news.page/keys [past-hickory]}]
+  {::pco/output
+   [{:hacker-news.page/past
+     [:hacker-news.item/age
+      :hacker-news.item/author-name
+      :hacker-news.item/id
+      :hacker-news.item/comments-count
+      :hacker-news.item/score
+      :hacker-news.item/rank-in-page
+      :hacker-news.item/source
+      :hacker-news.item/title
+      :hacker-news.item/url]}]}
+  {:hacker-news.page/past
+   (extract-items-from-list past-hickory)})
+
+(pco/defresolver past-next-page [{:hacker-news.page/keys [past-hickory]}]
+  {::pco/output
+   [{:hacker-news.page/past-next-page
+     [:hacker-news.page/past-page-url]}]}
+
+  (if-let [link (extract-more-link past-hickory)]
+    {:hacker-news.page/past-next-page
+     {:hacker-news.page/past-page-url
+      (str "https://news.ycombinator.com/" link)}}))
+```
+
+If we compare with the news resolvers, they are almost the same. The differences are:
+
+- The resolver names are different
+- The attribute names they are use for the collection node are different
+- The initial page uses a different URL
+- The table with items has some stuff before the actual first item, our new implementation skips those.
+
+This similarity can make you feel like there is some higher order thing to do here.
+Even more when we consider that the `ask` page will be another instance of the same
+situation.
+
+We can generalize this by writing a function that returns some resolvers, let's replace
+our `past` page implementation with this idea:
+
+```clojure
+(defn hn-page-resolvers [page-name base-url]
+  (let [hickory-sym   (symbol "hacker-news.resolvers.page" (str page-name "-hickory"))
+        page-sym      (symbol "hacker-news.resolvers.page" page-name)
+        next-page-sym (symbol "hacker-news.resolvers.page" (str page-name "-next-page"))
+
+        hickory-kw    (keyword "hacker-news.page" (str page-name "-hickory"))
+        page-kw       (keyword "hacker-news.page" page-name)
+        next-page-kw  (keyword "hacker-news.page" (str page-name "-next-page"))
+        page-url-kw   (keyword "hacker-news.page" (str page-name "-page-url"))]
+    [(pco/resolver hickory-sym
+       {::pco/cache-store ::durable-cache*
+        ::pco/input       [(pco/? page-url-kw)]
+        ::pco/output      [hickory-kw]}
+       (fn [_ input]
+         {hickory-kw
+          (-> (or (get input page-url-kw) base-url)
+              slurp
+              (hc/parse)
+              (hc/as-hickory))}))
+
+     (pco/resolver page-sym
+       {::pco/input
+        [hickory-kw]
+
+        ::pco/output
+        [{page-kw
+          [:hacker-news.item/age
+           :hacker-news.item/author-name
+           :hacker-news.item/id
+           :hacker-news.item/comments-count
+           :hacker-news.item/score
+           :hacker-news.item/rank-in-page
+           :hacker-news.item/source
+           :hacker-news.item/title
+           :hacker-news.item/url]}]}
+       (fn [_ input]
+         {page-kw
+          (extract-items-from-list (get input hickory-kw))}))
+
+     (pco/resolver next-page-sym
+       {::pco/input
+        [hickory-kw]
+
+        ::pco/output
+        [{next-page-kw
+          [page-url-kw]}]}
+       (fn [_ input]
+
+         (if-let [link (extract-more-link (get input hickory-kw))]
+           {next-page-kw
+            {page-url-kw
+             (str "https://news.ycombinator.com/" link)}})))]))
+```
+
+Now we have a function that returns 3 resolvers in a vector. We can now use this to
+define some pages:
+
+```clojure {12-16}
+(def env
+  (-> {::durable-cache* cache*}
+      (pci/register
+        [(pbir/alias-resolver :hacker-news.item/author-name :hacker-news.user/id)
+         (pbir/alias-resolver :hacker-news.comment/author-name :hacker-news.user/id)
+         news-page-html-string
+         news-page-hickory
+         news-page
+         news-next-page
+         all-news-pages
+
+         ; this is different than news, news is the home, newest are the most recent
+         (hn-page-resolvers "newest" "https://news.ycombinator.com/newest")
+         (hn-page-resolvers "past" "https://news.ycombinator.com/front")
+         (hn-page-resolvers "ask" "https://news.ycombinator.com/ask")
+         (hn-page-resolvers "show" "https://news.ycombinator.com/show")
+
+         user-data-hickory
+         user-data
+
+         item-page-hickory
+         item-data
+         item-comments-flat
+         item-comments])))
+```
+
+:::note
+`pci/register` accepts nested vectors as definitions, it flattens the structure out
+in the process of registration.
+:::
+
+Just like that, we have four new pages implemented!
+
+## Review
+
+That's it for this tutorial, a recap of what we saw here:
+
+- Design attribute names for Hacker News data
+- Use Hickory to parse HTML data
+- Create resolvers to connect the system
+- Use recursive queries to traverse pagination
+- Use optional inputs
+- Use nested queries with recursive inputs
+- Smart Maps exploration
+- Creates resolvers dynamically using functions
+
+I hope you learned some new things about Pathom 3 in the process.
+
+## Exercises
+
+If you like to keep playing, here are some suggestions to add:
+
+- Parse comments back, linking back to the items they point to
+- Make relationships from the user to its submissions, comments and favorites
+- Support logging in user, and they use mutations to implement voting or submission of new entries
+- Replace the HTML parsing implementation with the [Hacker News API](https://github.com/HackerNews/API)

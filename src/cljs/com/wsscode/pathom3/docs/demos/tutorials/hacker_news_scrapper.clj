@@ -172,6 +172,103 @@
 
 ; endregion
 
+; region past page
+
+(defn extract-items-from-list [hickory]
+  (let [tbody (->> hickory
+                   (hs/select (hs/class "itemlist"))
+                   first
+                   (hs/select (hs/tag "tbody"))
+                   first)
+        tbody (update tbody :content
+                #(into []
+                       (drop-while
+                         (fn [e]
+                           (let [cls (some-> e :attrs :class)]
+                             (not= cls "athing"))))
+                       %))]
+
+    (->> tbody
+         (hs/select (hs/and
+                      (hs/tag "tr")
+                      (hs/not (hs/or
+                                (hs/class "spacer")
+                                (hs/class "morespace")))))
+         (partition 2)
+         (mapv #(hash-map :type :element :tag :tbody :content (vec %)))
+         (mapv extract-item-from-hickory))))
+
+(defn extract-more-link [hickory]
+  (some->> hickory
+    (hs/select (hs/class "morelink"))
+    first :attrs :href))
+
+(defn hn-page-resolvers [page-name base-url]
+  (let [hickory-sym   (symbol "hacker-news.resolvers.page" (str page-name "-hickory"))
+        page-sym      (symbol "hacker-news.resolvers.page" page-name)
+        next-page-sym (symbol "hacker-news.resolvers.page" (str page-name "-next-page"))
+
+        hickory-kw    (keyword "hacker-news.page" (str page-name "-hickory"))
+        page-kw       (keyword "hacker-news.page" page-name)
+        next-page-kw  (keyword "hacker-news.page" (str page-name "-next-page"))
+        page-url-kw   (keyword "hacker-news.page" (str page-name "-page-url"))]
+    [(pco/resolver hickory-sym
+       {::pco/cache-store ::durable-cache*
+        ::pco/input       [(pco/? page-url-kw)]
+        ::pco/output      [hickory-kw]}
+       (fn [_ input]
+         {hickory-kw
+          (-> (or (get input page-url-kw) base-url)
+              slurp
+              (hc/parse)
+              (hc/as-hickory))}))
+
+     (pco/resolver page-sym
+       {::pco/input
+        [hickory-kw]
+
+        ::pco/output
+        [{page-kw
+          [:hacker-news.item/age
+           :hacker-news.item/author-name
+           :hacker-news.item/id
+           :hacker-news.item/comments-count
+           :hacker-news.item/score
+           :hacker-news.item/rank-in-page
+           :hacker-news.item/source
+           :hacker-news.item/title
+           :hacker-news.item/url]}]}
+       (fn [_ input]
+         {page-kw
+          (extract-items-from-list (get input hickory-kw))}))
+
+     (pco/resolver next-page-sym
+       {::pco/input
+        [hickory-kw]
+
+        ::pco/output
+        [{next-page-kw
+          [page-url-kw]}]}
+       (fn [_ input]
+
+         (if-let [link (extract-more-link (get input hickory-kw))]
+           {next-page-kw
+            {page-url-kw
+             (str "https://news.ycombinator.com/" link)}})))]))
+
+(comment
+  (hn-page-resolvers "past" "https://news.ycombinator.com/front"))
+
+(comment
+  (tap> (psm/smart-map env))
+
+  (p.eql/process env
+    [{:hacker-news.page/past
+      [:hacker-news.item/id
+       :hacker-news.item/title]}]))
+
+; endregion
+
 ; region comments resolvers
 
 (pco/defresolver item-page-hickory [{:hacker-news.item/keys [id]}]
@@ -327,8 +424,16 @@
          news-page
          news-next-page
          all-news-pages
+
+         ; this is different than news, news is the home, newest are the most recent
+         (hn-page-resolvers "newest" "https://news.ycombinator.com/newest")
+         (hn-page-resolvers "past" "https://news.ycombinator.com/front")
+         (hn-page-resolvers "ask" "https://news.ycombinator.com/ask")
+         (hn-page-resolvers "show" "https://news.ycombinator.com/show")
+
          user-data-hickory
          user-data
+
          item-page-hickory
          item-data
          item-comments-flat
@@ -460,13 +565,3 @@
                     :hacker-news.user/join-date]))
 
   )
-(-> (psm/smart-map env {:hacker-news.item/id "25733200"})
-    (clojure.datafy/datafy))
-(-> (psm/smart-map env {})
-    :hacker-news.page/news
-    first
-    :hacker-news.item/comments
-    first
-    (select-keys [:hacker-news.comment/author-name
-                  :hacker-news.comment/content
-                  :hacker-news.user/join-date]))
