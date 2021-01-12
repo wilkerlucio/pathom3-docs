@@ -25,6 +25,11 @@ module.exports = {
         'shape-descriptor',
       ]
     },
+    {
+      'Tutorials': [
+        'tutorials/hacker-news-scraper'
+      ]
+    }
     // 'faq',
     // {
     //   'Integrations': [
