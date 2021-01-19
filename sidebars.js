@@ -14,6 +14,7 @@ module.exports = {
         'placeholders',
         'mutations',
         'plugins',
+        'async',
       ]
     },
     // 'modeling-guides',
