@@ -260,16 +260,9 @@ have its own graph.
     (original env ast-or-graph entity-tree*)))
 ```
 
-In case you want to run something only at the root graph you can use the `p.path/root?`
-helper:
+#### `::pcr/wrap-root-run-graph!`
 
-```clojure
-(defn sample-run-graph-wrapper [original]
-  (fn [env ast-or-graph entity-tree*]
-    (if (p.path/root? env)
-      (do-something-at-root))
-    (original env ast-or-graph entity-tree*)))
-```
+Like the previous, but only runs at the root graph.
 
 ### EQL Output
 
