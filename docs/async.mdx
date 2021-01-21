@@ -98,45 +98,28 @@ Example usage:
 ## Using core.async
 
 To use core.async we can extend the channel protocol to implement the conversion from
-a core.async channel to a future:
+a core.async channel to a future.
+
+I have made a [library](https://github.com/wilkerlucio/promesa-bridges) to share the implementation of this extension, this way we can
+avoid issues when multiple people try to extend the same type.
+
+First add promesa-bridges to your dependencies:
+
+```clojure
+{:deps {com.wsscode/promesa-bridges {:mvn/version "2021.01.20"}}}
+```
+
+Then include and use it:
 
 ```clojure
 (ns com.wsscode.pathom3.docs.demos.core.async-extend-core-async
   (:require
     [clojure.core.async :as async :refer [go <!]]
-    [clojure.core.async.impl.channels :as async-ch]
+    [com.wsscode.promesa.bridges.core-async]
     [com.wsscode.pathom3.connect.indexes :as pci]
     [com.wsscode.pathom3.connect.operation :as pco]
     [com.wsscode.pathom3.interface.async.eql :as p.a.eql]
-    [promesa.core :as p]
-    [promesa.protocols]))
-
-; region core.async extension
-
-(defn error?
-  "Returns true if err is an error object."
-  [err]
-  #?(:clj
-     (instance? Throwable err)
-
-     :cljs
-     (instance? js/Error err)))
-
-(defn chan->promise [c]
-  (p/create
-    (fn [resolve reject]
-      (go
-        (let [v (<! c)]
-          (if (error? v)
-            (reject v)
-            (resolve v)))))))
-
-(extend-type async-ch/ManyToManyChannel
-  promesa.protocols/IPromiseFactory
-  (-promise [this]
-    (chan->promise this)))
-
-; endregion
+    [promesa.core :as p]))
 
 (pco/defresolver slow-resolver []
   {::pco/output [::slow-response]}
@@ -152,4 +135,4 @@ a core.async channel to a future:
     (cljs.pprint/pprint res)))
 ```
 
-You can use the same pattern above to wrap other async managers like [Manifold](https://github.com/clj-commons/manifold).
+If you like to add more extensions to `promesa-bridges`, please send a pull request.
