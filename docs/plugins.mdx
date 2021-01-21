@@ -276,3 +276,19 @@ the post-processing of the EQL output.
   (fn [env source ast]
     (original env source ast)))
 ```
+
+#### `::p.eql/wrap-process-ast`
+
+This wraps a call to `process-ast` in the EQL interface.
+
+```clojure
+(defn sample-process-ast-wrapper [process]
+  (fn [env ast]
+    (process env ast)))
+```
+
+When the query is triggered using `process`, you also get the query as `::pcr/root-query`
+in the environment.
+
+If you don't see this value it means `process-ast` was called directly. To get the query
+in this case use `eql/ast->query` to generate the query from the AST.
