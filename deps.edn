@@ -10,6 +10,7 @@
   cheshire/cheshire          {:mvn/version "5.10.0"}
   com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop" :sha "ca861d607da8cf63208e296b0250eae225d9a10c"}
   com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "2c52480f3d6af454b29f50812cdcc160f31dcab8"}
+  com.wsscode/pathom3-viz    {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
   hickory/hickory            {:mvn/version "0.7.1"}
   lilactown/helix            {:git/url "https://github.com/lilactown/helix" :sha "5785e9332534cb16da749699634556d573e44bb2"}
   org.clojure/clojure        {:mvn/version "1.10.1"}
