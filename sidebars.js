@@ -15,6 +15,7 @@ module.exports = {
         'mutations',
         'plugins',
         'async',
+        'debugging'
       ]
     },
     // 'modeling-guides',
