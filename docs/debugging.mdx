@@ -298,6 +298,7 @@ The `::pcrs/node-error-type` may be:
 
 - `::pcrs/node-error-type-direct`: error happened in the node responsible for the attribute
 - `::pcrs/node-error-type-ancestor`: error happened in some ancestor
+- `::pcrs/node-error-type-unreachable`: can't figure a path to reach this attribute
 
 In the case of `::pcrs/node-error-type-ancestor`, there will be a `::pcrs/node-error-id`
 to tell which node was responsible for the failure.
