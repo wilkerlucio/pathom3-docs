@@ -8,7 +8,9 @@
             [com.wsscode.pathom3.entity-tree :as p.ent]
             [clojure.data.json :as json]
             [com.fulcrologic.guardrails.core :refer [<- => >def >defn >fdef ? |]]
-            [com.wsscode.pathom3.format.eql :as pf.eql]))
+            [com.wsscode.pathom3.format.eql :as pf.eql]
+            [com.wsscode.pathom3.plugin :as p.plugin]
+            [com.wsscode.pathom3.connect.built-in.plugins :as pbip]))
 
 ;; what is a resolver?
 
@@ -287,5 +289,21 @@
 (p.eql/process (pci/register [db-user-by-id cache-server-user-by-id])
   [{[:user/id 2] [:user/name]}])
 ; => {[:user/id 2] #:user{:name "Name from Cache 2"}}
+
+; endregion
+
+; region batch
+
+(p.eql/process
+  (pci/register
+    (p.plugin/register (pbip/attribute-errors-plugin))
+    [(pco/resolver 'batch
+       {::pco/input  [:foo]
+        ::pco/output [:bar]
+        ::pco/batch? true}
+       (fn [_ items]
+         (mapv #(hash-map :bar (* 10 (:foo %))) items)))])
+  {:items #{{:foo 1} {:foo 2}}}
+  [{:items [:bar]}])
 
 ; endregion

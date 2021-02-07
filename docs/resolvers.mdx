@@ -713,6 +713,42 @@ In the following example we alias `[com.wsscode.misc.coll :as coll]`.
     (coll/restore-order items :id results)))
 ```
 
+### Unsupported batch
+
+Not all paths are supported in batch, for example:
+
+```clojure
+(p.eql/process
+  (pci/register
+    (p.plugin/register (pbip/attribute-errors-plugin))
+    [(pco/resolver 'batch
+       {::pco/input  [:foo]
+        ::pco/output [:bar]
+        ::pco/batch? true}
+       (fn [_ items]
+         (mapv #(hash-map :bar (* 10 (:foo %))) items)))])
+  {:items #{{:foo 1} {:foo 2}}}
+  [{:items [:bar]}])
+; Sun Feb 07 13:31:00 BRT 2021 WARN :com.wsscode.pathom3.connect.runner/event-batch-unsupported - {:com.wsscode.pathom3.path/path [:items 0], :com.wsscode.pathom3.connect.operation/op-name batch}
+; Sun Feb 07 13:31:00 BRT 2021 WARN :com.wsscode.pathom3.connect.runner/event-batch-unsupported - {:com.wsscode.pathom3.path/path [:items 1], :com.wsscode.pathom3.connect.operation/op-name batch}
+; => {:items #{{:bar 10} {:bar 20}}}
+```
+
+In cases like these, you will a warning telling you that batching is unsupported. The reason
+for this behavior is due to how batching works. Pathom collects entries for batch, and they
+run all together at the root entity context. Once the results are available, Pathom has
+to inject the response back into the tree.
+
+The process works fine with maps and vectors but not with sequences, lists, or sets. That's
+because the later data structures don't support indexed updates for the elements in them.
+
+When Pathom knows it is such path, it won't try to batch. It runs the resolver using a
+single collection element and gets the first result. This is effective the same as using
+the resolver without batching.
+
+If you see the warning, check the tree and find the collection that's isn't a vector
+and then you can fix it.
+
 ### Don't overuse batch
 
 Don't batch when the resolver operation is quick. If there is no IO in the
