@@ -91,6 +91,18 @@ this user birthday, we can reach that using the path highlighted in the next dia
 
 </div>
 
+Here I'll show you one way of doing a request like this, using the Pathom EQL interface:
+
+```clojure
+; process needs an environment configuration
+(p.eql/process env
+  ; we can provide some initial data
+  {:acme.user/id 1}
+  ; then we write an EQL query
+  [:acme.user/birth-year])
+; => {:acme.user/birth-year "1989"}
+```
+
 So resolvers establish edges in the Pathom graph, allowing Pathom to traverse from
 some source data to some target data. In the rest of this documentation, you will learn
 how to define resolvers.
