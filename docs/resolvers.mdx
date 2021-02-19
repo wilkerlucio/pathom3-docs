@@ -476,6 +476,37 @@ running unnecessary work on the runner.
 
 You can try this by asking for a nested property that doesn't exist.
 
+### Nested Inputs Filtering
+
+When using nested inputs with collections, Pathom will filter out items that can't
+fulfill the required specs, here is an example:
+
+```clojure
+(pco/defresolver top-players
+  "Return maps with ids for the top players in a given game."
+  []
+  {:game/top-players
+   [{:player/id 1}
+    {:player/id 20}
+    {:player/id 8}
+    {:player/id 2}]})
+
+(pco/defresolver player-by-id-cond-score
+  "Get player by id, in our case just generate some data based on the id."
+  [{:keys [player/id]}]
+  {:player/name (str "Player " id)
+   :player/score (if (< id 10)
+                   (* id 50)
+                   ; using this value is the same as omitting the key
+                   ::pco/unknown-value)})
+
+; in this case, the top-players-avg will get only 3 of the 4 players, given player 20
+; will not have score available
+(p.eql/process (pci/register [top-players player-by-id top-players-avg])
+  [:game/top-players-avg-score])
+; => #:game{:top-players-avg-score 183.3333333333}
+```
+
 ## Parameters
 
 Parameters are a secondary layer to send information to a resolver. One main difference

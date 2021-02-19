@@ -258,7 +258,8 @@
   "Compute the average score for the top players using nested inputs."
   [{:keys [game/top-players]}]
   ; we have to make the nested input explicit
-  {::pco/input [{:game/top-players [:player/score]}]}
+  {::pco/input [{:game/top-players [(pco/? :player/score)]}]}
+  (clojure.pprint/pprint top-players)
   {:game/top-players-avg-score
    (let [score-sum (transduce (map :player/score) + 0 top-players)]
      (double (/ score-sum (count top-players))))})
@@ -266,6 +267,18 @@
 (p.eql/process (pci/register [top-players player-by-id top-players-avg])
   [:game/top-players-avg-score])
 ; => #:game{:top-players-avg-score 387.5}
+
+(pco/defresolver player-by-id-cond-score
+  "Get player by id, in our case just generate some data based on the id."
+  [{:keys [player/id]}]
+  {:player/name (str "Player " id)
+   :player/score (if (< id 10)
+                   (* id 50)
+                   ; using this value is the same as omitting the key
+                   ::pco/unknown-value)})
+
+(p.eql/process (pci/register [top-players player-by-id-cond-score top-players-avg])
+  [:game/top-players-avg-score])
 
 ; endregion
 
