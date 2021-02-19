@@ -128,3 +128,35 @@ Mutation errors come as is in the mutation value result:
 ;     :trace
 ;     [...]}}}
 ```
+
+## Resolve mutation params
+
+On Pathom, when you call a mutation, the params flow without any alteration. The default
+behavior is meant to give the fastest path possible to invoke mutations.
+
+That said, it's common also to want the params to be "resolved", just like Pathom does
+with inputs on resolvers.
+
+To make that happen, you can use the `mutation-resolve-params` built-in plugin. When
+you add this plugin, Pathom will use the `::pco/params` as a query and will run that
+on the user params, and then deliver the resolved data to the mutation.
+
+Example:
+
+```clojure
+(pco/defmutation foo [{:keys [b]}]
+  {:res b})
+
+(p.eql/process
+  (-> (pci/register
+        [(pbir/single-attr-resolver :a :b inc)
+         foo])
+      (p.plugin/register pbip/mutation-resolve-params))
+  ['(foo {:a 1})])
+; => {foo {:res 2}}
+```
+
+:::tip
+When using `pco/defmutation`, `::pco/params` is inferred from the argument destructuring.
+:::
+
