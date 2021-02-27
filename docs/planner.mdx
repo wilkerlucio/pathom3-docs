@@ -110,7 +110,7 @@ import {PlanCytoscapeJS, PlannerExplorer} from './assets/cljs-components/com.wss
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:answer {#{} #{answer}}}"
+    oir="{:answer {{} #{answer}}}"
     query="[:answer]"
     displayType="display-type-node-id"/>
 </div>
@@ -205,8 +205,8 @@ but keep in mind for real systems, its recommended to stick with long names.
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:pi  {#{} #{pi}}
-          :tau {#{:pi} #{tau}}}"
+    oir="{:pi  {{} #{pi}}
+          :tau {{:pi {}} #{tau}}}"
     query="[:tau]"/>
 </div>
 
@@ -233,9 +233,9 @@ different attributes: `:a`, `:b:` and `:c`:
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{} #{a}}
-          :b {#{} #{b}}
-          :c {#{} #{c}}}"
+    oir="{:a {{} #{a}}
+          :b {{} #{b}}
+          :c {{} #{c}}}"
     query="[:a :b :c]"/>
 </div>
 
@@ -257,10 +257,10 @@ Now, to see a combination of AND node and chaining, let's ask for a single attri
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{} #{a}}
-          :b {#{} #{b}}
-          :c {#{} #{c}}
-          :d {#{:a :b :c} #{d}}}"
+    oir="{:a {{} #{a}}
+          :b {{} #{b}}
+          :c {{} #{c}}
+          :d {{:a {} :b {} :c {}} #{d}}}"
     query="[:d]"/>
 </div>
 
@@ -285,7 +285,7 @@ to the attribute `:a`:
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{} #{a1 a2 a3}}}"
+    oir="{:a {{} #{a1 a2 a3}}}"
     query="[:a]"/>
 </div>
 
@@ -311,11 +311,11 @@ input paths:
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{:b} #{a1 a2 a3}
-              #{:c :d} #{a9}}
-          :b {#{} #{b}}
-          :c {#{:d} #{c}}
-          :d {#{} #{d}}}"
+    oir="{:a {{:b {}} #{a1 a2 a3}
+              {:c {} :d {}} #{a9}}
+          :b {{} #{b}}
+          :c {{:d {}} #{c}}
+          :d {{} #{d}}}"
     query="[:a]"/>
 </div>
 
@@ -339,7 +339,7 @@ a dead-end:
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{:b} #{a}}}"
+    oir="{:a {{:b {}} #{a}}}"
     query="[:a]"/>
 </div>
 
@@ -360,9 +360,9 @@ Now a partial dead-end, note how it discards the dead cluster on `ab` and `ab2`:
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{:c} #{ac}
-              #{:b} #{ab ab2}}
-          :c {#{} #{c}}}"
+    oir="{:a {{:c {}} #{ac}
+              {:b {}} #{ab ab2}}
+          :c {{} #{c}}}"
     query="[:a]"/>
 </div>
 
@@ -383,8 +383,8 @@ When combining those, you will see the `OR` nodes get processed before the AND n
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{} #{a1 a2}}
-          :b {#{} #{b1 b2}}}"
+    oir="{:a {{} #{a1 a2}}
+          :b {{} #{b1 b2}}}"
     query="[:a :b]"/>
 </div>
 
@@ -408,13 +408,13 @@ And a more complex example:
 
 <div className="pathom-plan-view">
   <PlanCytoscapeJS
-    oir="{:a {#{} #{a}}
-          :b {#{:g} #{b}}
-          :c {#{} #{c}}
-          :e {#{} #{e e1}}
-          :f {#{:e} #{f}}
-          :g {#{:c :f} #{g}}
-          :h {#{:a :b} #{h}}}"
+    oir="{:a {{} #{a}}
+          :b {{:g {}} #{b}}
+          :c {{} #{c}}
+          :e {{} #{e e1}}
+          :f {{:e {}} #{f}}
+          :g {{:c {} :f {}} #{g}}
+          :h {{:a {} :b {}} #{h}}}"
     query="[:h]"/>
 </div>
 
@@ -424,7 +424,9 @@ You can use the following tool to play around with indexes and queries, and see 
 the planner will compute the plan for it:
 
 <div className="pathom-plan-view">
-  <PlannerExplorer />
+  <PlannerExplorer
+    oir={"{:a {{} #{a}}\n :b {{:g {}} #{b}}\n :c {{} #{c}}\n :e {{} #{e e1}}\n :f {{:e {}} #{f}}\n :g {{:c {} :f {}} #{g}}\n :h {{:a {} :b {}} #{h}}}"}
+    query="[:h]"/>
 </div>
 
 :::tip

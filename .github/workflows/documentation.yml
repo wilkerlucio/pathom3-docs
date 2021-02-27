@@ -91,9 +91,6 @@ jobs:
       - name: Compile CLJS
         run: npx shadow-cljs compile docs
 
-      - name: Compile Embed
-        run: npx shadow-cljs release embed
-
       - name: Release to GitHub Pages
         env:
           USE_SSH: true
