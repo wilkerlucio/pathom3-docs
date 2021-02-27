@@ -22,7 +22,7 @@
                     (.-contentWindow)
                     (post-message message)))))))
 
-    (dom/iframe {:src     "http://localhost:8087/embed.html"
+    (dom/iframe {:src     "https://pathom-viz.wsscode.com/embed.html"
                  :ref     iframe-ref
                  :loading "lazy"
                  :style   {:width "100%" :height height :border "0"}})))
