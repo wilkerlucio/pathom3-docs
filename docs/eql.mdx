@@ -273,8 +273,9 @@ level. Here is an example of what it means:
        :birth-year 1988}
 ```
 
-Remember the `*` only affects sibling attributes (things at same entity/level), the
-following example illustrates it:
+:::important
+The `*` only affects sibling attributes (things at same entity/level), the following
+example illustrates it:
 
 ```clojure
 (p.eql/process
@@ -289,4 +290,4 @@ following example illustrates it:
            :user/birth-year 1988},
     :ent2 #:user{:birth-year 1988}}
 ```
-
+:::
