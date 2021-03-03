@@ -234,3 +234,59 @@ You can also limit this using bounded recursive queries:
      ; max of 2 depths
      {:files 2}]))
 ```
+
+### Wildcard
+
+In EQL queries, you can use the special symbol `*` to ask Pathom to give all the data
+available for that entity. In other words, this removes the output filtering at that
+level. Here is an example of what it means:
+
+```clojure
+; define a resolver that returns multiple things
+(pco/defresolver user-data []
+  {:user/name       "foo"
+   :user/email      "some-user@email.com"
+   :user/birth-year 1988})
+
+; standard query
+(p.eql/process (pci/register user-data)
+    [:user/name])
+; gets the output filtered, only the items in query show up
+=> #:user{:name "foo"}
+
+; making query adding the *
+(p.eql/process (pci/register user-data)
+    [:user/name '*])
+; now all the data that was loaded in process will show up in the result
+=> #:user{:name "foo", :email "some-user@email.com", :birth-year 1988}
+
+; another example, now we can see the whole deps showing up
+(p.eql/process
+    (pci/register
+      [user-data
+       (pbir/single-attr-resolver :user/name :user/name++ #(str % " - extra things"))])
+    [:user/name++ '*])
+=>
+#:user{:name++ "foo - extra things",
+       :name "foo",
+       :email "some-user@email.com",
+       :birth-year 1988}
+```
+
+Remember the `*` only affects sibling attributes (things at same entity/level), the
+following example illustrates it:
+
+```clojure
+(p.eql/process
+    (pci/register user-data)
+    [{:>/ent1 [:user/name '*
+               {:>/nested [:user/email]}]}
+     {:>/ent2 [:user/birth-year]}])
+=>
+#:>{:ent1 {:user/name "foo",
+           :>/nested #:user{:email "some-user@email.com"},
+           :user/email "some-user@email.com",
+           :user/birth-year 1988},
+    :ent2 #:user{:birth-year 1988}}
+```
+
