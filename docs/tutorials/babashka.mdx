@@ -2,9 +2,9 @@
 title: Scripting with Babashka
 ---
 
-This tutorial will demonstrate how to use Pathom 3 in [Babashka](https://github.com/babashka/babashka).
+Pathom 3 works with Babashka!
 
-For this, I'll re-use the sample example from the [Pathom Tutorial](tutorial.mdx), the code is mostly
+To demo this, I'll re-use the sample example from the [Pathom Tutorial](tutorial.mdx), the code is mostly
 the same, the following script runs as standalone with babashka:
 
 :::important
@@ -132,6 +132,7 @@ Pathom usage requires Babashka `0.2.12` or up.
   (apply hash-map (map read-string *command-line-args*)))
 
 (defn main [{:keys [ip] :as args}]
+  (println (str "Looking up the temperature on IP " ip "..."))
   (let [{::keys [temperature]}
         (p.eql/process env
           {::ip ip}
@@ -141,12 +142,18 @@ Pathom usage requires Babashka `0.2.12` or up.
 (main (parse-data-args))
 ```
 
-On my machine this script runs in about 2s. We can compare it with the JVM version,
-which takes about 9s on my machine, that makes the Babashka version close to 5 times
-faster!
+Now we can run it like:
+
+```
+bb pathom-demo.bb :ip '"198.29.213.3"'
+```
+
+I measure the time to boot. On my machine, Babashka can boot and load Pathom in about
+300ms. This script's average total time is 2s ~ 3s on my machine (most of the time
+is waiting for HTTP responses). Just for fun, I compared it with the JVM implementation. There, to boot and make the HTTP requests, it took 9 seconds here.
 
 ## Limitations
 
-Smart Maps are not supported in Babashka at this time. This is due to some current
-Babashka limitations, but I've been in touch with [Michiel Borkent](https://github.com/borkdude) and there are
-some working going on Babashka and SCI that may allow this in the future.
+Smart Maps don't work in Babashka at this time. This is due to some current
+Babashka limitations, but I've been in touch with [Michiel Borkent](https://github.com/borkdude), and there is some work going on Babashka and SCI that may allow this in the future.
+
