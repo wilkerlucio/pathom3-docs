@@ -116,3 +116,22 @@
     {:path "src"}
     [:file-name
      {:files 2}]))
+
+(pco/defresolver user-data []
+  {:user/name       "foo"
+   :user/email      "some-user@email.com"
+   :user/birth-year 1988})
+
+(comment
+  (p.eql/process
+    (pci/register
+      [user-data
+       (pbir/single-attr-resolver :user/name :user/name++ #(str % " - extra things"))])
+    [:user/name++ '*]))
+
+(comment
+  (p.eql/process
+    (pci/register user-data)
+    [{:>/ent1 [:user/name '*
+               {:>/nested [:user/email]}]}
+     {:>/ent2 [:user/birth-year]}]))
