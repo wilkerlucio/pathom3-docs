@@ -30,7 +30,8 @@ module.exports = {
     },
     {
       'Tutorials': [
-        'tutorials/hacker-news-scraper'
+        'tutorials/hacker-news-scraper',
+        'tutorials/babashka'
       ]
     }
     // 'faq',
