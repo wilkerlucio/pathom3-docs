@@ -29,15 +29,21 @@
 
 (h/defnc ^:export PlanCytoscapeJS [{:keys [oir query displayType available] :as message}]
   (h/$ EmbedComponent
-    {:message {:component-name  :pathom.viz.embed/plan-stepper-demo
-               :component-props {::pci/index-oir      (read-string oir)
-                                 ::pcp/available-data (read-string available)
-                                 ::eql/query          (read-string query)}}
+    {:message {:pathom.viz.embed/component-name
+               :pathom.viz.embed.component/plan-stepper-demo
+
+               :pathom.viz.embed/component-props
+               {::pci/index-oir      (read-string oir)
+                ::pcp/available-data (read-string available)
+                ::eql/query          (read-string query)}}
      :height  "500px"}))
 
 (h/defnc ^:export PlannerExplorer [{:keys [oir query displayType available] :as message}]
   (h/$ EmbedComponent
-    {:message {:component-name  :pathom.viz.embed/planner-explorer
-               :component-props {:index-oir oir
-                                 :query     query}}
+    {:message {:pathom.viz.embed/component-name
+               :pathom.viz.embed.component/planner-explorer
+
+               :pathom.viz.embed/component-props
+               {::pci/index-oir (read-string oir)
+                ::eql/query     (read-string query)}}
      :height  "760px"}))
