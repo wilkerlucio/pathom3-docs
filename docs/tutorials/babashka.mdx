@@ -159,7 +159,7 @@ the HTTP requests, it took 9 seconds here.
 
 ## Limitations
 
-Smart Maps don't work in Babashka at this time. This is due to some current
-Babashka limitations, but I've been in touch with [Michiel Borkent](https://github.com/borkdude),
-and there is [some work going](https://github.com/borkdude/sci/pull/540) on Babashka and
-SCI that can allow this in the future.
+The current known limitation is that you can't call resolvers and mutations as functions.
+
+This is due a limitation in Babashka, `defrecord` can't implement `IFn`, this may
+change in the future.
