@@ -246,9 +246,9 @@ function to return the run stats of the process:
 
 (-> (psm/smart-map indexes)
     (psm/sm-get-with-stats ::y))
-;{:com.wsscode.pathom3.connect.planner/index-attrs #:com.wsscode.pathom.docs.smart-maps-demo{:n 3,
-;                                                                                            :y 1,
-;                                                                                            :x 2},
+;{:com.wsscode.pathom3.connect.planner/index-attrs #:com.wsscode.pathom.docs.smart-maps-demo{:n #{3},
+;                                                                                            :y #{1},
+;                                                                                            :x #{2}},
 ; :com.wsscode.pathom3.connect.planner/unreachable-attrs {},
 ; :com.wsscode.pathom3.connect.runner/graph-process-duration-ms 0.11225199699401855,
 ; :com.wsscode.pathom3.connect.runner.stats/overhead-duration-ms 0.09637504816055298,

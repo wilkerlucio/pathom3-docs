@@ -68,7 +68,7 @@ The result map is `{:area 800}`. Now let's look at what is in `meta`:
   {:area {:type :prop, :dispatch-key :area, :key :area}}
 
   ::pcp/index-attrs
-  {:width 2, :area 1}
+  {:width #{2}, :area #{1}}
 
   ::pcp/index-resolver->nodes
   {com.wsscode.pathom3.demos.troubleshoot/area  #{1}
@@ -210,7 +210,7 @@ we can see the diagnostics:
     (meta)
     ::pcr/run-stats)
 =>
-{::pcp/index-attrs                {:width 2, :area 1},
+{::pcp/index-attrs                {:width #{2}, :area #{1}},
  ::pcr/compute-plan-run-finish-ms 1.019610883512772E9,
  ::pcr/graph-run-finish-ms        1.01961088367712E9,
  ::pcr/compute-plan-run-start-ms  1.019610883061625E9,
