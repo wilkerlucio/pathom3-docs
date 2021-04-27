@@ -106,10 +106,10 @@ process:
 This tool still in the early stages. Expect changes to it.
 :::
 
-import {PlanCytoscapeJS, PlannerExplorer} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
+import {PlanStepperDemo, PlannerExplorer} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:answer {{} #{answer}}}"
     query="[:answer]"
     displayType="display-type-node-id"/>
@@ -204,7 +204,7 @@ but keep in mind for real systems, its recommended to stick with long names.
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:pi  {{} #{pi}}
           :tau {{:pi {}} #{tau}}}"
     query="[:tau]"/>
@@ -232,7 +232,7 @@ different attributes: `:a`, `:b:` and `:c`:
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{} #{a}}
           :b {{} #{b}}
           :c {{} #{c}}}"
@@ -256,7 +256,7 @@ Now, to see a combination of AND node and chaining, let's ask for a single attri
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{} #{a}}
           :b {{} #{b}}
           :c {{} #{c}}
@@ -284,7 +284,7 @@ to the attribute `:a`:
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{} #{a1 a2 a3}}}"
     query="[:a]"/>
 </div>
@@ -310,7 +310,7 @@ input paths:
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{:b {}} #{a1 a2 a3}
               {:c {} :d {}} #{a9}}
           :b {{} #{b}}
@@ -338,7 +338,7 @@ a dead-end:
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{:b {}} #{a}}}"
     query="[:a]"/>
 </div>
@@ -359,7 +359,7 @@ Now a partial dead-end, note how it discards the dead cluster on `ab` and `ab2`:
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{:c {}} #{ac}
               {:b {}} #{ab ab2}}
           :c {{} #{c}}}"
@@ -382,7 +382,7 @@ When combining those, you will see the `OR` nodes get processed before the AND n
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{} #{a1 a2}}
           :b {{} #{b1 b2}}}"
     query="[:a :b]"/>
@@ -407,7 +407,7 @@ And a more complex example:
 ```
 
 <div className="pathom-plan-view">
-  <PlanCytoscapeJS
+  <PlanStepperDemo
     oir="{:a {{} #{a}}
           :b {{:g {}} #{b}}
           :c {{} #{c}}
