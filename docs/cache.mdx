@@ -49,7 +49,8 @@ In the namespace `com.wsscode.pathom3.cache` you can find the `CacheStore` proto
 
 ```clojure
 (defprotocol CacheStore
-  (-cache-lookup-or-miss [this cache-key f]))
+  (-cache-lookup-or-miss [this cache-key f])
+  (-cache-find [this cache-key]))
 ```
 
 This protocol is implemented by Pathom to `Atom` and `Volatile`, so you can use any
@@ -111,7 +112,10 @@ To demonstrate it, we will make a persistent cache using a `LRUCache` from core.
 (defrecord CoreCacheStore [cache-atom]
   p.cache/CacheStore
   (-cache-lookup-or-miss [_ cache-key f]
-    (cc/lookup-or-miss cache-atom cache-key (fn [_] (f)))))
+    (cc/lookup-or-miss cache-atom cache-key (fn [_] (f))))
+
+  (-cache-find [_ cache-key]
+    (find @cache-atom cache-key)))
 
 ; helper to start a new LRU cache
 (defn lru-cache [base threshold]
