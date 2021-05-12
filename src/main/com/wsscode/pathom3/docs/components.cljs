@@ -20,7 +20,8 @@
   (.postMessage window #js {:event "pathom-viz-embed" :payload (pr-str message)} "*"))
 
 (h/defnc EmbedComponent [{:keys [message height]}]
-  (let [iframe-ref (hooks/use-ref nil)]
+  (let [iframe-ref (hooks/use-ref nil)
+        [full? sf!] (hooks/use-state false)]
     (hooks/use-effect [iframe-ref]
       (when @iframe-ref
         (-> @iframe-ref
@@ -29,10 +30,17 @@
                 (-> @iframe-ref
                     (.-contentWindow)
                     (post-message message)))))))
-    (dom/iframe {:src     embed-url
-                 :ref     iframe-ref
-                 :loading "lazy"
-                 :style   {:width "100%" :height height :border "0"}})))
+    (dom/div {:& {:style (cond-> {:display       "flex"
+                                  :flexDirection "column"}
+                           full?
+                           (merge {:position      "fixed" :inset "0"
+                                   :zIndex        "1000"}))}}
+      (dom/button {:on-click #(sf! (not full?))}
+        (if full? "Leave Full Screen" "Full Screen"))
+      (dom/iframe {:src     embed-url
+                   :ref     iframe-ref
+                   :loading "lazy"
+                   :style   {:flex "1" :width "100%" :height (if full? "auto" height) :border "0"}}))))
 
 (defn use-edn-file [path]
   (let [[contents c!] (hooks/use-state ::loading)]
