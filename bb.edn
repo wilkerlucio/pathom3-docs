@@ -1,12 +1,12 @@
 {:tasks
- {watch-js
+ {js:watch
   (shell "shadow-cljs watch docs")
 
-  watch-docs
+  docs:watch
   (shell "yarn start")
 
   -dev
-  {:depends [watch-js watch-docs]}
+  {:depends [js:watch docs:watch]}
 
   dev
   (shell "bb run --parallel -dev")}}
