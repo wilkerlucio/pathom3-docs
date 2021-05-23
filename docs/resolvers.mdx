@@ -233,7 +233,7 @@ as well, for example:
 
 ## Invoking resolvers
 
-Like functions, you can call the resolvers directly. 
+Like functions, you can call the resolvers directly: 
 
 ```clojure
 (pco/defresolver extension [{::keys [path]}]
@@ -246,7 +246,7 @@ Like functions, you can call the resolvers directly.
 This makes it easier to test resolvers in unit tests.
 
 A direct call uses the arity of the resolver. In this example, the resolver takes a single parameter
-representing a map containing the key ::path.
+representing a map containing the key `::path`.
 
 Outside of the test context, you should have little reason to invoke a resolver directly. What
 sets resolvers apart from regular functions are that it contains data about its requirements
