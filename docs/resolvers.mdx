@@ -233,8 +233,7 @@ as well, for example:
 
 ## Invoking resolvers
 
-Like functions, you can call the resolvers directly. The arity to call resolver is similar
-to how to define resolvers:
+Like functions, you can call the resolvers directly: 
 
 ```clojure
 (pco/defresolver extension [{::keys [path]}]
@@ -245,6 +244,9 @@ to how to define resolvers:
 ```
 
 This makes it easier to test resolvers in unit tests.
+
+A direct call uses the arity of the resolver. In this example, the resolver takes a single parameter
+representing a map containing the key `::path`.
 
 Outside of the test context, you should have little reason to invoke a resolver directly. What
 sets resolvers apart from regular functions are that it contains data about its requirements
@@ -319,8 +321,9 @@ leveraged by the resolvers meta-data:
 ; => "http://avatar-images-host/for-id/some-slogan"
 ```
 
-Note how as we change the input, Pathom adjusts the resolvers required to call, this
-is the main thing that Pathom brings to you, **it removes the chore of knowing the
+Note how as we change the input, Pathom uses different resolvers to satisfy the request for data.
+In this way, Pathom allow you to request the data you need, in a declarative fashion, rather than
+making procedural calls. **It removes the chore of knowing the
 function names**, so you can focus on the data you have and need, instead of how to
 get it.
 
