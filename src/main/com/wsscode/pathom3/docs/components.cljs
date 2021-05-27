@@ -7,7 +7,8 @@
             [cljs.tools.reader.edn :refer [read-string]]
             [helix.core :as h]
             [helix.dom :as dom]
-            [helix.hooks :as hooks]))
+            [helix.hooks :as hooks]
+            [clojure.string :as str]))
 
 (def DEV-VIZ? false)
 
@@ -124,3 +125,49 @@
                                     (coll/update-if :plan read-string))
                        :height  "500px"}))
 
+; region kroki
+
+(def extension->type
+  {"puml" "plantuml"})
+
+(defn path-extension [path]
+  (last (str/split path ".")))
+
+(defn request-graph [graph-type source]
+  (p/let [^js response (js/fetch (str "https://kroki.io/" graph-type "/svg")
+                         #js {:method  "post"
+                              :headers #js {"Content-Type" "text/plain"}
+                              :body    source})]
+    (.text response)))
+
+(defn use-kroki-diagram [{:keys [type source]}]
+  (let [[diagram-svg ds!] (hooks/use-state nil)]
+    (hooks/use-effect [type source]
+      (if (and type source)
+        (-> (request-graph type source)
+            (p/then ds!))))
+    diagram-svg))
+
+(h/defnc ^:export KrokiDiagram [diagram]
+  (let [diagram-svg (use-kroki-diagram diagram)]
+    (if diagram-svg
+      (dom/div {:dangerouslySetInnerHTML #js {:__html diagram-svg}})
+      (dom/noscript))))
+
+(defn use-diagram-file [path]
+  (let [[contents c!] (hooks/use-state ::loading)]
+    (hooks/use-effect [path]
+      (let [type (-> path path-extension extension->type)]
+        (-> (p/let [res (js/fetch path)
+                    txt (.text res)]
+              (c! {:type type :source txt}))
+            (p/catch #(c! {::error %})))))
+    contents))
+
+(h/defnc ^:export KrokiDiagramFile [{:keys [path]}]
+  (let [diagram-data (use-diagram-file path)]
+    (loader diagram-data
+      (fn [diagram]
+        (h/$ KrokiDiagram {:& diagram})))))
+
+; endregion
