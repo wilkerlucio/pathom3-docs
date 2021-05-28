@@ -291,12 +291,26 @@ each path that failed.
 ## Mutation Errors
 
 Mutation errors are simple, when a mutation fails, the value of the output is going
-to be the mutation exception.
+to be the a map with the key `::pcr/mutation-error`, which has the exception.
 
 ```clojure
-
+(p.eql/process
+  (pci/register
+    (pco/mutation 'doit
+      {}
+      (fn [_ _]
+        (throw (ex-info "Mutation error" {})))))
+  ['(doit)])
+; =>
+{doit {:com.wsscode.pathom3.connect.runner/mutation-error
+       #error {
+               :cause "Mutation error"
+               :data  {}
+               :via   [{:type    clojure.lang.ExceptionInfo
+                        :message "Mutation error"
+                        :data    {}
+                        :at      [...]}]
+               :trace [...]}}}
 ```
 
 ## Observability
-
-

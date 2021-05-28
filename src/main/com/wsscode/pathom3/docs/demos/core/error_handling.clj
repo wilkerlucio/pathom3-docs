@@ -184,3 +184,22 @@
                  {::pco/output [:error-demo]}
                  (fn [_ _] (throw (ex-info "Other Error" {}))))])
             [:error-demo]))))))
+
+
+(p.eql/process
+  (pci/register
+    (pco/mutation 'doit
+      {}
+      (fn [_ _]
+        (throw (ex-info "Mutation error" {})))))
+  ['(doit)])
+; =>
+{doit {:com.wsscode.pathom3.connect.runner/mutation-error
+       #error {
+               :cause "Mutation error"
+               :data  {}
+               :via   [{:type    clojure.lang.ExceptionInfo
+                        :message "Mutation error"
+                        :data    {}
+                        :at      [...]}]
+               :trace [...]}}}
