@@ -303,6 +303,30 @@
   [{[:user/id 2] [:user/name]}])
 ; => {[:user/id 2] #:user{:name "Name from Cache 2"}}
 
+;; dependency override case
+
+(p.eql/process
+  (pci/register
+    [(pco/resolver 'high-priority-dep
+       {::pco/priority 5 ; very high priority
+        ::pco/output   [:dep]}
+       (fn [_ _] {:dep "value"}))
+
+     (pco/resolver 'a1
+       {::pco/priority 1
+        ::pco/input    [:dep]
+        ::pco/output   [:a]}
+       (fn [_ _]
+         {:a 1}))
+
+     ; this is higher on priority than a1, and has no deps
+     (pco/resolver 'a2
+       {::pco/priority 2
+        ::pco/output   [:a]}
+       (fn [_ _]
+         {:a 2}))])
+  [:a])
+
 ; endregion
 
 ; region batch
