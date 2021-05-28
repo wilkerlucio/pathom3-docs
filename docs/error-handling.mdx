@@ -235,6 +235,55 @@ there. You can view the node relationship in the graph below:
 In case there are many options for an attribute you will get the error details of
 each path that failed.
 
+```clojure
+(let [response (p.eql/process
+                 (pci/register
+                   [(pco/resolver 'err1
+                      {::pco/output [:error-demo]}
+                      (fn [_ _] (throw (ex-info "One Error" {}))))
+                    (pco/resolver 'err2
+                      {::pco/output [:error-demo]}
+                      (fn [_ _] (throw (ex-info "Other Error" {}))))])
+                 [:error-demo])]
+  (p.error/attribute-error response :error-demo))
+; =>
+{:com.wsscode.pathom3.error/error-type
+ :com.wsscode.pathom3.error/node-errors,
+
+ :com.wsscode.pathom3.error/node-error-details
+ {1
+  {:com.wsscode.pathom3.error/error-type
+   :com.wsscode.pathom3.error/node-exception,
+
+   :com.wsscode.pathom3.error/exception
+   #error {
+           :cause "Other Error"
+           :data  {}
+           :via   [{:type    clojure.lang.ExceptionInfo
+                    :message "Other Error"
+                    :data    {}
+                    :at      [...]}]
+           :trace
+                  [...]}},
+  2
+  {:com.wsscode.pathom3.error/error-type
+   :com.wsscode.pathom3.error/node-exception,
+
+   :com.wsscode.pathom3.error/exception
+   #error {
+           :cause "One Error"
+           :data  {}
+           :via   [{:type    clojure.lang.ExceptionInfo
+                    :message "One Error"
+                    :data    {}
+                    :at      [...]}]
+           :trace [...]}}}}
+```
+
+<div className="pathom-plan-view">
+  <PlanGraphFileWithDetails path="/viz/error-handling/multiple-errors.edn"/>
+</div>
+
 ### Did something fail?
 
 
