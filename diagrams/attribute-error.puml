@@ -1,0 +1,51 @@
+@startuml
+
+<style>
+.success {
+  backgroundColor PaleGreen
+}
+
+.warn {
+  backgroundColor Orange
+}
+
+.error {
+  backgroundColor Salmon
+}
+</style>
+
+start
+
+:Check attribute;
+
+if (Contained on output?) then (yes)
+  <<success>> :Success;
+  stop
+else (no)
+  if (Attribute was requested?) then (yes)
+    if (Attribute has nodes?) then (yes)
+      :Check node state;
+      note right: For each node
+      if (Node failed?) then (yes)
+        <<error>> :Node exception;
+      elseif (Node ran?) then (yes)
+          <<error>> :Attribute missing on output;
+      elseif (Ancestor has error?) then (yes)
+        <<error>> :Ancestor error;
+      else (no)
+        <<success>> :No error at this node;
+        stop
+      endif
+    else (no)
+      <<error>> :Unreachable by planner;
+    endif
+  else (no)
+    <<warn>> :Not requested;
+  endif
+endif
+
+:Return error;
+
+stop
+
+@enduml
