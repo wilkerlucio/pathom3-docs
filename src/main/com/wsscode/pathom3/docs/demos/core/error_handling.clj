@@ -4,7 +4,8 @@
     [com.wsscode.pathom3.interface.eql :as p.eql]
     [com.wsscode.pathom3.connect.indexes :as pci]
     [com.wsscode.pathom3.error :as p.error]
-    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]))
+    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+    [com.wsscode.pathom3.plugin :as p.plugin]))
 
 (def identity-db
   {1 {:user/name "Martin"}})
@@ -59,13 +60,13 @@
     :com.wsscode.pathom3.error/node-exception,
 
     :com.wsscode.pathom3.error/exception
-    #error{:cause "Example Error"
-           :data  {}
-           :via   [{:type    clojure.lang.ExceptionInfo
-                    :message "Example Error"
-                    :data    {}
-                    :at      [...]}]
-           :trace ...}}}}
+    {:cause "Example Error"
+     :data  {}
+     :via   [{:type    clojure.lang.ExceptionInfo
+              :message "Example Error"
+              :data    {}
+              :at      [...]}]
+     :trace ...}}}}
 
 ;; output missing
 
@@ -108,14 +109,13 @@
     2,
 
     :com.wsscode.pathom3.error/exception
-    #error {
-            :cause "Example Error"
-            :data  {}
-            :via   [{:type    clojure.lang.ExceptionInfo
-                     :message "Example Error"
-                     :data    {}
-                     :at      [...]}]
-            :trace [...]}}}}
+    {:cause "Example Error"
+     :data  {}
+     :via   [{:type    clojure.lang.ExceptionInfo
+              :message "Example Error"
+              :data    {}
+              :at      [...]}]
+     :trace [...]}}}}
 
 (comment
   (meta
@@ -147,28 +147,26 @@
     :com.wsscode.pathom3.error/node-exception,
 
     :com.wsscode.pathom3.error/exception
-    #error {
-            :cause "Other Error"
-            :data  {}
-            :via   [{:type    clojure.lang.ExceptionInfo
-                     :message "Other Error"
-                     :data    {}
-                     :at      [...]}]
-            :trace
-                   [...]}},
+    {:cause "Other Error"
+     :data  {}
+     :via   [{:type    clojure.lang.ExceptionInfo
+              :message "Other Error"
+              :data    {}
+              :at      [...]}]
+     :trace
+            [...]}},
    2
    {:com.wsscode.pathom3.error/error-type
     :com.wsscode.pathom3.error/node-exception,
 
     :com.wsscode.pathom3.error/exception
-    #error {
-            :cause "One Error"
-            :data  {}
-            :via   [{:type    clojure.lang.ExceptionInfo
-                     :message "One Error"
-                     :data    {}
-                     :at      [...]}]
-            :trace [...]}}}}
+    {:cause "One Error"
+     :data  {}
+     :via   [{:type    clojure.lang.ExceptionInfo
+              :message "One Error"
+              :data    {}
+              :at      [...]}]
+     :trace [...]}}}}
 
 (comment
   (spit "static/viz/error-handling/multiple-errors.edn"
@@ -194,12 +192,28 @@
         (throw (ex-info "Mutation error" {})))))
   ['(doit)])
 ; =>
-{doit {:com.wsscode.pathom3.connect.runner/mutation-error
-       #error {
-               :cause "Mutation error"
-               :data  {}
-               :via   [{:type    clojure.lang.ExceptionInfo
-                        :message "Mutation error"
-                        :data    {}
-                        :at      [...]}]
-               :trace [...]}}}
+'{doit {:com.wsscode.pathom3.connect.runner/mutation-error
+        {:cause "Mutation error"
+         :data  {}
+         :via   [{:type    clojure.lang.ExceptionInfo
+                  :message "Mutation error"
+                  :data    {}
+                  :at      [...]}]
+         :trace [...]}}}
+
+
+(p.eql/process
+  (-> (pci/register
+        [(pco/resolver 'err1
+           {::pco/output [:error-demo]}
+           (fn [_ _] (throw (ex-info "One Error" {}))))
+         (pco/resolver 'err2
+           {::pco/output [:error-demo]}
+           (fn [_ _] (throw (ex-info "Other Error" {}))))])
+      (p.plugin/register
+        {::p.plugin/id 'err
+         :com.wsscode.pathom3.connect.runner/wrap-resolver-error
+         (fn [_]
+           (fn [env node error]
+             (println "Error: " (ex-message error))))}))
+  [:error-demo])

@@ -284,9 +284,36 @@ each path that failed.
   <PlanGraphFileWithDetails path="/viz/error-handling/multiple-errors.edn"/>
 </div>
 
-### Did something fail?
+### Observing resolver errors
 
+You may want to know every time some error happen, you can use the
+`::pcr/wrap-resolver-error` extension:
 
+```clojure
+(p.eql/process
+  (-> (pci/register
+        [(pco/resolver 'err1
+           {::pco/output [:error-demo]}
+           (fn [_ _] (throw (ex-info "One Error" {}))))
+         (pco/resolver 'err2
+           {::pco/output [:error-demo]}
+           (fn [_ _] (throw (ex-info "Other Error" {}))))])
+      (p.plugin/register
+        {::p.plugin/id 'err
+         :com.wsscode.pathom3.connect.runner/wrap-resolver-error
+         (fn [_]
+           (fn [env node error]
+             (println "Error: " (ex-message error))))}))
+  [:error-demo])
+; Error:  Other Error
+; Error:  One Error
+; => {}
+```
+
+This extension gets invoked anytime a resolver error happens, normal or batch.
+
+If you like to have more specific handlers for batches, there is also the
+[::pcr/wrap-batch-resolver-error](plugins.mdx#pcrwrap-batch-resolver-error).
 
 ## Mutation Errors
 
@@ -312,5 +339,3 @@ to be the a map with the key `::pcr/mutation-error`, which has the exception.
                         :at      [...]}]
                :trace [...]}}}
 ```
-
-## Observability
