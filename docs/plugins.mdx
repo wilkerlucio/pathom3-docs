@@ -232,9 +232,21 @@ Wrap the call of a mutation.
 Wrap the operation that attaches an error to a node.
 
 ```clojure
-(defn sample-resolver-error-wrapper [original]
+(defn sample-resolver-error-wrapper [_]
   (fn [env node error]
-    (original env node error)))
+    ; report error
+    ))
+```
+
+#### `::pcr/wrap-batch-resolver-error`
+
+Wrap batch errors
+
+```clojure
+(defn sample-batch-resolver-error-wrapper [_]
+  (fn [env [batch-op batch-items] e]
+    ; report error
+    ))
 ```
 
 #### `::pcr/wrap-merge-attribute`
