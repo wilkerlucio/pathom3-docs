@@ -10,8 +10,8 @@ Pathom is an abstraction around attributes, and the error handling follow this i
 thinking of errors as things that happen per attribute.
 
 :::info
-This is counter-intuitive from new people using Pathom, specially for users used to deal
-with REST, people expect a request to either success or fail.
+This is counter-intuitive from new people using Pathom, especially for users used to deal
+with REST, people expect a request to either succeed or fail.
 :::
 
 Here is an example to make the concept more concrete:
@@ -51,14 +51,14 @@ Here is an example to make the concept more concrete:
 
 Considering the request and response, did this request succeed or failed?
 
-Hard to say at the "request level", but at the attribute level its clear: `:movie/title`
-succeed and `:user/name` failed. At your application level you must take this partial
+Hard to say at the "request level", but at the attribute level it's clear: `:movie/title`
+succeed and `:user/name` failed. At your application-level you must take this partial
 failure property into account to decide what to do.
 
-Notice the missing attribute name is just missing, by default Pathom doesn't add any
-error indicators, and its up to you to ask about the errors.
+Notice the missing attribute name is just missing. By default, Pathom doesn't add any
+error indicators, and it's up to you to ask about the errors.
 
-To do so, you can use the `attribute-error` helper, let's try it on top of our previous
+To do so, you can use the `attribute-error` helper. Let's try it on top of our previous
 example:
 
 ```clojure
@@ -190,14 +190,11 @@ attribute.
    :com.wsscode.pathom3.error/attribute-missing}}}
 ```
 
-It's important that you have a basic understanding on how the Pathom graph works, if
-not check the [planner documentation](planner.mdx) and come back after.
-
 #### Ancestor error
 
 `:com.wsscode.pathom3.error/ancestor-error`
 
-In this case the error didn't happen in the node responsible for the attribute, but on
+In this case, the error didn't happen in the node responsible for the attribute, but on
 some ancestor node (some dependency behind on the chain).
 
 ```clojure
@@ -232,8 +229,7 @@ there. You can view the node relationship in the graph below:
 
 #### Multiple errors
 
-In case there are many options for an attribute you will get the error details of
-each path that failed.
+If there are many options for an attribute, you will get the error details of each path that failed.
 
 ```clojure
 (let [response (p.eql/process
@@ -317,8 +313,8 @@ If you like to have more specific handlers for batches, there is also the
 
 ## Mutation Errors
 
-Mutation errors are simple, when a mutation fails, the value of the output is going
-to be the a map with the key `::pcr/mutation-error`, which has the exception.
+Mutation errors are simple. When a mutation fails, the value of the output is going
+to be a map with the key `::pcr/mutation-error`, which has the exception.
 
 ```clojure
 (p.eql/process
