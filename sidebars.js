@@ -13,6 +13,7 @@ module.exports = {
         'cache',
         'placeholders',
         'mutations',
+        'error-handling',
         'plugins',
         'built-in-plugins',
         'async',

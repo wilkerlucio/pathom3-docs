@@ -1,0 +1,253 @@
+---
+title: Error Handling
+---
+
+import {KrokiDiagramFile, PlanGraphFileWithDetails} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
+
+## Attribute Errors
+
+Pathom is an abstraction around attributes, and the error handling follow this idea by
+thinking of errors as things that happen per attribute.
+
+:::info
+This is counter-intuitive from new people using Pathom, specially for users used to deal
+with REST, people expect a request to either success or fail.
+:::
+
+Here is an example to make the concept more concrete:
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.error-handling
+  (:require
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.error :as p.error]))
+
+(def identity-db
+  {1 {:user/name "Martin"}})
+
+(pco/defresolver user-identity
+  [{:keys [user/id]}]
+  {::pco/output [:user/name]}
+  (get identity-db id))
+
+(def movies-db
+  {1 {:movie/title "Bacurau"}})
+
+(pco/defresolver movie-details
+  [{:keys [movie/id]}]
+  {::pco/output [:movie/title]}
+  (get movies-db id))
+
+(def env
+  (pci/register
+    [user-identity movie-details]))
+
+(p.eql/process env {:movie/id 1}
+  [:user/name :movie/title])
+; => #:movie{:title "Bacurau"}
+```
+
+Considering the request and response, did this request succeed or failed?
+
+Hard to say at the "request level", but at the attribute level its clear: `:movie/title`
+succeed and `:user/name` failed. At your application level you must take this partial
+failure property into account to decide what to do.
+
+Notice the missing attribute name is just missing, by default Pathom doesn't add any
+error indicators, and its up to you to ask about the errors.
+
+To do so, you can use the `attribute-error` helper, let's try it on top of our previous
+example:
+
+```clojure
+; add require [com.wsscode.pathom3.error :as p.error]
+
+(let [response (p.eql/process env {:movie/id 1}
+                 [:user/name :movie/title])]
+  (p.error/attribute-error response :user/name))
+; => #:com.wsscode.pathom3.error{:error-type :com.wsscode.pathom3.error/attribute-unreachable}
+```
+
+This indicates the attribute `:user/name` wasn't reachable, which makes sense given we
+didn't provide the `:user/id` required for it (and neither there is a resolver to
+provide it).
+
+:::tip
+You can make Pathom expose the errors on the output using the built-in
+[attribute-errors plugin](built-in-plugins.mdx#attribute-errors).
+:::
+
+## Types of attribute errors
+
+In the following diagram you can see how Pathom gets to each error type for a given
+attribute:
+
+<div className="pathom-diagram">
+  <KrokiDiagramFile path="/diagrams/attribute-error.puml"/>
+</div>
+
+### Attribute not requested
+
+`:com.wsscode.pathom3.error/attribute-not-requested`
+
+This error will tell that the attribute wasn't part of the request, or part of the
+initial data:
+
+```clojure
+; using the same previous setup
+
+(let [response (p.eql/process env {:movie/id 1}
+                ; note this time we don't ask for the :user/name
+                 [:movie/title])]
+  ; but check for its error
+  (p.error/attribute-error response :user/name))
+; => #:com.wsscode.pathom3.error{:error-type :com.wsscode.pathom3.error/attribute-not-requested}
+```
+
+### Attribute unreachable
+
+`:com.wsscode.pathom3.error/attribute-unreachable`
+
+This is the
+
+:::important
+Pathom considers the value `nil` a success.
+:::
+
+### Node Errors
+
+`:com.wsscode.pathom3.error/node-errors`
+
+At this point, it means Pathom expected to fulfill the attribute, but something failed
+in the process.
+
+The [Pathom Plan](planner.mdx) includes an index that says which node is expected to
+return the value for each attribute (and if there are multiple options for an attribute,
+it will have multiple nodes associated with).
+
+For each of the nodes, Pathom will look for errors (check again on the diagram to see
+the flow).
+
+#### Node exception
+
+`:com.wsscode.pathom3.error/node-exception`
+
+When the resolver throws an exception, the runner stores this associated with the node
+that invoked the resolver. This is the first thing that Pathom looks for, and if there
+is an error there, it returns the error.
+
+```clojure
+(let [response (p.eql/process
+                 (pci/register
+                   (pbir/constantly-fn-resolver :error-demo
+                     (fn [_] (throw (ex-info "Example Error" {})))))
+                 [:error-demo])]
+  (p.error/attribute-error response :error-demo))
+; =>
+{:com.wsscode.pathom3.error/error-type
+ :com.wsscode.pathom3.error/node-errors,
+
+ :com.wsscode.pathom3.error/node-error-details
+ {1
+  {:com.wsscode.pathom3.error/error-type
+   :com.wsscode.pathom3.error/node-exception,
+
+   :com.wsscode.pathom3.error/exception
+   {:cause "Example Error"
+    :data  {}
+    :via   [{:type    clojure.lang.ExceptionInfo
+             :message "Example Error"
+             :data    {}
+             :at      [...]}]
+    :trace ...}}}}
+```
+
+#### Attribute missing on output
+
+`:com.wsscode.pathom3.error/attribute-missing`
+
+This happens when the resolver completed with success, but the output didn't include the
+attribute.
+
+```clojure
+(let [response (p.eql/process
+                 (pci/register
+                   (pco/resolver 'x
+                     {::pco/output [:a :b :c]}
+                     (fn [_ _]
+                       {:b 1 :c 2})))
+                 [:a])]
+  (p.error/attribute-error response :a))
+; =>
+{:com.wsscode.pathom3.error/error-type
+ :com.wsscode.pathom3.error/node-errors,
+
+ :com.wsscode.pathom3.error/node-error-details
+ {1
+  {:com.wsscode.pathom3.error/error-type
+   :com.wsscode.pathom3.error/attribute-missing}}}
+```
+
+It's important that you have a basic understanding on how the Pathom graph works, if
+not check the [planner documentation](planner.mdx) and come back after.
+
+#### Ancestor error
+
+`:com.wsscode.pathom3.error/ancestor-error`
+
+In this case the error didn't happen in the node responsible for the attribute, but on
+some ancestor node (some dependency behind on the chain).
+
+```clojure
+{:com.wsscode.pathom3.error/error-type
+ :com.wsscode.pathom3.error/node-errors,
+
+ :com.wsscode.pathom3.error/node-error-details
+ {1
+  {:com.wsscode.pathom3.error/error-type
+   :com.wsscode.pathom3.error/ancestor-error,
+
+   :com.wsscode.pathom3.error/error-ancestor-id
+   2,
+
+   :com.wsscode.pathom3.error/exception
+   #error {
+           :cause "Example Error"
+           :data  {}
+           :via   [{:type    clojure.lang.ExceptionInfo
+                    :message "Example Error"
+                    :data    {}
+                    :at      [...]}]
+           :trace [...]}}}}
+```
+
+In this case Pathom indicates the ID of the ancestor node that failed, and the exception
+there. You can view the node relationship in the graph below:
+
+<div className="pathom-plan-view">
+  <PlanGraphFileWithDetails path="/viz/error-handling/ancestor-error.edn"/>
+</div>
+
+#### Multiple errors
+
+In case there are many options for an attribute you will get the error details of
+each path that failed.
+
+### Did something fail?
+
+
+
+## Mutation Errors
+
+Mutation errors are simple, when a mutation fails, the value of the output is going
+to be the mutation exception.
+
+```clojure
+
+```
+
+## Observability
+
+
