@@ -249,6 +249,17 @@ Wrap batch errors
     ))
 ```
 
+#### `::pcr/wrap-mutation-error`
+
+Use this to get notified when mutation errors happen.
+
+```clojure
+(defn sample-mutation-error-wrapper [_]
+  (fn [env ast error]
+    ; report error
+    ))
+```
+
 #### `::pcr/wrap-merge-attribute`
 
 Wrap the operation of merging new data in the entity. This is an important point. You
