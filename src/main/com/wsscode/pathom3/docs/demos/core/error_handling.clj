@@ -213,7 +213,30 @@
       (p.plugin/register
         {::p.plugin/id 'err
          :com.wsscode.pathom3.connect.runner/wrap-resolver-error
-         (fn [_]
-           (fn [env node error]
-             (println "Error: " (ex-message error))))}))
+                       (fn [_]
+                         (fn [env node error]
+                           (println "Error: " (ex-message error))))}))
   [:error-demo])
+
+(p.eql/process
+  (-> (pci/register
+        (pco/mutation 'doit
+          {}
+          (fn [_ _]
+            (throw (ex-info "Mutation error" {})))))
+      (p.plugin/register
+        {::p.plugin/id 'err
+         :com.wsscode.pathom3.connect.runner/wrap-mutation-error
+                       (fn [_]
+                         (fn [env ast error]
+                           (println "Error on" (:key ast) "-" (ex-message error))))}))
+  ['(doit)])
+; =>
+'{doit {:com.wsscode.pathom3.connect.runner/mutation-error
+        #error {:cause "Mutation error"
+                :data  {}
+                :via   [{:type    clojure.lang.ExceptionInfo
+                         :message "Mutation error"
+                         :data    {}
+                         :at      [...]}]
+                :trace [...]}}}
