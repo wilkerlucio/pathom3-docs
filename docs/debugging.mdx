@@ -263,8 +263,8 @@ This is why just looking at the node responsible is a naive solution. The correc
 to look at the node first, and if the error isn't there, traverse back the graph to
 find the issue.
 
-Pathom provides a solution built-in to handle that, the function `get-attribute-error`
-in the `com.wsscode.pathom3.connect.runner.stats` namespace:
+Pathom provides a solution built-in to handle that, the function `attribute-error`
+in the `com.wsscode.pathom3.error` namespace:
 
 ```clojure
 (-> (p.eql/process
@@ -272,29 +272,15 @@ in the `com.wsscode.pathom3.connect.runner.stats` namespace:
       {:x 10 :x2 "foo" :height 40}
       [:area])
 
-    (meta)
-    ::pcr/run-stats
-    psm/smart-run-stats
-    (pcrs/get-attribute-error :area))
+    (p.error/attribute-error :area))
 =>
-{::pcrs/node-error-type
- ::pcrs/node-error-type-ancestor
-
- ::pcrs/node-error-id
- 2,
-
- ::pcr/node-error
- #error{:cause "class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-        :via   [{:type    java.lang.ClassCastException,
-                 :message "class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-                 :at      [clojure.lang.Numbers
-                           minus
-                           "Numbers.java"
-                           162]}],
-        :trace ...}}
+#:com.wsscode.pathom3.error{:error-type         :com.wsscode.pathom3.error/node-errors,
+                            :node-error-details {1 #:com.wsscode.pathom3.error{:error-type        :com.wsscode.pathom3.error/ancestor-error,
+                                                                               :error-ancestor-id 2,
+                                                                               :exception         ...error...}}}
 ```
 
-The `::pcrs/node-error-type` may be:
+The `::pcrs/error-type` may be:
 
 - `::pcrs/node-error-type-direct`: error happened in the node responsible for the attribute
 - `::pcrs/node-error-type-ancestor`: error happened in some ancestor
@@ -348,7 +334,7 @@ dependency to your project:
 
 ```clojure
 {:deps {com.wsscode/pathom-viz-connector
-        {:mvn/version "2021.01.25"}}}
+        {:mvn/version "2021.04.20"}}}
 ```
 
 :::tip
@@ -359,7 +345,7 @@ You can also do it with a local deps aliases:
  {:dev/pathom-tools
   {:extra-deps
     {com.wsscode/pathom-viz-connector
-     {:mvn/version "2021.01.25"}}}}}
+     {:mvn/version "2021.04.20"}}}}}
 ```
 :::
 

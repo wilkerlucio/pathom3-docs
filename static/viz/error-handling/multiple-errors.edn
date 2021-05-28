@@ -1,0 +1,256 @@
+{:com.wsscode.pathom3.connect.planner/source-ast
+ {:type :root,
+  :children
+        [{:type         :prop,
+          :dispatch-key :error-demo,
+          :key          :error-demo}]},
+ :com.wsscode.pathom3.connect.planner/index-attrs
+ {:error-demo #{1 2}},
+ :com.wsscode.pathom3.connect.runner/compute-plan-run-finish-ms
+ 7.3470316070568E7,
+ :com.wsscode.pathom3.connect.runner/graph-run-finish-ms
+ 7.3470316862605E7,
+ :com.wsscode.pathom3.connect.runner/compute-plan-run-start-ms
+ 7.3470315822796E7,
+ :com.wsscode.pathom3.connect.planner/root
+ 3,
+ :com.wsscode.pathom3.connect.planner/available-data
+ {},
+ :com.wsscode.pathom3.connect.runner/node-run-stats
+ {3
+  #:com.wsscode.pathom3.connect.runner{:node-run-start-ms
+                                       7.3470316090203E7,
+                                       :taken-paths
+                                       [1
+                                        2],
+                                       :node-run-finish-ms
+                                       7.347031684072E7},
+  1
+  #:com.wsscode.pathom3.connect.runner{:node-run-start-ms
+                                       7.3470316277986E7,
+                                       :resolver-run-start-ms
+                                       7.347031631254E7,
+                                       :node-error
+                                       {
+                                        :cause "Other Error"
+                                        :data  {}
+                                        :via
+                                               [{:type    clojure.lang.ExceptionInfo
+                                                 :message "Other Error"
+                                                 :data    {}
+                                                 :at      [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770$fn__17771$fn__17774 invoke "error_handling.clj" 12]}]
+                                        :trace
+                                               [[com.wsscode.pathom3.docs.demos.core.error_handling$eval17770$fn__17771$fn__17774 invoke "error_handling.clj" 12]
+                                                [com.wsscode.pathom3.connect.operation.Resolver _resolve "operation.cljc" 60]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_cached$fn__17041 invoke "runner.cljc" 345]
+                                                [com.wsscode.pathom3.cache$eval16410$fn__16411 invoke "cache.cljc" 36]
+                                                [com.wsscode.pathom3.cache$eval16369$fn__16383$G__16358__16392 invoke "cache.cljc" 10]
+                                                [com.wsscode.pathom3.cache$cached invokeStatic "cache.cljc" 64]
+                                                [com.wsscode.pathom3.cache$cached invoke "cache.cljc" 45]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_cached invokeStatic "runner.cljc" 343]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_cached invoke "runner.cljc" 340]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_from_node$fn__17055 invoke "runner.cljc" 417]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_from_node invokeStatic "runner.cljc" 401]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_from_node invoke "runner.cljc" 378]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 140]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.connect.runner$run_resolver_node_BANG_ invokeStatic "runner.cljc" 441]
+                                                [com.wsscode.pathom3.connect.runner$run_resolver_node_BANG_ invoke "runner.cljc" 431]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invokeStatic "runner.cljc" 556]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invoke "runner.cljc" 545]
+                                                [com.wsscode.pathom3.connect.runner$run_or_node_BANG_$fn__17092 invoke "runner.cljc" 513]
+                                                [com.wsscode.pathom3.connect.runner$run_or_node_BANG_ invokeStatic "runner.cljc" 501]
+                                                [com.wsscode.pathom3.connect.runner$run_or_node_BANG_ invoke "runner.cljc" 491]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invokeStatic "runner.cljc" 562]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invoke "runner.cljc" 545]
+                                                [com.wsscode.pathom3.connect.runner$run_root_node_BANG_ invokeStatic "runner.cljc" 614]
+                                                [com.wsscode.pathom3.connect.runner$run_root_node_BANG_ invoke "runner.cljc" 611]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG__STAR_ invokeStatic "runner.cljc" 642]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG__STAR_ invoke "runner.cljc" 623]
+                                                [com.wsscode.pathom3.connect.runner$plan_and_run_BANG_ invokeStatic "runner.cljc" 666]
+                                                [com.wsscode.pathom3.connect.runner$plan_and_run_BANG_ invoke "runner.cljc" 649]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_impl_BANG_ invokeStatic "runner.cljc" 800]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_impl_BANG_ invoke "runner.cljc" 797]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 143]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_with_plugins$fn__17238 invoke "runner.cljc" 815]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 143]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_with_plugins invokeStatic "runner.cljc" 813]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_with_plugins invoke "runner.cljc" 811]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG_ invokeStatic "runner.cljc" 828]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG_ invoke "runner.cljc" 821]
+                                                [com.wsscode.pathom3.interface.eql$process_ast_STAR_ invokeStatic "eql.cljc" 15]
+                                                [com.wsscode.pathom3.interface.eql$process_ast_STAR_ invoke "eql.cljc" 13]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 140]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.interface.eql$process_ast invokeStatic "eql.cljc" 22]
+                                                [com.wsscode.pathom3.interface.eql$process_ast invoke "eql.cljc" 19]
+                                                [com.wsscode.pathom3.interface.eql$process invokeStatic "eql.cljc" 50]
+                                                [com.wsscode.pathom3.interface.eql$process invoke "eql.cljc" 25]
+                                                [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770$fn__17771 invoke "error_handling.clj" 5]
+                                                [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770 invokeStatic "error_handling.clj" 2]
+                                                [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770 invoke "error_handling.clj" 174]
+                                                [clojure.lang.Compiler eval "Compiler.java" 7177]
+                                                [clojure.lang.Compiler eval "Compiler.java" 7132]
+                                                [clojure.core$eval invokeStatic "core.clj" 3214]
+                                                [clojure.core$eval invoke "core.clj" 3210]
+                                                [nrepl.middleware.interruptible_eval$evaluate$fn__936 invoke "interruptible_eval.clj" 91]
+                                                [clojure.main$repl$read_eval_print__9086$fn__9089 invoke "main.clj" 437]
+                                                [clojure.main$repl$read_eval_print__9086 invoke "main.clj" 437]
+                                                [clojure.main$repl$fn__9095 invoke "main.clj" 458]
+                                                [clojure.main$repl invokeStatic "main.clj" 458]
+                                                [clojure.main$repl doInvoke "main.clj" 368]
+                                                [clojure.lang.RestFn invoke "RestFn.java" 1523]
+                                                [nrepl.middleware.interruptible_eval$evaluate invokeStatic "interruptible_eval.clj" 84]
+                                                [nrepl.middleware.interruptible_eval$evaluate invoke "interruptible_eval.clj" 56]
+                                                [nrepl.middleware.interruptible_eval$interruptible_eval$fn__962$fn__966 invoke "interruptible_eval.clj" 155]
+                                                [clojure.lang.AFn run "AFn.java" 22]
+                                                [nrepl.middleware.session$session_exec$main_loop__1063$fn__1067 invoke "session.clj" 190]
+                                                [nrepl.middleware.session$session_exec$main_loop__1063 invoke "session.clj" 189]
+                                                [clojure.lang.AFn run "AFn.java" 22]
+                                                [java.lang.Thread run "Thread.java" 829]]},
+                                       :resolver-run-finish-ms
+                                       7.3470316537063E7,
+                                       :node-resolver-input
+                                       {},
+                                       :node-resolver-output
+                                       :com.wsscode.pathom3.connect.runner/node-error,
+                                       :node-run-finish-ms
+                                       7.3470316552814E7},
+  :com.wsscode.pathom3.connect.runner/nodes-with-error
+  #{1 2},
+  2
+  #:com.wsscode.pathom3.connect.runner{:node-run-start-ms
+                                       7.3470316618208E7,
+                                       :resolver-run-start-ms
+                                       7.3470316638085E7,
+                                       :node-error
+                                       {
+                                        :cause "One Error"
+                                        :data  {}
+                                        :via
+                                               [{:type    clojure.lang.ExceptionInfo
+                                                 :message "One Error"
+                                                 :data    {}
+                                                 :at      [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770$fn__17771$fn__17772 invoke "error_handling.clj" 9]}]
+                                        :trace
+                                               [[com.wsscode.pathom3.docs.demos.core.error_handling$eval17770$fn__17771$fn__17772 invoke "error_handling.clj" 9]
+                                                [com.wsscode.pathom3.connect.operation.Resolver _resolve "operation.cljc" 60]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_cached$fn__17041 invoke "runner.cljc" 345]
+                                                [com.wsscode.pathom3.cache$eval16410$fn__16411 invoke "cache.cljc" 36]
+                                                [com.wsscode.pathom3.cache$eval16369$fn__16383$G__16358__16392 invoke "cache.cljc" 10]
+                                                [com.wsscode.pathom3.cache$cached invokeStatic "cache.cljc" 64]
+                                                [com.wsscode.pathom3.cache$cached invoke "cache.cljc" 45]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_cached invokeStatic "runner.cljc" 343]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_cached invoke "runner.cljc" 340]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_from_node$fn__17055 invoke "runner.cljc" 417]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_from_node invokeStatic "runner.cljc" 401]
+                                                [com.wsscode.pathom3.connect.runner$invoke_resolver_from_node invoke "runner.cljc" 378]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 140]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.connect.runner$run_resolver_node_BANG_ invokeStatic "runner.cljc" 441]
+                                                [com.wsscode.pathom3.connect.runner$run_resolver_node_BANG_ invoke "runner.cljc" 431]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invokeStatic "runner.cljc" 556]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invoke "runner.cljc" 545]
+                                                [com.wsscode.pathom3.connect.runner$run_or_node_BANG_$fn__17092 invoke "runner.cljc" 513]
+                                                [com.wsscode.pathom3.connect.runner$run_or_node_BANG_ invokeStatic "runner.cljc" 501]
+                                                [com.wsscode.pathom3.connect.runner$run_or_node_BANG_ invoke "runner.cljc" 491]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invokeStatic "runner.cljc" 562]
+                                                [com.wsscode.pathom3.connect.runner$run_node_BANG_ invoke "runner.cljc" 545]
+                                                [com.wsscode.pathom3.connect.runner$run_root_node_BANG_ invokeStatic "runner.cljc" 614]
+                                                [com.wsscode.pathom3.connect.runner$run_root_node_BANG_ invoke "runner.cljc" 611]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG__STAR_ invokeStatic "runner.cljc" 642]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG__STAR_ invoke "runner.cljc" 623]
+                                                [com.wsscode.pathom3.connect.runner$plan_and_run_BANG_ invokeStatic "runner.cljc" 666]
+                                                [com.wsscode.pathom3.connect.runner$plan_and_run_BANG_ invoke "runner.cljc" 649]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_impl_BANG_ invokeStatic "runner.cljc" 800]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_impl_BANG_ invoke "runner.cljc" 797]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 143]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_with_plugins$fn__17238 invoke "runner.cljc" 815]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 143]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_with_plugins invokeStatic "runner.cljc" 813]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_with_plugins invoke "runner.cljc" 811]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG_ invokeStatic "runner.cljc" 828]
+                                                [com.wsscode.pathom3.connect.runner$run_graph_BANG_ invoke "runner.cljc" 821]
+                                                [com.wsscode.pathom3.interface.eql$process_ast_STAR_ invokeStatic "eql.cljc" 15]
+                                                [com.wsscode.pathom3.interface.eql$process_ast_STAR_ invoke "eql.cljc" 13]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invokeStatic "plugin.cljc" 140]
+                                                [com.wsscode.pathom3.plugin$run_with_plugins invoke "plugin.cljc" 129]
+                                                [com.wsscode.pathom3.interface.eql$process_ast invokeStatic "eql.cljc" 22]
+                                                [com.wsscode.pathom3.interface.eql$process_ast invoke "eql.cljc" 19]
+                                                [com.wsscode.pathom3.interface.eql$process invokeStatic "eql.cljc" 50]
+                                                [com.wsscode.pathom3.interface.eql$process invoke "eql.cljc" 25]
+                                                [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770$fn__17771 invoke "error_handling.clj" 5]
+                                                [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770 invokeStatic "error_handling.clj" 2]
+                                                [com.wsscode.pathom3.docs.demos.core.error_handling$eval17770 invoke "error_handling.clj" 174]
+                                                [clojure.lang.Compiler eval "Compiler.java" 7177]
+                                                [clojure.lang.Compiler eval "Compiler.java" 7132]
+                                                [clojure.core$eval invokeStatic "core.clj" 3214]
+                                                [clojure.core$eval invoke "core.clj" 3210]
+                                                [nrepl.middleware.interruptible_eval$evaluate$fn__936 invoke "interruptible_eval.clj" 91]
+                                                [clojure.main$repl$read_eval_print__9086$fn__9089 invoke "main.clj" 437]
+                                                [clojure.main$repl$read_eval_print__9086 invoke "main.clj" 437]
+                                                [clojure.main$repl$fn__9095 invoke "main.clj" 458]
+                                                [clojure.main$repl invokeStatic "main.clj" 458]
+                                                [clojure.main$repl doInvoke "main.clj" 368]
+                                                [clojure.lang.RestFn invoke "RestFn.java" 1523]
+                                                [nrepl.middleware.interruptible_eval$evaluate invokeStatic "interruptible_eval.clj" 84]
+                                                [nrepl.middleware.interruptible_eval$evaluate invoke "interruptible_eval.clj" 56]
+                                                [nrepl.middleware.interruptible_eval$interruptible_eval$fn__962$fn__966 invoke "interruptible_eval.clj" 155]
+                                                [clojure.lang.AFn run "AFn.java" 22]
+                                                [nrepl.middleware.session$session_exec$main_loop__1063$fn__1067 invoke "session.clj" 190]
+                                                [nrepl.middleware.session$session_exec$main_loop__1063 invoke "session.clj" 189]
+                                                [clojure.lang.AFn run "AFn.java" 22]
+                                                [java.lang.Thread run "Thread.java" 829]]},
+                                       :resolver-run-finish-ms
+                                       7.3470316771295E7,
+                                       :node-resolver-input
+                                       {},
+                                       :node-resolver-output
+                                       :com.wsscode.pathom3.connect.runner/node-error,
+                                       :node-run-finish-ms
+                                       7.3470316830349E7}},
+ :com.wsscode.pathom3.connect.planner/index-ast
+ {:error-demo
+  {:type         :prop,
+   :dispatch-key :error-demo,
+   :key          :error-demo}},
+ :com.wsscode.pathom3.connect.runner/graph-run-start-ms
+ 7.3470315814923E7,
+ :com.wsscode.pathom3.connect.planner/index-resolver->nodes
+ {err1 #{2}, err2 #{1}},
+ :com.wsscode.pathom3.connect.planner/nodes
+ {2
+  {:com.wsscode.pathom3.connect.operation/op-name
+   err1,
+   :com.wsscode.pathom3.connect.planner/expects
+   {:error-demo {}},
+   :com.wsscode.pathom3.connect.planner/input
+   {},
+   :com.wsscode.pathom3.connect.planner/node-id
+   2,
+   :com.wsscode.pathom3.connect.planner/node-parents
+   #{3}},
+  1
+  {:com.wsscode.pathom3.connect.operation/op-name
+   err2,
+   :com.wsscode.pathom3.connect.planner/expects
+   {:error-demo {}},
+   :com.wsscode.pathom3.connect.planner/input
+   {},
+   :com.wsscode.pathom3.connect.planner/node-id
+   1,
+   :com.wsscode.pathom3.connect.planner/node-parents
+   #{3}},
+  3
+  #:com.wsscode.pathom3.connect.planner{:expects
+                                        {:error-demo
+                                         {}},
+                                        :node-id
+                                        3,
+                                        :run-or
+                                        #{1
+                                          2}}}}
