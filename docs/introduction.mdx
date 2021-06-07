@@ -13,6 +13,29 @@ production apps, the algorithm of Pathom 3 is still under experimentation stage,
 consider that if you intend to use Pathom in production code.
 :::
 
+## Namespace aliases
+
+When you read code from the examples in this documentation they will use alias to reference
+namespaces, here you can find what the aliases point to:
+
+```clojure
+[com.wsscode.pathom3.cache :as p.cache]
+[com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+[com.wsscode.pathom3.connect.built-in.plugins :as pbip]
+[com.wsscode.pathom3.connect.foreign :as pcf]
+[com.wsscode.pathom3.connect.indexes :as pci]
+[com.wsscode.pathom3.connect.operation :as pco]
+[com.wsscode.pathom3.connect.planner :as pcp]
+[com.wsscode.pathom3.connect.runner :as pcr]
+[com.wsscode.pathom3.error :as p.error]
+[com.wsscode.pathom3.format.eql :as pf.eql]
+[com.wsscode.pathom3.interface.async.eql :as p.a.eql]
+[com.wsscode.pathom3.interface.eql :as p.eql]
+[com.wsscode.pathom3.interface.smart-map :as psm]
+[com.wsscode.pathom3.path :as p.path]
+[com.wsscode.pathom3.plugin :as p.plugin]
+```
+
 ## General attribute modeling view
 
 Attribute modeling is a way to think and design information systems.
@@ -168,27 +191,4 @@ While in alpha state, this library is only available as a git `deps` dependency.
 {:deps
  {com.wsscode/pathom3 {:git/url "https://github.com/wilkerlucio/pathom3"
                        :sha     "FIND_LATEST_ON_GITHUB"}}}
-```
-
-## Namespace aliases
-
-When you read code from the examples in this documentation they will use alias to reference
-namespaces, here you can find what the aliases point to:
-
-```clojure
-[com.wsscode.pathom3.cache :as p.cache]
-[com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
-[com.wsscode.pathom3.connect.built-in.plugins :as pbip]
-[com.wsscode.pathom3.connect.foreign :as pcf]
-[com.wsscode.pathom3.connect.indexes :as pci]
-[com.wsscode.pathom3.connect.operation :as pco]
-[com.wsscode.pathom3.connect.planner :as pcp]
-[com.wsscode.pathom3.connect.runner :as pcr]
-[com.wsscode.pathom3.error :as p.error]
-[com.wsscode.pathom3.format.eql :as pf.eql]
-[com.wsscode.pathom3.interface.async.eql :as p.a.eql]
-[com.wsscode.pathom3.interface.eql :as p.eql]
-[com.wsscode.pathom3.interface.smart-map :as psm]
-[com.wsscode.pathom3.path :as p.path]
-[com.wsscode.pathom3.plugin :as p.plugin]
 ```
