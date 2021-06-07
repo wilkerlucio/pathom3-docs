@@ -13,6 +13,16 @@ production apps, the algorithm of Pathom 3 is still under experimentation stage,
 consider that if you intend to use Pathom in production code.
 :::
 
+## Install
+
+While in alpha state, this library is only available as a git `deps` dependency.
+
+```clojure
+{:deps
+ {com.wsscode/pathom3 {:git/url "https://github.com/wilkerlucio/pathom3"
+                       :sha     "FIND_LATEST_ON_GITHUB"}}}
+```
+
 ## Namespace aliases
 
 When you read code from the examples in this documentation they will use alias to reference
@@ -182,13 +192,3 @@ To bundle the process together, you interact using one of the Pathom interfaces:
 of loading from a database, realized using resolvers.
 - [EQL](eql.mdx) is a syntax that allows users to express a data shape, and then Pathom
 fill the requirements using the logic from resolvers.
-
-## Install
-
-While in alpha state, this library is only available as a git `deps` dependency.
-
-```clojure
-{:deps
- {com.wsscode/pathom3 {:git/url "https://github.com/wilkerlucio/pathom3"
-                       :sha     "FIND_LATEST_ON_GITHUB"}}}
-```
