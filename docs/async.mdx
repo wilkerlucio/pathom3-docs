@@ -95,6 +95,45 @@ Example usage:
     (cljs.pprint/pprint res)))
 ```
 
+## Async ENV
+
+When using the async helpers, Pathom also supports the `env` being async.
+
+This is useful when the environment build requires async operations. For example, in
+a CLJS client, to integrate a remote Pathom service we need to request the index
+async:
+
+```clojure
+(defn transit-request [url body]
+  (p/let [resp (js/fetch url
+                 #js {:method "POST"
+                      :body   (tt/write-str body {:handlers pcot/write-handlers})})
+          text (.text resp)]
+    (tt/read-str text {:handlers pcot/read-handlers})))
+
+(defn pathom-remote [request]
+  (transit-request "https://name-server.com" request))
+
+(def users
+  {1 {:person/first-name "Alex"
+      :person/last-name  "French Guy Cooking"}
+   2 {:person/first-name "Denise"
+      :person/last-name  "Mascarenhas"}})
+
+; note now we make env a promise instead of a map
+(def async-env
+  (p/let [rem (pcf/foreign-register pathom-remote)]
+    (pci/register
+      [rem
+       (pbir/static-table-resolver :person/id users)])))
+
+;           use directly as env, supported by Pathom
+(p/let [res (p.a.eql/process async-env
+              {:person/id 2}
+              [:person/full-name])]
+  (js/console.log "!! " res))
+```
+
 ## Using core.async
 
 To use core.async we can extend the channel protocol to implement the conversion from
