@@ -3,14 +3,15 @@
 
  :deps
  {applied-science/js-interop {:mvn/version "0.2.7"}
+  cheshire/cheshire          {:mvn/version "5.10.0"}
+  clj-http/clj-http          {:mvn/version "3.11.0"}
   com.fulcrologic/fulcro     {:mvn/version "3.4.3"}
   com.fulcrologic/guardrails {:mvn/version "0.0.12"}
   com.wsscode/async          {:mvn/version "2021.01.15"}
-  clj-http/clj-http          {:mvn/version "3.11.0"}
-  cheshire/cheshire          {:mvn/version "5.10.0"}
   com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop" :sha "ca861d607da8cf63208e296b0250eae225d9a10c"}
-  com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "5ff86c46282b5376be577f95ec9e66707fcea511"}
+  com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "6dcd414bf39e9f162b18228d2048697aa7801d25"}
   com.wsscode/pathom3-viz    {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
+  com.wsscode/transito       {:git/url "https://github.com/wilkerlucio/transito" :sha "7119312488e8e8eac0262b86b0c74f6d940de78e"}
   hickory/hickory            {:mvn/version "0.7.1"}
   lilactown/helix            {:git/url "https://github.com/lilactown/helix" :sha "5785e9332534cb16da749699634556d573e44bb2"}
   org.clojure/clojure        {:mvn/version "1.10.1"}
