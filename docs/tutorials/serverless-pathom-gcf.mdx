@@ -10,7 +10,7 @@ it available as a service.
 
 ## Project Setup
 
-To make the GPC integration I'll use the library [google-cloud-functions-clojure](https://github.com/pepijn/google-cloud-functions-clojure).
+To make the GCP integration I'll use the library [google-cloud-functions-ring-adapter](https://github.com/pepijn/google-cloud-functions-clojure).
 
 Example setup for `deps.edn`:
 
@@ -148,7 +148,7 @@ The boundary interface isn't required, but it gives the clients extra capabiliti
 Now to hook that, we need to create a Java file in our sources that will link our handler:
 
 ```java
-import nl.epij.gcp.gcf.RingHttpFunction;
+import nl.epij.gcf.RingHttpFunction;
 
 public class PathomServer extends RingHttpFunction {
     public String getHandler() {
@@ -174,6 +174,11 @@ curl --location --request POST 'http://localhost:13337' \
 # => {:temperature 26.064999999999998}
 ```
 
+:::important
+I used EDN fore readability, but you should use `application/transit+json` (with transit data) for performance
+and to support the custom handlers for resolvers and mutations.
+:::
+
 ## GCF Deploy
 
 For the next steps, you need to have [GCP Account](https://accounts.google.com/signin/v2/identifier?service=cloudconsole&passive=1209600&osid=1&continue=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&followup=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&flowName=GlifWebSignIn&flowEntry=ServiceLogin)
@@ -198,9 +203,8 @@ gcloud functions deploy --runtime java11 --source target/artifacts/ --max-instan
 If you go through with no errors, the function should be online!
 
 :::note
-You can find out the URL to try it at the Google Console: https://console.cloud.google.com/functions/list?project=YOUR_PROJECT
-
-There, find the function and navigate to the `Trigger` tab.
+You can find out the URL to try it in the message output after deploy.
+Look for `httpsTrigger: ... url:`
 :::
 
 You can find the full sources of this demo at https://github.com/wilkerlucio/pathom3-demo-gcf.
