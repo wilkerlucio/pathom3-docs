@@ -32,7 +32,7 @@ module.exports = {
     {
       'Tutorials': [
         'tutorials/hacker-news-scraper',
-        'tutorials/gcp-pathom-lambda',
+        'tutorials/serverless-pathom-gcf',
         'tutorials/babashka'
       ]
     }

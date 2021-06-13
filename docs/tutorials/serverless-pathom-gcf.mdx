@@ -1,9 +1,9 @@
 ---
-title: GCP Pathom Lambda
+title: Serverless Pathom with GCF
 ---
 
 In this tutorial, we are going to implement a Pathom server and deploy it
-as a lambda on [Google Cloud Platform](https://cloud.google.com/).
+as a [Google Cloud Function](https://cloud.google.com/functions).
 
 We will start with the code created at the [Pathom Tutorial](../tutorial.mdx), and make
 it available as a service.
@@ -45,6 +45,44 @@ Example setup for `deps.edn`:
                 :nl.epij.gcf/java-paths   ["src/java"]
                 :nl.epij.gcf/compile-path "target/classes"
                 :nl.epij.gcf/jar-path     "target/artifacts/application.jar"}}}}
+```
+
+## Pathom Production Settings
+
+Here are some recommended settings to do when exposing a Pathom API.
+
+### Expose attribute errors
+
+To make the errors visible we can set up the attribute errors plugin,
+
+```clojure
+(def env
+  (-> (pci/register
+        [ip->lat-long
+         latlong->woeid
+         woeid->temperature])
+      (p.plugin/register
+        [(pbip/attribute-errors-plugin)])))
+```
+
+### Cache plan results
+
+It's common for clients to make the same EQL requests, Pathom can leverage this and
+persist the plan part of the process across requests, this is how we set up it:
+
+```clojure
+; create a var to store the cache
+(defonce plan-cache* (atom {}))
+
+(def env
+  ; persistent plan cache
+  (-> {::pcp/plan-cache* plan-cache*}
+      (pci/register
+        [ip->lat-long
+         latlong->woeid
+         woeid->temperature])
+      (p.plugin/register
+        [(pbip/attribute-errors-plugin)])))
 ```
 
 ## Ring handler setup
@@ -130,22 +168,24 @@ and install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).
 On Mac, you can install GCP with `brew install google-cloud-sdk`
 :::
 
-To deploy the handler as lambda; first we assemble the jar:
+To deploy the handler as Google Cloud Function; first we assemble the jar:
 
 ```
 clojure -X:assemble
 ```
 
-Deploy to GCP:
+Deploy to GCP (tune as you see fit):
 
 ```
 gcloud functions deploy --runtime java11 --source target/artifacts/ --max-instances 1 development-pathom-server-demo --trigger-http --allow-unauthenticated --entry-point PathomServer --memory 2GB --timeout 270
 ```
 
-If you go through with no errors, the lambda should be online!
+If you go through with no errors, the function should be online!
 
 :::note
 You can find out the URL to try it at the Google Console: https://console.cloud.google.com/functions/list?project=YOUR_PROJECT
 
-There, find the lambda and navigate to the `Trigger` tab.
+There, find the function and navigate to the `Trigger` tab.
 :::
+
+You can find the full sources of this demo at https://github.com/wilkerlucio/pathom3-demo-gcf.
