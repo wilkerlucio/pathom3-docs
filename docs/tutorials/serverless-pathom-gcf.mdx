@@ -19,7 +19,7 @@ Example setup for `deps.edn`:
  ["src/main" "src/java"]
 
  :deps
- {com.wsscode/pathom3                        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "3441c195a76cbea80a0c5e56cfcfa38b0b4cc579"}
+ {com.wsscode/pathom3                        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "898a1b1916af01d9ab744ef0c0e9a5f5321e7860"}
   metosin/muuntaja                           {:mvn/version "0.6.8"}
   nl.epij/google-cloud-function-ring-adapter {:mvn/version "0.1.0-SNAPSHOT"}
   org.clojure/clojure                        {:mvn/version "1.10.3"}
@@ -47,7 +47,7 @@ Example setup for `deps.edn`:
                 :nl.epij.gcf/jar-path     "target/artifacts/application.jar"}}}}
 ```
 
-## Pathom Production Settings
+## Recommended Settings
 
 Here are some recommended settings to do when exposing a Pathom API.
 
@@ -67,8 +67,8 @@ To make the errors visible we can set up the attribute errors plugin,
 
 ### Cache plan results
 
-It's common for clients to make the same EQL requests, Pathom can leverage this and
-persist the plan part of the process across requests, this is how we set up it:
+It's common for clients to make the same EQL requests. Pathom can leverage this and
+persist the planning part of the process across requests. This is how we set it up:
 
 ```clojure
 ; create a var to store the cache
@@ -117,12 +117,23 @@ for this:
     [:formats "application/transit+json"]
     ; in this part we setup the read and write handlers for Pathom resolvers and mutations
     merge {:decoder-opts {:handlers pcot/read-handlers}
-           :encoder-opts {:handlers pcot/write-handlers}}))
+           :encoder-opts {:handlers  pcot/write-handlers
+                          ; write-meta is required if you wanna see execution stats on Pathom Viz
+                          :transform t/write-meta}}))
 
 (def app
   (-> handler
       (middleware/wrap-format muuntaja-options)))
 ```
+
+The `:transform t/write-meta` will make transit encode also the meta-data. This means the
+running status data will flow. It allows Pathom Viz to show debug information.
+Keep in mind the "run status" data is usually much larger than the response itself.
+
+You can mitigate this in two different levels at Pathom:
+
+1. Set `:com.wsscode.pathom3.connect.runner/run-stats-omit-resolver-io? true` to remove input/output details. This adds a great reduction in the size of the status.
+2. Set `:com.wsscode.pathom3.connect.runner/run-stats-omit? true` to remove all status from meta
 
 :::tip
 This same handler setup works with any other ring server, like [Pedestal](http://pedestal.io/),
