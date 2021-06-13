@@ -2,7 +2,11 @@
   (:require [com.wsscode.pathom3.connect.indexes :as pci]
             [com.wsscode.pathom3.connect.operation :as pco]
             [com.wsscode.pathom3.interface.async.eql :as p.a.eql]
-            [promesa.core :as p]))
+            [com.wsscode.pathom3.connect.operation.transit :as pcot]
+            [com.wsscode.transito :as tt]
+            [promesa.core :as p]
+            [com.wsscode.pathom3.connect.foreign :as pcf]
+            [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]))
 
 (defn json-get [url]
   (p/let [resp (js/fetch url)
@@ -60,3 +64,31 @@
                    :jikan.anime/title
                    :jikan.anime/type
                    :jikan.anime/url]}]})
+
+(defn transit-request [url body]
+  (p/let [resp (js/fetch url
+                 #js {:method "POST"
+                      :body   (tt/write-str body {:handlers pcot/write-handlers})})
+          text (.text resp)]
+    (tt/read-str text {:handlers pcot/read-handlers})))
+
+(defn pathom-remote [request]
+  (transit-request "https://europe-west2-pathomdemos.cloudfunctions.net/development-pathom-server-demo" request))
+
+(def users
+  {1 {:person/first-name "Wilker"
+      :person/last-name  "Silva"}
+   2 {:person/first-name "Denise"
+      :person/last-name  "Mascarenhas"}})
+
+(def async-env
+  (p/let [rem (pcf/foreign-register pathom-remote)]
+    (pci/register
+      [rem
+       (pbir/static-table-resolver :person/id users)])))
+
+(comment
+  (p/let [res (p.a.eql/process async-env
+                {:person/id 2}
+                [:person/full-name])]
+    (js/console.log "!! " res)))
