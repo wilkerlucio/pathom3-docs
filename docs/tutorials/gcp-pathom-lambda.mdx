@@ -2,7 +2,7 @@
 title: GCP Pathom Lambda
 ---
 
-In this tutorial we are going to implement a Pathom server and deploy it
+In this tutorial, we are going to implement a Pathom server and deploy it
 as a lambda on [Google Cloud Platform](https://cloud.google.com/).
 
 We will start with the code created at the [Pathom Tutorial](../tutorial.mdx), and make
@@ -49,7 +49,7 @@ Example setup for `deps.edn`:
 
 ## Ring handler setup
 
-Now let's setup a [Ring](https://github.com/ring-clojure/ring) handler. The two main things
+Now let's set up a [Ring](https://github.com/ring-clojure/ring) handler. The two main things
 for this:
 
 1. Setup content negotiation to decode/encode data, I'll use [muuntaja](https://github.com/metosin/muuntaja).
@@ -92,10 +92,9 @@ This same handler setup works with any other ring server, like [Pedestal](http:/
 etc...
 :::
 
-The boundary interface isn't required, but it gives extra capabilities to the clients
-like allow the user to provide root data.
+The boundary interface isn't required, but it gives the clients extra capabilities like allowing the user to provide root data.
 
-Now to hook that we need to create a Java file in our sources, that will link our handler:
+Now to hook that, we need to create a Java file in our sources that will link our handler:
 
 ```java
 import nl.epij.gcp.gcf.RingHttpFunction;
@@ -107,13 +106,13 @@ public class PathomServer extends RingHttpFunction {
 }
 ```
 
-After this part we can test our server locally:
+After this part, we can test our server locally:
 
 ```
 PORT=13337 clojure -X:run
 ```
 
-Once it runs, we can test it sending a request:
+Once it runs, we can test it by sending a request:
 
 ```
 curl --location --request POST 'http://localhost:13337' \
@@ -124,14 +123,14 @@ curl --location --request POST 'http://localhost:13337' \
 
 ## GCP Setup
 
-For the next steps you need to have [GCP Account](https://accounts.google.com/signin/v2/identifier?service=cloudconsole&passive=1209600&osid=1&continue=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&followup=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&flowName=GlifWebSignIn&flowEntry=ServiceLogin)
+For the next steps, you need to have [GCP Account](https://accounts.google.com/signin/v2/identifier?service=cloudconsole&passive=1209600&osid=1&continue=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&followup=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&flowName=GlifWebSignIn&flowEntry=ServiceLogin)
 and install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).
 
 :::tip
-On Mac you can install GCP with `brew install google-cloud-sdk`
+On Mac, you can install GCP with `brew install google-cloud-sdk`
 :::
 
-To deploy the handler as lambda, first we assemble the jar:
+To deploy the handler as lambda; first we assemble the jar:
 
 ```
 clojure -X:assemble
@@ -143,8 +142,10 @@ Deploy to GCP:
 gcloud functions deploy --runtime java11 --source target/artifacts/ --max-instances 1 development-pathom-server-demo --trigger-http --allow-unauthenticated --entry-point PathomServer --memory 2GB --timeout 270
 ```
 
-If you go through with no errors the lambda should be online!
+If you go through with no errors, the lambda should be online!
 
+:::note
 You can find out the URL to try it at the Google Console: https://console.cloud.google.com/functions/list?project=YOUR_PROJECT
 
 There, find the lambda and navigate to the `Trigger` tab.
+:::
