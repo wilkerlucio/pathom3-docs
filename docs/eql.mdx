@@ -279,10 +279,10 @@ example illustrates it:
 
 ```clojure
 (p.eql/process
-    (pci/register user-data)
-    [{:>/ent1 [:user/name '*
-               {:>/nested [:user/email]}]}
-     {:>/ent2 [:user/birth-year]}])
+  (pci/register user-data)
+  [{:>/ent1 [:user/name '*
+             {:>/nested [:user/email]}]}
+   {:>/ent2 [:user/birth-year]}])
 =>
 #:>{:ent1 {:user/name "foo",
            :>/nested #:user{:email "some-user@email.com"},
@@ -291,3 +291,79 @@ example illustrates it:
     :ent2 #:user{:birth-year 1988}}
 ```
 :::
+
+## Boundary Interface
+
+The Pathom EQL design makes it a suitable solution to enable remote communication via
+EQL syntax.
+
+By receiving an EQL request which is pure data, a server can fetch information and
+invoke mutations.
+
+This is a powerful API, and it's something that Pathom is designed to handle.
+
+Using the boundary interface adds the following capabilities to the request:
+
+- Add support to load the index via EQL
+- Support provision of root entity data
+- Support requests in [AST format](https://edn-query-language.org/eql/1.0.0/specification.html)
+
+Combined, those features allow another Pathom instance to integrate this graph.
+
+The request to a boundary interface can be either an `EQL` request or a map. The map
+has the following options available:
+
+```clojure
+; initial entity data
+:pathom/entity {:foo "3"}
+
+; the request in EQL format
+:pathom/tx [:foo]
+
+; the request in AST format
+:pathom/ast {:type     :root
+             :children [{:type :prop
+                         :key :foo
+                         :dispatch-key :foo}]}
+```
+
+You should either use `:pathom/tx` or `:pathom/ast`. If both are present, Pathom will
+pick the AST.
+
+Here you can see an example of a setup and usage of the boundary interface:
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.eql
+  (:require
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+    [com.wsscode.pathom3.connect.operation :as pco])
+  (:import (java.util Date)))
+
+(pco/defresolver area [{:geo/keys [width height]}]
+  {:geo/area (* width height)})
+
+(def env
+  (pci/register
+    [(pbir/constantly-fn-resolver ::now (fn [_] (Date.)))
+     area]))
+
+(def pathom (p.eql/boundary-interface env))
+
+; request EQL
+(pathom [::now])
+
+; send root entity data
+(pathom {:pathom/entity {:geo/width 10 :geo/height 8}
+         :pathom/tx     [:geo/area]})
+
+; use AST, this way Pathom doesn't have to decode the EQL
+(pathom
+  {:pathom/ast {:type     :root
+                :children [{:type         :prop
+                            :key          ::now
+                            :dispatch-key ::now}]}})
+```
+
+It's recommended that you always use this at API boundaries.
