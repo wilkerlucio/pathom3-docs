@@ -21,7 +21,7 @@
 
 ; send root data with entity
 (pathom {:pathom/entity {:geo/width 10 :geo/height 8}
-         :pathom/tx     [:geo/area]})
+         :pathom/eql    [:geo/area]})
 
 ; use AST, this way Pathom doesn't have to decode the EQL
 (pathom

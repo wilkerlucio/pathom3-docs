@@ -10,7 +10,7 @@ it available as a service.
 
 ## Project Setup
 
-To make the GPC integration I'll use the library [google-cloud-function-ring-adapter](https://github.com/pepijn/google-cloud-function-ring-adapter).
+To make the GPC integration I'll use the library [google-cloud-functions-clojure](https://github.com/pepijn/google-cloud-functions-clojure).
 
 Example setup for `deps.edn`:
 
@@ -19,17 +19,17 @@ Example setup for `deps.edn`:
  ["src/main" "src/java"]
 
  :deps
- {com.wsscode/pathom3                        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "898a1b1916af01d9ab744ef0c0e9a5f5321e7860"}
-  metosin/muuntaja                           {:mvn/version "0.6.8"}
-  nl.epij/google-cloud-function-ring-adapter {:mvn/version "0.1.0-SNAPSHOT"}
-  org.clojure/clojure                        {:mvn/version "1.10.3"}
-  org.clojure/core.async                     {:mvn/version "1.3.618"}
-  ring-cors/ring-cors                        {:mvn/version "0.1.13"}}
+ {com.wsscode/pathom3                         {:git/url "https://github.com/wilkerlucio/pathom3" :sha "898a1b1916af01d9ab744ef0c0e9a5f5321e7860"}
+  metosin/muuntaja                            {:mvn/version "0.6.8"}
+  nl.epij/google-cloud-functions-ring-adapter {:mvn/version "0.1.0"}
+  org.clojure/clojure                         {:mvn/version "1.10.3"}
+  org.clojure/core.async                      {:mvn/version "1.3.618"}
+  ring-cors/ring-cors                         {:mvn/version "0.1.13"}}
 
  :aliases
  {:assemble
-  {:extra-deps {nl.epij.gcf/deploy {:git/url   "https://github.com/pepijn/google-cloud-function-ring-adapter"
-                                    :sha       "ede2ccee2fec5a526350622f32a39fac95bb0273"
+  {:extra-deps {nl.epij.gcf/deploy {:git/url   "https://github.com/pepijn/google-cloud-functions-clojure"
+                                    :sha       "e0f49db974a8f97e1459efd16c0edfb3030a6115"
                                     :deps/root "deploy"}}
    :exec-fn    nl.epij.gcf.deploy/assemble-jar!
    :exec-args  {:nl.epij.gcf/entrypoint   PathomServer
@@ -37,8 +37,8 @@ Example setup for `deps.edn`:
                 :nl.epij.gcf/compile-path "target/classes"
                 :nl.epij.gcf/jar-path     "target/artifacts/application.jar"}}
   :run
-  {:extra-deps {nl.epij.gcf/deploy {:git/url   "https://github.com/pepijn/google-cloud-function-ring-adapter"
-                                    :sha       "ede2ccee2fec5a526350622f32a39fac95bb0273"
+  {:extra-deps {nl.epij.gcf/deploy {:git/url   "https://github.com/pepijn/google-cloud-functions-clojure"
+                                    :sha       "e0f49db974a8f97e1459efd16c0edfb3030a6115"
                                     :deps/root "deploy"}}
    :exec-fn    nl.epij.gcf.deploy/run-server!
    :exec-args  {:nl.epij.gcf/entrypoint   PathomServer
@@ -47,7 +47,7 @@ Example setup for `deps.edn`:
                 :nl.epij.gcf/jar-path     "target/artifacts/application.jar"}}}}
 ```
 
-## Recommended Settings
+## Recommended Settings for Pathom
 
 Here are some recommended settings to do when exposing a Pathom API.
 
@@ -84,6 +84,8 @@ persist the planning part of the process across requests. This is how we set it 
       (p.plugin/register
         [(pbip/attribute-errors-plugin)])))
 ```
+
+Check the [Cache](../cache.mdx) page for more details on how to control the cache.
 
 ## Ring handler setup
 
@@ -167,12 +169,12 @@ Once it runs, we can test it by sending a request:
 curl --location --request POST 'http://localhost:13337' \
 --header 'Content-Type: application/edn' \
 --header 'Accept: application/edn' \
---data-raw '{:pathom/tx [:temperature], :pathom/entity {:ip "198.29.213.3"}}'
+--data-raw '{:pathom/eql [:temperature], :pathom/entity {:ip "198.29.213.3"}}'
 
 # => {:temperature 26.064999999999998}
 ```
 
-## GCP Setup
+## GCF Deploy
 
 For the next steps, you need to have [GCP Account](https://accounts.google.com/signin/v2/identifier?service=cloudconsole&passive=1209600&osid=1&continue=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&followup=https%3A%2F%2Fconsole.cloud.google.com%2Ffreetrial%2Fsignup%2Ftos%3Fref%3Dhttps%3A%2F%2Fwww.google.com%2F&flowName=GlifWebSignIn&flowEntry=ServiceLogin)
 and install the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install).

@@ -318,7 +318,7 @@ has the following options available:
 :pathom/entity {:foo "3"}
 
 ; the request in EQL format
-:pathom/tx [:foo]
+:pathom/eql [:foo]
 
 ; the request in AST format
 :pathom/ast {:type     :root
@@ -327,7 +327,7 @@ has the following options available:
                          :dispatch-key :foo}]}
 ```
 
-You should either use `:pathom/tx` or `:pathom/ast`. If both are present, Pathom will
+You should either use `:pathom/eql` or `:pathom/ast`. If both are present, Pathom will
 pick the AST.
 
 Here you can see an example of a setup and usage of the boundary interface:
@@ -356,7 +356,7 @@ Here you can see an example of a setup and usage of the boundary interface:
 
 ; send root entity data
 (pathom {:pathom/entity {:geo/width 10 :geo/height 8}
-         :pathom/tx     [:geo/area]})
+         :pathom/eql    [:geo/area]})
 
 ; use AST, this way Pathom doesn't have to decode the EQL
 (pathom
