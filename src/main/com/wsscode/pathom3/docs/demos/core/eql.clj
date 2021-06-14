@@ -29,3 +29,26 @@
                 :children [{:type         :prop
                             :key          ::now
                             :dispatch-key ::now}]}})
+
+;;;;;;;;;; env extension demo
+
+(def users-db
+  {1 {:user/login "bunny"}
+   2 {:user/login "fox"}})
+
+(pco/defresolver current-user [{:keys [app/current-user-id]} _]
+  {::pco/output [:user/login]}
+  (get users-db current-user-id))
+
+(def env (pci/register current-user))
+
+(def pathom (p.eql/boundary-interface env))
+
+(pathom {:app/current-user-id 1} [:user/login])
+
+(pathom
+  (fn [env]
+    (-> env
+        (assoc :app/current-user-id 2)
+        (pci/register (pbir/single-attr-resolver :user/login :user/greet #(str "Hello " %)))))
+  [:user/greet])

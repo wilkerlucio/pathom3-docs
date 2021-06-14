@@ -302,6 +302,8 @@ invoke mutations.
 
 This is a powerful API, and it's something that Pathom is designed to handle.
 
+### Using the boundary interface
+
 Using the boundary interface adds the following capabilities to the request:
 
 - Add support to load the index via EQL (though `::pci/indexes` attribute)
@@ -367,3 +369,50 @@ Here you can see an example of a setup and usage of the boundary interface:
 ```
 
 It's recommended that you always use this at API boundaries.
+
+### Extending environment
+
+The boundary API design is to make it flexible, and altough is more efficient
+to initialize as much as possible before in the env, it still allows extension of
+it.
+
+To extend the env you can send another argument to the boundary interface.
+
+For example, let's say we have a resolver to get data from the current user. The current
+user is something we like to set at the start of the process, but we don't want to allow
+users to override it (for security reasons).
+
+In this case we can set the user id on env when we call the boundary interface:
+
+```clojure
+(def users-db
+  {1 {:user/login "bunny"}
+   2 {:user/login "fox"}})
+
+(pco/defresolver current-user [{:keys [app/current-user-id]} _]
+  {::pco/output [:user/login]}
+  (get users-db current-user-id))
+
+(def env (pci/register current-user))
+
+(def pathom (p.eql/boundary-interface env))
+
+(pathom {:app/current-user-id 1} [:user/login])
+; => {:user/login "bunny"}
+```
+
+In this example we sent env as a map, the boundary interface get this map and merge
+into the previous env and run.
+
+The env extension can also be a function, this allows more complex operations like
+registering new resolvers, for example:
+
+```clojure
+(pathom
+  (fn [env]
+    (-> env
+        (assoc :app/current-user-id 2)
+        (pci/register (pbir/single-attr-resolver :user/login :user/greet #(str "Hello " %)))))
+  [:user/greet])
+; => {:user/greet "Hello fox"}
+```
