@@ -9,7 +9,7 @@
   com.fulcrologic/guardrails {:mvn/version "0.0.12"}
   com.wsscode/async          {:mvn/version "2021.01.15"}
   com.wsscode/js-interop     {:git/url "https://github.com/wilkerlucio/js-data-interop" :sha "ca861d607da8cf63208e296b0250eae225d9a10c"}
-  com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "898a1b1916af01d9ab744ef0c0e9a5f5321e7860"}
+  com.wsscode/pathom3        {:git/url "https://github.com/wilkerlucio/pathom3" :sha "8e7a34bfc3ba0356cc274499482c26725b1da151"}
   com.wsscode/pathom3-viz    {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
   com.wsscode/transito       {:git/url "https://github.com/wilkerlucio/transito" :sha "7119312488e8e8eac0262b86b0c74f6d940de78e"}
   hickory/hickory            {:mvn/version "0.7.1"}
