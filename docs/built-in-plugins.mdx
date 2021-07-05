@@ -45,44 +45,6 @@ Example setup:
 
 This plugin uses the same error finding described in the [debugging page](debugging.mdx#error-for-some-attribute).
 
-## Remove stats
-
-This plugin removes all run-stats meta-data from the response, including in the nested
-responses.
-
-One example case you may need this plugin is to provide a Pathom API. In production, in case you
-use transit with meta support. It's important to remove this meta to avoid massive payloads.
-
-```clojure
-(ns com.wsscode.pathom3.docs.built-in-plugins
-  (:require [com.wsscode.pathom3.connect.built-in.plugins :as pbip]
-            [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
-            [com.wsscode.pathom3.connect.indexes :as pci]
-            [com.wsscode.pathom3.interface.eql :as p.eql]
-            [com.wsscode.pathom3.plugin :as p.plugin]))
-
-(def env
-  (-> (pci/register (pbir/single-attr-resolver :x :y inc))
-      (p.plugin/register pbip/remove-stats-plugin)))
-
-(-> (p.eql/process env
-      {:x 10}
-      [:y])
-    meta)
-=> {}
-```
-
-For API's its expected to combine this plugin with the `attribute-error` plugin. The
-order of these plugins is important, remember to keep `remove-stats-plugin` on top:
-
-```clojure
-(def env
-  (-> (pci/register (pbir/single-attr-resolver :x :y inc))
-      (p.plugin/register
-        [pbip/remove-stats-plugin
-         (pbip/attribute-errors-plugin)])))
-```
-
 ## Resolve mutations params
 
 On Pathom, when you call a mutation, the params flow without any alteration. The default
