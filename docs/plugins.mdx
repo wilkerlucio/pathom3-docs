@@ -209,12 +209,13 @@ namespace.
 
 #### `::pcr/wrap-resolve`
 
-Wrap the call of a resolver.
+Wrap the call of a resolver. Note in the case of a batch resolver, input is going to be
+a sequence.
 
 ```clojure
 (defn sample-resolve-wrapper [resolve]
-  (fn [env node]
-    (resolve env node)))
+  (fn [env input]
+    (resolve env input)))
 ```
 
 #### `::pcr/wrap-mutate`
