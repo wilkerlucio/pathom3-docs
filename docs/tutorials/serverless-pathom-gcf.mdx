@@ -134,8 +134,8 @@ Keep in mind the "run status" data is usually much larger than the response itse
 
 You can mitigate this in two different levels at Pathom:
 
-1. Set `:com.wsscode.pathom3.connect.runner/run-stats-omit-resolver-io? true` to remove input/output details. This adds a great reduction in the size of the status.
-2. Set `:com.wsscode.pathom3.connect.runner/run-stats-omit? true` to remove all status from meta
+1. Set `:com.wsscode.pathom3.connect.runner/omit-run-stats-resolver-io? true` to remove input/output details. This adds a great reduction in the size of the status.
+2. Set `:com.wsscode.pathom3.connect.runner/omit-run-stats? true` to remove all status from meta
 
 :::tip
 This same handler setup works with any other ring server, like [Pedestal](http://pedestal.io/),
