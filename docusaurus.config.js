@@ -1,6 +1,6 @@
 module.exports = {
   title: 'Pathom 3',
-  tagline: 'A library to model and process attribute relationships.',
+  tagline: 'Logic programming though attribute relationships.',
   url: 'https://pathom3.wsscode.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
