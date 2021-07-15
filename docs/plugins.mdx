@@ -272,11 +272,25 @@ can control how sub-processes occur here. The source original is an `assoc` like
     (original env out k v)))
 ```
 
+### `::pcr/wrap-run-graph-done!`
+
+This runs only once per entity, if you want to do any kind of post-process that you
+expect one entity to be ready.
+
+```clojure
+(defn sample-run-graph-wrapper [original]
+  (fn [env]
+    (original env ast-or-graph entity-tree*)))
+```
+
 #### `::pcr/wrap-run-graph!`
 
 Wrap the operation of running a graph. Note for a given transaction, there may be many
 graphs to run. Each entity (each map in the result) is potentially an entity and may
 have its own graph.
+
+Also note this may run multiple times for the same entity, for each "batch hit" it
+does.
 
 ```clojure
 (defn sample-run-graph-wrapper [original]
