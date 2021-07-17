@@ -19,6 +19,30 @@ available data. Given those are the same, it hits the cache.
 This cache is set in the key `::pcp/plan-cache*` in the environment. You can set it
 with the helper `pcp/with-plan-cache`.
 
+Here is an example to setup a durable cache for the planner, which I recommend as a
+good default:
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.cache
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.connect.planner :as pcp]
+            [com.wsscode.pathom3.interface.eql :as p.eql]))
+
+(pco/defresolver full-name [{::keys [first-name last-name]}]
+  {::full-name (str first-name " " last-name)})
+
+; setup with defonce to keep during reloads
+(defonce plan-cache* (atom {}))
+
+(def env
+  (-> (pci/register full-name)
+      (pcp/with-plan-cache plan-cache*)))
+
+(defn handle [tx]
+  (p.eql/process env tx))
+```
+
 ### Resolver call
 
 Pathom caches the resolver result based on the resolver name, input, and parameters.
