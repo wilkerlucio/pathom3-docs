@@ -348,6 +348,10 @@ has the following options available:
              :children [{:type :prop
                          :key :foo
                          :dispatch-key :foo}]}
+
+; activate lenient mode, to make the process tolerant to errors in the process, localizing errors per attribute
+; or set false to force strict mode
+:pathom/lenient-mode? true
 ```
 
 You should either use `:pathom/eql` or `:pathom/ast`. If both are present, Pathom will
