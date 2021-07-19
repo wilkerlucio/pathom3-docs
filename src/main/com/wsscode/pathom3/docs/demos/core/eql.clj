@@ -52,3 +52,23 @@
         (assoc :app/current-user-id 2)
         (pci/register (pbir/single-attr-resolver :user/login :user/greet #(str "Hello " %)))))
   [:user/greet])
+
+;; union demo
+
+(def union-env
+  (pci/register
+    [(pbir/single-attr-resolver :acme.post/title :acme.post/link #(str % "-link"))
+     (pbir/single-attr-resolver :acme.ad/x :acme.ad/y inc)
+     (pbir/constantly-resolver :acme/feed
+       [^{:com.wsscode.pathom3.format.eql/union-entry-key :acme.post/id}
+        {:acme.post/title "TITLE"}
+        ^{:com.wsscode.pathom3.format.eql/union-entry-key :acme.ad/id}
+        {:acme.ad/x 1}])]))
+
+(p.eql/process union-env
+  [{:acme/feed
+    {:acme.post/id [:acme.post/link]
+     :acme.ad/id   [:acme.ad/y]}}])
+; => {:acme/feed
+;     [{:acme.post/link "TITLE-link"}
+;      {:acme.ad/y 2}]}

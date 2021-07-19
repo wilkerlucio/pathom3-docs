@@ -163,6 +163,31 @@ to render. This is how we can write some resolvers to fetch each type:
 To decide which path to take, Pathom looks if the entry data contains the key mentioned
 in the union entry key. When they match Pathom picks that path option.
 
+There is a secondary option, this is more intended for implementors of dynamic resolvers.
+
+If the meta contains the meta-data `::pf.eql/union-entry-path`, Pathom will use that
+to pick the path, example:
+
+```clojure
+(def union-env
+  (pci/register
+    [(pbir/single-attr-resolver :acme.post/title :acme.post/link #(str % "-link"))
+     (pbir/single-attr-resolver :acme.ad/x :acme.ad/y inc)
+     (pbir/constantly-resolver :acme/feed
+       [^{:com.wsscode.pathom3.format.eql/union-entry-key :acme.post/id}
+        {:acme.post/title "TITLE"}
+        ^{:com.wsscode.pathom3.format.eql/union-entry-key :acme.ad/id}
+        {:acme.ad/x 1}])]))
+
+(p.eql/process union-env
+  [{:acme/feed
+    {:acme.post/id [:acme.post/link]
+     :acme.ad/id   [:acme.ad/y]}}])
+; => {:acme/feed
+;     [{:acme.post/link "TITLE-link"}
+;      {:acme.ad/y 2}]}
+```
+
 ### Recursive queries
 
 Some data shapes are trees. For example, if we like to map a file system with Pathom.
