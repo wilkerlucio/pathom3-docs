@@ -162,7 +162,7 @@ Here is an example to make the concept more concrete:
 (p.eql/process env {:movie/id 1}
   [:user/name :movie/title])
 ; => {:movie/title "Bacurau",
-;     :com.wsscode.pathom3.connect.runner/attribute-errors {:user/name {:com.wsscode.pathom3.error/error-type :com.wsscode.pathom3.error/attribute-unreachable}}}
+;     :com.wsscode.pathom3.connect.runner/attribute-errors {:user/name {:com.wsscode.pathom3.error/cause :com.wsscode.pathom3.error/attribute-unreachable}}}
 ```
 
 Considering the request and response, did this request succeed or failed?
@@ -202,7 +202,7 @@ initial data:
                  [:movie/title])]
   ; but check for its error
   (p.error/attribute-error response :user/name))
-; => #:com.wsscode.pathom3.error{:error-type :com.wsscode.pathom3.error/attribute-not-requested}
+; => #:com.wsscode.pathom3.error{:cause :com.wsscode.pathom3.error/attribute-not-requested}
 ```
 
 ### Attribute unreachable
@@ -245,12 +245,12 @@ is an error there, it returns the error.
                  [:error-demo])]
   (p.error/attribute-error response :error-demo))
 ; =>
-{:com.wsscode.pathom3.error/error-type
+{:com.wsscode.pathom3.error/cause
  :com.wsscode.pathom3.error/node-errors,
 
  :com.wsscode.pathom3.error/node-error-details
  {1
-  {:com.wsscode.pathom3.error/error-type
+  {:com.wsscode.pathom3.error/cause
    :com.wsscode.pathom3.error/node-exception,
 
    :com.wsscode.pathom3.error/exception
@@ -280,12 +280,12 @@ attribute.
                  [:a])]
   (p.error/attribute-error response :a))
 ; =>
-{:com.wsscode.pathom3.error/error-type
+{:com.wsscode.pathom3.error/cause
  :com.wsscode.pathom3.error/node-errors,
 
  :com.wsscode.pathom3.error/node-error-details
  {1
-  {:com.wsscode.pathom3.error/error-type
+  {:com.wsscode.pathom3.error/cause
    :com.wsscode.pathom3.error/attribute-missing}}}
 ```
 
@@ -297,12 +297,12 @@ In this case, the error didn't happen in the node responsible for the attribute,
 some ancestor node (some dependency behind on the chain).
 
 ```clojure
-{:com.wsscode.pathom3.error/error-type
+{:com.wsscode.pathom3.error/cause
  :com.wsscode.pathom3.error/node-errors,
 
  :com.wsscode.pathom3.error/node-error-details
  {1
-  {:com.wsscode.pathom3.error/error-type
+  {:com.wsscode.pathom3.error/cause
    :com.wsscode.pathom3.error/ancestor-error,
 
    :com.wsscode.pathom3.error/error-ancestor-id
@@ -342,12 +342,12 @@ If there are many options for an attribute, you will get the error details of ea
                  [:error-demo])]
   (p.error/attribute-error response :error-demo))
 ; =>
-{:com.wsscode.pathom3.error/error-type
+{:com.wsscode.pathom3.error/cause
  :com.wsscode.pathom3.error/node-errors,
 
  :com.wsscode.pathom3.error/node-error-details
  {1
-  {:com.wsscode.pathom3.error/error-type
+  {:com.wsscode.pathom3.error/cause
    :com.wsscode.pathom3.error/node-exception,
 
    :com.wsscode.pathom3.error/exception
@@ -361,7 +361,7 @@ If there are many options for an attribute, you will get the error details of ea
            :trace
                   [...]}},
   2
-  {:com.wsscode.pathom3.error/error-type
+  {:com.wsscode.pathom3.error/cause
    :com.wsscode.pathom3.error/node-exception,
 
    :com.wsscode.pathom3.error/exception

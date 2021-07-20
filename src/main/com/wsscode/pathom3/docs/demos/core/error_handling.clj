@@ -100,18 +100,18 @@
 (p.eql/process env {:movie/id 1}
   [:user/name :movie/title])
 ; => {:movie/title "Bacurau",
-;     :com.wsscode.pathom3.connect.runner/attribute-errors {:user/name {:com.wsscode.pathom3.error/error-type :com.wsscode.pathom3.error/attribute-unreachable}}}
+;     :com.wsscode.pathom3.connect.runner/attribute-errors {:user/name {:com.wsscode.pathom3.error/cause :com.wsscode.pathom3.error/attribute-unreachable}}}
 
 (let [response (p.eql/process env {:movie/id 1}
                  [:user/name :movie/title])]
   (p.error/attribute-error response :user/name))
-; => #:com.wsscode.pathom3.error{:error-type :com.wsscode.pathom3.error/attribute-unreachable}
+; => #:com.wsscode.pathom3.error{:cause :com.wsscode.pathom3.error/attribute-unreachable}
 
 
 (let [response (p.eql/process env {:movie/id 1}
                  [:movie/title])]
   (p.error/attribute-error response :user/name))
-; => #:com.wsscode.pathom3.error{:error-type :com.wsscode.pathom3.error/attribute-not-requested}
+; => #:com.wsscode.pathom3.error{:cause :com.wsscode.pathom3.error/attribute-not-requested}
 
 ;; node exception
 
@@ -123,12 +123,12 @@
                  [:error-demo])]
   (p.error/attribute-error response :error-demo))
 ; =>
-'{:com.wsscode.pathom3.error/error-type
+'{:com.wsscode.pathom3.error/cause
   :com.wsscode.pathom3.error/node-errors,
 
   :com.wsscode.pathom3.error/node-error-details
   {1
-   {:com.wsscode.pathom3.error/error-type
+   {:com.wsscode.pathom3.error/cause
     :com.wsscode.pathom3.error/node-exception,
 
     :com.wsscode.pathom3.error/exception
@@ -152,12 +152,12 @@
                  [:a])]
   (p.error/attribute-error response :a))
 ; =>
-{:com.wsscode.pathom3.error/error-type
+{:com.wsscode.pathom3.error/cause
  :com.wsscode.pathom3.error/node-errors,
 
  :com.wsscode.pathom3.error/node-error-details
  {1
-  {:com.wsscode.pathom3.error/error-type
+  {:com.wsscode.pathom3.error/cause
    :com.wsscode.pathom3.error/attribute-missing}}}
 
 ;; ancestor error
@@ -171,12 +171,12 @@
                  [:dep-on-error])]
   (p.error/attribute-error response :dep-on-error))
 ; =>
-'{:com.wsscode.pathom3.error/error-type
+'{:com.wsscode.pathom3.error/cause
   :com.wsscode.pathom3.error/node-errors,
 
   :com.wsscode.pathom3.error/node-error-details
   {1
-   {:com.wsscode.pathom3.error/error-type
+   {:com.wsscode.pathom3.error/cause
     :com.wsscode.pathom3.error/ancestor-error,
 
     :com.wsscode.pathom3.error/error-ancestor-id
@@ -214,12 +214,12 @@
                  [:error-demo])]
   (p.error/attribute-error response :error-demo))
 ; =>
-'{:com.wsscode.pathom3.error/error-type
+'{:com.wsscode.pathom3.error/cause
   :com.wsscode.pathom3.error/node-errors,
 
   :com.wsscode.pathom3.error/node-error-details
   {1
-   {:com.wsscode.pathom3.error/error-type
+   {:com.wsscode.pathom3.error/cause
     :com.wsscode.pathom3.error/node-exception,
 
     :com.wsscode.pathom3.error/exception
@@ -232,7 +232,7 @@
      :trace
             [...]}},
    2
-   {:com.wsscode.pathom3.error/error-type
+   {:com.wsscode.pathom3.error/cause
     :com.wsscode.pathom3.error/node-exception,
 
     :com.wsscode.pathom3.error/exception
