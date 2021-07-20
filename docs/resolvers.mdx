@@ -4,8 +4,8 @@ title: Resolvers
 
 import {PlanGraphFileWithDetails} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
 
-Resolvers are the primary building blocks in Pathom. They are the constructs to express
-relationships between attributes.
+Resolvers are the primary building blocks in Pathom. In Pathom resolvers are used to
+express a relationship between attributes.
 
 On this page, you will learn how to create resolvers and use them. After that you
 will learn about the built-in resolvers that come with Pathom.
@@ -162,7 +162,7 @@ code bases. So Pathom 3 adds some extra sugar tricks to avoid the repetition:
 
 :::tip
 If you use [Cursive](https://cursive-ide.com/), you can ask it to resolve the
-`pc/defresolver` as a `defn`, and you will get proper symbol resolution
+`pco/defresolver` as a `defn`, and you will get proper symbol resolution
 :::
 
 2. Now, given the `input` is the same as destructuring, we can let `defresolver` infer the input from it:
@@ -281,7 +281,7 @@ To illustrate the difference, let's compare the two approaches, first let's defi
   {:acme.user/avatar-url (str "http://avatar-images-host/for-id/" avatar-slug)})
 ```
 
-Consider the question: What is the `avatar url` of the user with id `1`.
+Consider the question: What is the `avatar url` of the user with id `1`?
 
 The traditional way to get there using our resolvers as functions goes as:
 
@@ -416,8 +416,7 @@ resolver for `:user/display-name` we make the `:user/name` attribute optional:
            :user/name  "Sam"}})
      (pbir/constantly-resolver :all-users
        [{:user/id 1}
-        {:user/id 2}
-        {:user/id 3}])
+        {:user/id 2}])
      user-display-name]))
 
 (p.eql/process opt-env
@@ -425,7 +424,6 @@ resolver for `:user/display-name` we make the `:user/name` attribute optional:
 ; => {:all-users
 ;     [{:user/display-name "user@example.com"} ; no name, use email
 ;      {:user/display-name "Sam"} ; has name (the optional), use it
-;      {} ; user 3 doesn't exist, so resolver didn't get called
 ;     ]}
 ```
 
@@ -480,37 +478,6 @@ no available path to fulfill the nested part, the planner will discard that path
 running unnecessary work on the runner.
 
 You can try this by asking for a nested property that doesn't exist.
-
-### Nested Inputs Filtering
-
-When using nested inputs with collections, Pathom will filter out items that can't
-fulfill the required specs, here is an example:
-
-```clojure
-(pco/defresolver top-players
-  "Return maps with ids for the top players in a given game."
-  []
-  {:game/top-players
-   [{:player/id 1}
-    {:player/id 20}
-    {:player/id 8}
-    {:player/id 2}]})
-
-(pco/defresolver player-by-id-cond-score
-  "Get player by id, in our case just generate some data based on the id."
-  [{:keys [player/id]}]
-  {:player/name (str "Player " id)
-   :player/score (if (< id 10)
-                   (* id 50)
-                   ; using this value is the same as omitting the key
-                   ::pco/unknown-value)})
-
-; in this case, the top-players-avg will get only 3 of the 4 players, given player 20
-; will not have score available
-(p.eql/process (pci/register [top-players player-by-id top-players-avg])
-  [:game/top-players-avg-score])
-; => #:game{:top-players-avg-score 183.3333333333}
-```
 
 ## Parameters
 
@@ -768,7 +735,6 @@ Not all paths are supported in batch, for example:
 ```clojure
 (p.eql/process
   (pci/register
-    (p.plugin/register (pbip/attribute-errors-plugin))
     [(pco/resolver 'batch
        {::pco/input  [:foo]
         ::pco/output [:bar]

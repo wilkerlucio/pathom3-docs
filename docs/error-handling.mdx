@@ -4,6 +4,111 @@ title: Error Handling
 
 import {KrokiDiagramFile, PlanGraphFileWithDetails} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
 
+## Strict Mode
+
+Pathom 3 is strict by default. It's an all-or-nothing mode, or Pathom will fulfill the
+full query, or it will throw an exception.
+
+Here are the reasons that may cause Pathom to throw:
+
+- Attribute doesn't exist in the indexes
+- Attribute exists in the indexes, but the available data isn't enough to reach it
+- A resolver throw an exception*
+- Attribute wasn't in the final output after all the process
+
+:::note
+* An exception to this rule is if a resolver is contained in a OR node, if there are
+multiple options to fetch some attribute. It only throws when every option fails.
+:::
+
+Let's see one example of each of those cases:
+
+```clojure
+; Attribute doesn't exist in the indexes
+(p.eql/process
+  (pci/register
+    (pbir/constantly-resolver :a "foo"))
+  [:b])
+; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:b] at path []
+
+; Attribute exists in the indexes, but the available data isn't enough to reach it
+(p.eql/process
+  (pci/register
+    (pbir/single-attr-resolver :a :b "foo"))
+  [:b])
+; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:b] at path []
+
+; An extended version of this is also true in case of nested inputs, if Pathom can't see
+; a Pathom for a nested input requirement, it will consider it a plan failure.
+(p.eql/process
+  (pci/register
+    [(pco/resolver 'nested-provider
+       {::pco/output [{:a [:b]}]}
+       (fn [_ _]
+         {:a {:b 1}}))
+     (pco/resolver 'nested-requires
+       {::pco/input  [{:a [:c]}]
+        ::pco/output [:d]}
+       (fn [_ _]
+         {:d 10}))])
+  [:d])
+; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:c] at path [:a]
+
+; A resolver throw an exception*
+(p.eql/process
+  (pci/register
+    (pco/resolver 'error
+      {::pco/output [:error]}
+      (fn [_ _]
+        (throw (ex-info "Deu ruim." {})))))
+  [:error])
+; => EXCEPTION: Deu ruim.
+
+; Attribute wasn't in the final output after all the process
+(p.eql/process
+  (pci/register
+    (pco/resolver 'data
+      {::pco/output [:a :b :c]}
+      (fn [_ _]
+        {:a 10})))
+  [:c])
+; => EXCEPTION: Required attributes missing: [:c] at path []
+```
+
+This mode is good when:
+- You run Pathom in process
+- Your queries are small
+- You want all-or-nothing from the output
+
+### Optionality
+
+In the same way that resolvers support [optional inputs](resolvers.mdx#optional-inputs), you can use the same syntax
+to express optional attributes in your client query.
+
+This will affect how the `Attribute wasn't in the final output after all the process`
+behaves, for example:
+
+```clojure
+(p.eql/process
+  (pci/register
+    (pco/resolver 'data
+      {::pco/output [:a :b :c]}
+      (fn [_ _]
+        {:a 10})))
+  [:a (pco/? :c)])
+; => {:a 10} - no exception, ignore the absence of :c
+```
+
+## Lenient Mode
+
+When you Pathom scenario involves large queries (for a complex UI made with [Fulcro](https://fulcro.fulcrologic.com/)
+for example) you probably don't want that a single attribute break the whole query.
+
+This requires a more tolerant mode, which is the lenient mode in Pathom 3.
+
+In lenient mode, errors are handled per attribute. The following sections will explain
+how to handle errors in this way.
+
 ## Attribute Errors
 
 Pathom is an abstraction around attributes, and the error handling follow this idea by
@@ -42,11 +147,13 @@ Here is an example to make the concept more concrete:
 
 (def env
   (pci/register
+    {::p.error/lenient-mode? true}
     [user-identity movie-details]))
 
 (p.eql/process env {:movie/id 1}
   [:user/name :movie/title])
-; => #:movie{:title "Bacurau"}
+; => {:movie/title "Bacurau",
+;     :com.wsscode.pathom3.connect.runner/attribute-errors {:user/name {:com.wsscode.pathom3.error/error-type :com.wsscode.pathom3.error/attribute-unreachable}}}
 ```
 
 Considering the request and response, did this request succeed or failed?
@@ -55,29 +162,12 @@ Hard to say at the "request level", but at the attribute level it's clear: `:mov
 succeed and `:user/name` failed. At your application-level you must take this partial
 failure property into account to decide what to do.
 
-Notice the missing attribute name is just missing. By default, Pathom doesn't add any
-error indicators, and it's up to you to ask about the errors.
+Note in lenient mode, Pathom adds the attribute `::pcr/attribute-errors` when there
+is some attribute error. This map contains the error details for each attribute.
 
-To do so, you can use the `attribute-error` helper. Let's try it on top of our previous
-example:
-
-```clojure
-; add require [com.wsscode.pathom3.error :as p.error]
-
-(let [response (p.eql/process env {:movie/id 1}
-                 [:user/name :movie/title])]
-  (p.error/attribute-error response :user/name))
-; => #:com.wsscode.pathom3.error{:error-type :com.wsscode.pathom3.error/attribute-unreachable}
-```
-
-This indicates the attribute `:user/name` wasn't reachable, which makes sense given we
+The error indicates the attribute `:user/name` wasn't reachable, which makes sense given we
 didn't provide the `:user/id` required for it (and neither there is a resolver to
 provide it).
-
-:::tip
-You can make Pathom expose the errors on the output using the built-in
-[attribute-errors plugin](built-in-plugins.mdx#attribute-errors).
-:::
 
 ## Types of attribute errors
 

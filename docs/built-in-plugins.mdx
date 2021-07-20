@@ -8,43 +8,6 @@ Here you will find information about built-in plugins.
 [com.wsscode.pathom3.connect.built-in.plugins :as pbip]
 ```
 
-## Attribute errors
-
-Pathom 3 keeps errors inside the meta-data in responses.
-
-One way to expose these errors in the data is using the `attribute-error-plugin`.
-
-Example setup:
-
-```clojure
-(ns com.wsscode.pathom3.docs.built-in-plugins
-  (:require [com.wsscode.pathom3.connect.built-in.plugins :as pbip]
-            [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
-            [com.wsscode.pathom3.connect.indexes :as pci]
-            [com.wsscode.pathom3.interface.eql :as p.eql]
-            [com.wsscode.pathom3.plugin :as p.plugin]))
-
-(def env
-  (-> (pci/register (pbir/single-attr-resolver :x :y inc))
-      (p.plugin/register (pbip/attribute-errors-plugin))))
-
-(p.eql/process env
-  {:x "foo"}
-  [:y])
-=>
-{:com.wsscode.pathom3.connect.runner/attribute-errors
- {:y #error{:cause "class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-            :via   [{:type    java.lang.ClassCastException,
-                     :message "class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-                     :at      [clojure.lang.Numbers
-                               inc
-                               "Numbers.java"
-                               137]}],
-            :trace ...}}}
-```
-
-This plugin uses the same error finding described in the [debugging page](debugging.mdx#error-for-some-attribute).
-
 ## Resolve mutations params
 
 On Pathom, when you call a mutation, the params flow without any alteration. The default
