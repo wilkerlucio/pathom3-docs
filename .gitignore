@@ -7,6 +7,9 @@
 # Generated files
 .docusaurus
 .cache-loader
+.cpcache
+.idea
+.lsp
 
 # Misc
 .DS_Store
