@@ -7,6 +7,75 @@
     [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
     [com.wsscode.pathom3.plugin :as p.plugin]))
 
+; region strict mode
+
+; Attribute doesn't exist in the indexes
+(comment
+  (p.eql/process
+    (pci/register
+      (pbir/constantly-resolver :a "foo"))
+    [:b]))
+; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:b] at path []
+
+; Attribute exists in the indexes, but the available data isn't enough to reach it
+(comment
+  (p.eql/process
+    (pci/register
+      (pbir/single-attr-resolver :a :b "foo"))
+    [:b]))
+; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:b] at path []
+
+; An extended version of this is also true in case of nested inputs, if Pathom can't see
+; a Pathom for a nested input requirement, it will consider it a plan failure.
+(comment
+  (p.eql/process
+    (pci/register
+      [(pco/resolver 'nested-provider
+         {::pco/output [{:a [:b]}]}
+         (fn [_ _]
+           {:a {:b 1}}))
+       (pco/resolver 'nested-requires
+         {::pco/input  [{:a [:c]}]
+          ::pco/output [:d]}
+         (fn [_ _]
+           {:d 10}))])
+    [:d]))
+; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:c] at path [:a]
+
+; A resolver throw an exception*
+(comment
+  (p.eql/process
+    (pci/register
+      (pco/resolver 'error
+        {::pco/output [:error]}
+        (fn [_ _]
+          (throw (ex-info "Deu ruim." {})))))
+    [:error]))
+; => EXCEPTION: Deu ruim.
+
+; Attribute wasn't in the final output after all the process
+(comment
+  (p.eql/process
+    (pci/register
+      (pco/resolver 'data
+        {::pco/output [:a :b :c]}
+        (fn [_ _]
+          {:a 10})))
+    [:c]))
+; => EXCEPTION: Required attributes missing: [:c] at path []
+
+(comment
+  (p.eql/process
+    (pci/register
+      (pco/resolver 'data
+        {::pco/output [:a :b :c]}
+        (fn [_ _]
+          {:a 10})))
+    [:a (pco/? :c)]))
+; => {:a 10} - no exception, ignore the absence of :c
+
+; endregion
+
 (def identity-db
   {1 {:user/name "Martin"}})
 
@@ -30,7 +99,8 @@
 
 (p.eql/process env {:movie/id 1}
   [:user/name :movie/title])
-; => #:movie{:title "Bacurau"}
+; => {:movie/title "Bacurau",
+;     :com.wsscode.pathom3.connect.runner/attribute-errors {:user/name {:com.wsscode.pathom3.error/error-type :com.wsscode.pathom3.error/attribute-unreachable}}}
 
 (let [response (p.eql/process env {:movie/id 1}
                  [:user/name :movie/title])]
