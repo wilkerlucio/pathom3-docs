@@ -51,20 +51,6 @@ Example setup for `deps.edn`:
 
 Here are some recommended settings to do when exposing a Pathom API.
 
-### Expose attribute errors
-
-To make the errors visible we can set up the attribute errors plugin,
-
-```clojure
-(def env
-  (-> (pci/register
-        [ip->lat-long
-         latlong->woeid
-         woeid->temperature])
-      (p.plugin/register
-        [(pbip/attribute-errors-plugin)])))
-```
-
 ### Cache plan results
 
 It's common for clients to make the same EQL requests. Pathom can leverage this and
@@ -80,9 +66,7 @@ persist the planning part of the process across requests. This is how we set it 
       (pci/register
         [ip->lat-long
          latlong->woeid
-         woeid->temperature])
-      (p.plugin/register
-        [(pbip/attribute-errors-plugin)])))
+         woeid->temperature])))
 ```
 
 Check the [Cache](../cache.mdx) page for more details on how to control the cache.
