@@ -110,11 +110,17 @@ This data contains timestamps for many events and specialized data depending on 
 
 #### Looking for issues
 
+:::important
+Since Pathom 3 moved to strict mode, all these errors will surface by default. While
+using lenient mode you can see the stats as described in this section.
+:::
+
 Let's write a broken query to debug it:
 
 ```clojure
 (-> (p.eql/process
-      env
+      ; use lenient mode to get error on stats
+      (assoc env ::p.error/lenient-mode? true)
       {:x 10 :height 40}
       [:area])
 
@@ -180,118 +186,6 @@ smart stats (as you can with any Smart Map):
 
     clojure.datafy/datafy)
 ```
-:::
-
-### Error for some attribute
-
-In many cases, what you care about is the status of some specific attribute. Errors get
-located in the run stats of the node. The graph has the `::pcp/index-attrs`, which tells
-which node is responsible for a given attribute.
-
-Here is an example of an execution with error. We're going to put a string where it should
-be a number, causing a math exception:
-
-```clojure :com.wsscode.pathom3.connect.planner/run-next 1}}}
-(p.eql/process
-  env
-  {:x 10 :x2 "foo" :height 40}
-  [:area])
-=> {}
-```
-
-We can see the response is silent in the output, but looking at meta
-we can see the diagnostics:
-
-```clojure
-(-> (p.eql/process
-      env
-      {:x 10 :x2 "foo" :height 40}
-      [:area])
-    (meta)
-    ::pcr/run-stats)
-=>
-{::pcp/index-attrs                {:width #{2}, :area #{1}},
- ::pcr/compute-plan-run-finish-ms 1.019610883512772E9,
- ::pcr/graph-run-finish-ms        1.01961088367712E9,
- ::pcr/compute-plan-run-start-ms  1.019610883061625E9,
- ::pcp/root                       2,
- ::pcr/node-run-stats             {2
-                                   #::pcr{:node-run-start-ms      1.019610883534996E9,
-                                          :node-error             #error{:cause "class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-                                                                         :via   [{:type    java.lang.ClassCastException,
-                                                                                  :message "class java.lang.String cannot be cast to class java.lang.Number (java.lang.String and java.lang.Number are in module java.base of loader 'bootstrap')",
-                                                                                  :at      [clojure.lang.Numbers
-                                                                                            minus
-                                                                                            "Numbers.java"
-                                                                                            162]}],
-                                                                         :trace ...},
-                                          :resolver-run-start-ms  1.019610883569344E9,
-                                          :resolver-run-finish-ms 1.019610883641287E9,
-                                          :node-resolver-input    {:x  10,
-                                                                   :x2 "foo"},
-                                          :node-resolver-output   ::pcr/node-error,
-                                          :node-run-finish-ms     1.019610883656152E9},
-
-                                   ::pcr/nodes-with-error
-                                   #{2}},
- ::pcp/index-ast                  {:area {:type         :prop,
-                                          :dispatch-key :area,
-                                          :key          :area}},
- ::pcr/graph-run-start-ms         1.019610883053178E9,
- ::pcp/index-resolver->nodes      #:com.wsscode.pathom3.docs.demos.core.debugging{area  #{1},
-                                                                                  width #{2}},
- ::pcp/nodes                      {1 {::pco/op-name          com.wsscode.pathom3.docs.demos.core.debugging/area,
-                                      ::pcp/node-id          1,
-                                      ::pcp/expects          {:area {}},
-                                      ::pcp/input            {:width  {},
-                                                              :height {}},
-                                      ::pcp/node-parents     #{2},
-                                      ::pcp/source-for-attrs #{:area}},
-                                   2 {::pco/op-name          com.wsscode.pathom3.docs.demos.core.debugging/width,
-                                      ::pcp/node-id          2,
-                                      ::pcp/expects          {:width {}},
-                                      ::pcp/input            {:x  {},
-                                                              :x2 {}},
-                                      ::pcp/source-for-attrs #{:width},
-                                      ::pcp/run-next         1}}}
-```
-
-We wanted the attribute `:area`, at the `::pcp/index-attrs` we can see the node for it
-is the node `1`. We can also see the error in the stats but at the node `2`.
-
-This is why just looking at the node responsible is a naive solution. The correct solution
-to look at the node first, and if the error isn't there, traverse back the graph to
-find the issue.
-
-Pathom provides a solution built-in to handle that, the function `attribute-error`
-in the `com.wsscode.pathom3.error` namespace:
-
-```clojure
-(-> (p.eql/process
-      env
-      {:x 10 :x2 "foo" :height 40}
-      [:area])
-
-    (p.error/attribute-error :area))
-=>
-#:com.wsscode.pathom3.error{:error-type         :com.wsscode.pathom3.error/node-errors,
-                            :node-error-details {1 #:com.wsscode.pathom3.error{:error-type        :com.wsscode.pathom3.error/ancestor-error,
-                                                                               :error-ancestor-id 2,
-                                                                               :exception         ...error...}}}
-```
-
-The `::pcrs/error-type` may be:
-
-- `::pcrs/node-error-type-direct`: error happened in the node responsible for the attribute
-- `::pcrs/node-error-type-ancestor`: error happened in some ancestor
-- `::pcrs/node-error-type-unreachable`: can't figure a path to reach this attribute
-
-In the case of `::pcrs/node-error-type-ancestor`, there will be a `::pcrs/node-error-id`
-to tell which node was responsible for the failure.
-
-:::note
-Smart Run Stats is a good example of how you can use Pathom Smart Maps to have lazy access
-to derived data, instead of doing eager computations.
 :::
 
 ## Debug with Pathom Viz
