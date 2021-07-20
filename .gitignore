@@ -10,6 +10,8 @@
 .cpcache
 .idea
 .lsp
+.calva
+.clj-kondo/.cache
 
 # Misc
 .DS_Store
