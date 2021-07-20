@@ -105,30 +105,6 @@ you can use the `::pco/op-name` to make it something else:
   ['(io/save-my-file {::file-path "./file.txt" ::file-content "contents here"})])
 ```
 
-## Mutation errors
-
-Mutation errors come as is in the mutation value result:
-
-```clojure
-(pco/defmutation error [] (throw (ex-info "Error" {:data true})))
-
-(def env (pci/register error))
-
-(p.eql/process env
-  [`(error)])
-; => {com.wsscode.pathom3.docs.mutations/error
-;     {:com.wsscode.pathom3.connect.runner/mutation-error #error {
-;     :cause "Error"
-;     :data {:data true}
-;     :via
-;     [{:type clojure.lang.ExceptionInfo
-;       :message "Error"
-;       :data {:data true}
-;       :at [com.wsscode.pathom3.docs.mutations$error__18074 invokeStatic "mutations.cljc" 12]}]
-;     :trace
-;     [...]}}}
-```
-
 ## Resolve mutation params
 
 On Pathom, when you call a mutation, the params flow without any alteration. The default
