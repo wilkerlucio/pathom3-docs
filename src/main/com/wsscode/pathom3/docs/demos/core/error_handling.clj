@@ -25,6 +25,7 @@
 
 (def env
   (pci/register
+    {::p.error/lenient-mode? true}
     [user-identity movie-details]))
 
 (p.eql/process env {:movie/id 1}
@@ -46,6 +47,7 @@
 
 (let [response (p.eql/process
                  (pci/register
+                   {::p.error/lenient-mode? true}
                    (pbir/constantly-fn-resolver :error-demo
                      (fn [_] (throw (ex-info "Example Error" {})))))
                  [:error-demo])]
@@ -72,6 +74,7 @@
 
 (let [response (p.eql/process
                  (pci/register
+                   {::p.error/lenient-mode? true}
                    (pco/resolver 'x
                      {::pco/output [:a :b :c]}
                      (fn [_ _]
@@ -91,6 +94,7 @@
 
 (let [response (p.eql/process
                  (pci/register
+                   {::p.error/lenient-mode? true}
                    [(pbir/constantly-fn-resolver :error-demo
                       (fn [_] (throw (ex-info "Example Error" {}))))
                     (pbir/single-attr-resolver :error-demo :dep-on-error str)])
@@ -121,6 +125,7 @@
   (meta
     (p.eql/process
       (pci/register
+        {::p.error/lenient-mode? true}
         [(pbir/constantly-fn-resolver :error-demo
            (fn [_] (throw (ex-info "Example Error" {}))))
          (pbir/single-attr-resolver :error-demo :dep-on-error str)])
@@ -129,6 +134,7 @@
 
 (let [response (p.eql/process
                  (pci/register
+                   {::p.error/lenient-mode? true}
                    [(pco/resolver 'err1
                       {::pco/output [:error-demo]}
                       (fn [_ _] (throw (ex-info "One Error" {}))))
@@ -186,6 +192,7 @@
 
 (p.eql/process
   (pci/register
+    {::p.error/lenient-mode? true}
     (pco/mutation 'doit
       {}
       (fn [_ _]
@@ -204,6 +211,7 @@
 
 (p.eql/process
   (-> (pci/register
+        {::p.error/lenient-mode? true}
         [(pco/resolver 'err1
            {::pco/output [:error-demo]}
            (fn [_ _] (throw (ex-info "One Error" {}))))
@@ -220,6 +228,7 @@
 
 (p.eql/process
   (-> (pci/register
+        {::p.error/lenient-mode? true}
         (pco/mutation 'doit
           {}
           (fn [_ _]
@@ -233,10 +242,10 @@
   ['(doit)])
 ; =>
 '{doit {:com.wsscode.pathom3.connect.runner/mutation-error
-        #error {:cause "Mutation error"
-                :data  {}
-                :via   [{:type    clojure.lang.ExceptionInfo
-                         :message "Mutation error"
-                         :data    {}
-                         :at      [...]}]
-                :trace [...]}}}
+        {:cause "Mutation error"
+         :data  {}
+         :via   [{:type    clojure.lang.ExceptionInfo
+                  :message "Mutation error"
+                  :data    {}
+                  :at      [...]}]
+         :trace [...]}}}
