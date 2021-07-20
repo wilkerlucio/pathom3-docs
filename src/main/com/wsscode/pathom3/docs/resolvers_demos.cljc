@@ -223,8 +223,7 @@
            :user/name  "Sam"}})
      (pbir/constantly-resolver :all-users
        [{:user/id 1}
-        {:user/id 2}
-        {:user/id 3}])
+        {:user/id 2}])
      user-display-name]))
 
 (p.eql/process opt-env
@@ -261,7 +260,7 @@
   {::pco/input [{:game/top-players [(pco/? :player/score)]}]}
   (clojure.pprint/pprint top-players)
   {:game/top-players-avg-score
-   (let [score-sum (transduce (map :player/score) + 0 top-players)]
+   (let [score-sum (transduce (keep :player/score) + 0 top-players)]
      (double (/ score-sum (count top-players))))})
 
 (p.eql/process (pci/register [top-players player-by-id top-players-avg])
@@ -333,7 +332,6 @@
 
 (p.eql/process
   (pci/register
-    (p.plugin/register (pbip/attribute-errors-plugin))
     [(pco/resolver 'batch
        {::pco/input  [:foo]
         ::pco/output [:bar]
