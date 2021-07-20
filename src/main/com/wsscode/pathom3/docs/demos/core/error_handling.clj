@@ -71,8 +71,8 @@
         {::pco/output [:a :b :c]}
         (fn [_ _]
           {:a 10})))
-    [:a (pco/? :c)]))
-; => {:a 10} - no exception, ignore the absence of :c
+    [:a (pco/? :c) (pco/? :not-on-index)]))
+; => {:a 10} - no exception, ignore the absence of :c and :not-on-index
 
 ; endregion
 
@@ -292,7 +292,7 @@
         {::p.plugin/id 'err
          :com.wsscode.pathom3.connect.runner/wrap-resolver-error
                        (fn [_]
-                         (fn [env node error]
+                         (fn [_env _node error]
                            (println "Error: " (ex-message error))))}))
   [:error-demo])
 
@@ -307,7 +307,7 @@
         {::p.plugin/id 'err
          :com.wsscode.pathom3.connect.runner/wrap-mutation-error
                        (fn [_]
-                         (fn [env ast error]
+                         (fn [_env ast error]
                            (println "Error on" (:key ast) "-" (ex-message error))))}))
   ['(doit)])
 ; =>

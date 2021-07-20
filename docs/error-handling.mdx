@@ -13,8 +13,8 @@ Here are the reasons that may cause Pathom to throw:
 
 - Attribute doesn't exist in the indexes
 - Attribute exists in the indexes, but the available data isn't enough to reach it
-- A resolver throw an exception*
 - Attribute wasn't in the final output after all the process
+- A resolver throw an exception*
 
 :::note
 * An exception to this rule is if a resolver is contained in a OR node, if there are
@@ -54,16 +54,6 @@ Let's see one example of each of those cases:
   [:d])
 ; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:c] at path [:a]
 
-; A resolver throw an exception*
-(p.eql/process
-  (pci/register
-    (pco/resolver 'error
-      {::pco/output [:error]}
-      (fn [_ _]
-        (throw (ex-info "Deu ruim." {})))))
-  [:error])
-; => EXCEPTION: Deu ruim.
-
 ; Attribute wasn't in the final output after all the process
 (p.eql/process
   (pci/register
@@ -73,6 +63,16 @@ Let's see one example of each of those cases:
         {:a 10})))
   [:c])
 ; => EXCEPTION: Required attributes missing: [:c] at path []
+
+; A resolver throw an exception
+(p.eql/process
+  (pci/register
+    (pco/resolver 'error
+      {::pco/output [:error]}
+      (fn [_ _]
+        (throw (ex-info "Deu ruim." {})))))
+  [:error])
+; => EXCEPTION: Deu ruim.
 ```
 
 This mode is good when:
@@ -85,8 +85,7 @@ This mode is good when:
 In the same way that resolvers support [optional inputs](resolvers.mdx#optional-inputs), you can use the same syntax
 to express optional attributes in your client query.
 
-This will affect how the `Attribute wasn't in the final output after all the process`
-behaves, for example:
+This will ignore problems to fetch that attribute, except in case of an exception. For example:
 
 ```clojure
 (p.eql/process
@@ -95,8 +94,18 @@ behaves, for example:
       {::pco/output [:a :b :c]}
       (fn [_ _]
         {:a 10})))
-  [:a (pco/? :c)])
-; => {:a 10} - no exception, ignore the absence of :c
+  [:a (pco/? :c) (pco/? :not-on-index)])
+; => {:a 10} - no exception, ignore the absence of :c and :not-on-index
+
+; exceptions still get out
+(p.eql/process
+  (pci/register
+    (pco/resolver 'error
+      {::pco/output [:error]}
+      (fn [_ _]
+        (throw (ex-info "Deu ruim." {})))))
+  [(pco/? :error)])
+; => EXCEPTION: Deu ruim.
 ```
 
 ## Lenient Mode
