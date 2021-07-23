@@ -280,7 +280,7 @@ expect one entity to be ready.
 ```clojure
 (defn sample-run-graph-wrapper [original]
   (fn [env]
-    (original env ast-or-graph entity-tree*)))
+    (original env)))
 ```
 
 #### `::pcr/wrap-run-graph!`
