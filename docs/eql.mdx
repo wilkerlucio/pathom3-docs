@@ -210,6 +210,7 @@ I'll start writing a few resolvers to handle paths and directory navigation:
   {:directory? (.isDirectory file)})
 
 (pco/defresolver directory-files [{:keys [^File file directory?]}]
+  {::pco/output [{:files [:file]}]}
   {:files
    (if directory?
      (mapv #(hash-map :file %) (.listFiles file))
@@ -317,6 +318,27 @@ example illustrates it:
     :ent2 #:user{:birth-year 1988}}
 ```
 :::
+
+## Process One
+
+Sometimes you just want a single value instead of a map of values as the output. The
+`p.eql/process-one` wrapper facilitates this use case:
+
+Simplest usage:
+```clojure
+(p.eql/process-one env :foo)
+```
+
+Same as process, you can send initial data:
+```clojure
+(p.eql/process-one env {:data "here"} :foo)
+```
+
+You can also use joins and param expressions:
+```clojure
+(p.eql/process-one env {:join [:sub-query]})
+(p.eql/process-one env '(:param {:expr "sion"}))
+```
 
 ## Boundary Interface
 
