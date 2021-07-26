@@ -2,20 +2,22 @@
  ["src/main"]
 
  :deps
- {applied-science/js-interop {:mvn/version "0.2.7"}
-  cheshire/cheshire          {:mvn/version "5.10.0"}
-  clj-http/clj-http          {:mvn/version "3.11.0"}
-  com.fulcrologic/fulcro     {:mvn/version "3.4.3"}
-  com.fulcrologic/guardrails {:mvn/version "0.0.12"}
-  com.wsscode/async          {:mvn/version "2021.01.15"}
-  com.wsscode/pathom3        {:mvn/version "2021.07.19-alpha"}
-  com.wsscode/pathom3-viz    {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
-  com.wsscode/transito       {:mvn/version "2021.07.04"}
-  hickory/hickory            {:mvn/version "0.7.1"}
-  lilactown/helix            {:mvn/version "0.1.1"}
-  org.clojure/clojure        {:mvn/version "1.10.1"}
-  org.clojure/clojurescript  {:mvn/version "1.10.764"}
-  thheller/shadow-cljs       {:mvn/version "2.11.4"}}
+ {applied-science/js-interop  {:mvn/version "0.2.7"}
+  cheshire/cheshire           {:mvn/version "5.10.0"}
+  clj-http/clj-http           {:mvn/version "3.11.0"}
+  http-kit/http-kit           {:mvn/version "2.5.3"}
+  com.fulcrologic/fulcro      {:mvn/version "3.4.3"}
+  com.fulcrologic/guardrails  {:mvn/version "0.0.12"}
+  com.wsscode/async           {:mvn/version "2021.01.15"}
+  com.wsscode/pathom3         {:git/url "https://github.com/wilkerlucio/pathom3" :sha "16a69027e6bb6426d39beab4ad398cee3da7ce32"}
+  com.wsscode/pathom3-viz     {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
+  com.wsscode/pathom3-graphql {:git/url "https://github.com/wilkerlucio/pathom3-graphql" :sha "c24eddb40e22bbdd023dbd046776eb923f4a3300"}
+  com.wsscode/transito        {:mvn/version "2021.07.04"}
+  hickory/hickory             {:mvn/version "0.7.1"}
+  lilactown/helix             {:mvn/version "0.1.1"}
+  org.clojure/clojure         {:mvn/version "1.10.1"}
+  org.clojure/clojurescript   {:mvn/version "1.10.764"}
+  thheller/shadow-cljs        {:mvn/version "2.11.4"}}
 
  :aliases
  {:demos
