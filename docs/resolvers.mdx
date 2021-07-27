@@ -597,7 +597,7 @@ Example implementation using a more generic function to filter data:
 
 ## Resolver Transform
 
-It's possible to send a function to transform the resolver before its instantiation.
+It's possible to send a function to transform the resolver after its instantiation.
 
 This allows to create some helpers that you may want to apply only to some specific
 resolvers.
@@ -625,9 +625,7 @@ a batch resolver:
   ...)
 ```
 
-The transform function receives the configuration map of the resolver (including the
-execution function, as `::pco/resolve`). Then Pathom uses the returned map to instantiate
-the resolver.
+The transform function receives the resolver and you should output a resolver.
 
 ## Batch resolvers
 
