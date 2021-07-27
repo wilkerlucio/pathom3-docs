@@ -613,8 +613,8 @@ a batch resolver:
   "Convert a resolver in a batch version of it."
   [resolver]
   (-> resolver
-      (pco/update-config #(assoc % ::pco/batch? true))
-      (update :resolve
+      (assoc ::pco/batch? true)
+      (update ::pco/resolve
         (fn [resolve]
           (fn [env inputs]
             (mapv #(resolve env %) inputs))))))
