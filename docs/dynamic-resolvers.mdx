@@ -1,0 +1,218 @@
+---
+title: Dynamic Resolvers
+---
+
+## What are dynamic resolvers?
+
+Dynamic resolvers is a feature of Pathom that enables the definition of remote complex
+sources of information.
+
+Dynamic resolvers are used for:
+- [Integrate a Pathom instance with another Pathom instance](foreign.mdx)
+- [Integrate Pathom with GraphQL servers](https://github.com/wilkerlucio/pathom3-graphql)
+- [Integrate Pathom with Datomic](https://github.com/wilkerlucio/pathom3-datomic)
+
+## What dynamic resolvers can do?
+
+I think the simplest way to explain dynamic resolvers is by demonstrating the limitations
+of static resolvers.
+
+For this example we are going to play with the [Star Wars API](https://swapi.dev/)
+
+Our demo goal query is to request all the characters in star wars, including their
+names and which films they participated.
+
+This is a REST API, we will start wrapping the call that [lists all people](https://swapi.dev/documentation#people).
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
+  (:require
+    [clojure.data.json :as json]
+    [com.wsscode.misc.coll :as coll]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [org.httpkit.client :as http]))
+
+(defn request-api [url]
+  (-> @(http/request {:url url})
+      :body json/read-str))
+
+(defn adapt-person [{:strs [name films]}]
+  {:swapi.person/name  name
+   :swapi.person/films (mapv #(array-map :swapi.film/url %) films)})
+
+(pco/defresolver all-people []
+  {::pco/output
+   [{:swapi/all-people
+     [:swapi.person/name
+      {:swapi.person/films
+       [:swapi.film/url]}]}]}
+  {:swapi/all-people
+   (let [results (-> (request-api "https://swapi.dev/api/people")
+                     (get "results"))]
+     (mapv adapt-person results))})
+
+(def env
+  (pci/register
+    [all-people]))
+
+(comment
+  ; we can now request the people name for example:
+  (p.eql/process
+    env
+    [{:swapi/all-people
+      [:swapi.person/name]}]))
+```
+
+The endpoint we wrapped isn't enough for our task. We also want to get the titles of
+the movies, which requires a call to a [separate endpoint](https://swapi.dev/documentation#films).
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
+  (:require
+    [clojure.data.json :as json]
+    [com.wsscode.misc.coll :as coll]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [org.httpkit.client :as http]))
+
+(defn request-api [url]
+  (-> @(http/request {:url url})
+      :body json/read-str))
+
+(defn adapt-person [{:strs [name films]}]
+  {:swapi.person/name  name
+   :swapi.person/films (mapv #(array-map :swapi.film/url %) films)})
+
+(pco/defresolver all-people []
+  {::pco/output
+   [{:swapi/all-people
+     [:swapi.person/name
+      {:swapi.person/films
+       [:swapi.film/url]}]}]}
+  {:swapi/all-people
+   (let [results (-> (request-api "https://swapi.dev/api/people")
+                     (get "results"))]
+     (mapv adapt-person results))})
+
+(defn adapt-film [film]
+  (coll/map-keys #(keyword "swapi.film" %) film))
+
+(pco/defresolver film-by-url [{:keys [swapi.film/url]}]
+  {::pco/output
+   [:swapi.film/title]}
+  (-> (request-api url)
+      (adapt-film)))
+
+(def env
+  (pci/register
+    [all-people
+     film-by-url]))
+
+(comment
+  (p.eql/process
+    env
+    [{:swapi/all-people
+      [:swapi.person/name
+       {:swapi.person/films
+        [:swapi.film/title]}]}]))
+```
+
+:::note
+I wrap the minimum for this demo, but a more complete implementation should list all
+the fields from each endpoint, and properly adapt the shape to allow composition between
+all entities in the system.
+:::
+
+Now let's try something a bit different. Let's do the same, but instead of using the
+SWAPI, let's use a [GraphQL wrapper of the same API](https://swapi-graphql.netlify.app/).
+
+For the first version we are going to use it in the same way we did for the REST, one
+resolver at a time:
+
+```clojure
+(defn request-swapi-graphql [query]
+  (-> @(http/request
+         {:url     "https://swapi-graphql.netlify.app/.netlify/functions/index"
+          :method  :post
+          :headers {"Content-Type" "application/json"
+                    "Accept"       "*/*"}
+          :body    (json/write-str {:query query})})
+      :body
+      json/read-str))
+
+(defn adapt-person [{:strs [name filmConnection]}]
+  {:swapi.person/name  name
+   :swapi.person/films (mapv #(array-map :swapi.film/id (get % "id"))
+                         (get filmConnection "films"))})
+
+(pco/defresolver all-people []
+  {::pco/output
+   [{:swapi/all-people
+     [:swapi.person/name
+      {:swapi.person/films
+       [:swapi.film/id]}]}]}
+  {:swapi/all-people
+   (let [results (-> (request-swapi-graphql "query { allPeople { people { name filmConnection { films { id } } } } }")
+                     (get-in ["data" "allPeople" "people"]))]
+     (mapv adapt-person results))})
+
+(defn adapt-film [film]
+  (coll/map-keys #(keyword "swapi.film" %) film))
+
+(pco/defresolver film-by-id [{:keys [swapi.film/id]}]
+  {::pco/output
+   [:swapi.film/title]}
+  (-> (request-swapi-graphql (str "query { film(id: \"" id "\") { title } }"))
+      (get-in ["data" "film"])
+      adapt-film))
+
+(def env
+  (-> (pci/register
+        [all-people
+         film-by-id])
+      ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
+       "swapi")))
+
+(comment
+  (p.eql/process
+    env
+    [{:swapi/all-people
+      [:swapi.person/name
+       {:swapi.person/films
+        [:swapi.film/title]}]}]))
+```
+
+This works as well, but it's far from optimal efficiency. This implementation runs 6
+requests to the GraphQL, but since GraphQL supports rich queries, an optimal solution
+should run just a single request.
+
+The challenging part is that what query must be sent is highly dependent on the current
+context (including resolver dependencies and user queries).
+
+Dynamic resolvers are designed to work in these sorts of situations.
+
+The main difference between static resolvers (the "regular" ones) and dynamic resolvers
+is in terms of input and output. A static resolvers always get the same input shape and
+always output the same shape. While dynamic resolvers are designed to be more flexible
+and "mask" a complex query to send to a rich data source.
+
+The primary case for dynamic resolvers in Pathom is to integrate with foreign Pathom
+resources. You can learn more about this at the [foreign](foreign.mdx) documentation
+page.
+
+GraphQL is another great target, and you can find the tools to integrate with it
+at the [Pathom 3 GraphQL repository](https://github.com/wilkerlucio/pathom3-graphql).
+
+:::note
+Even though the expected shape is always the same in static resolvers, there is a bit
+of room for variation using optional inputs. The output may omit some declared
+keys, but it should never return something wasn't declared by that specific resolver.
+:::
+
+
+
+In static resolvers (the "regular" ones), the input and output of a single invocation
+is always fixed.
