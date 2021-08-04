@@ -203,16 +203,56 @@ The primary case for dynamic resolvers in Pathom is to integrate with foreign Pa
 resources. You can learn more about this at the [foreign](foreign.mdx) documentation
 page.
 
-GraphQL is another great target, and you can find the tools to integrate with it
-at the [Pathom 3 GraphQL repository](https://github.com/wilkerlucio/pathom3-graphql).
+Let's implement this again, but this time we are going use the [Pathom 3 GraphQL Integration](https://github.com/wilkerlucio/pathom3-graphql)
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
+  (:require
+    [clojure.data.json :as json]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.graphql :as p.gql]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [org.httpkit.client :as http]))
+
+; same request helper for graphql from previous example
+(defn request-swapi-graphql [query]
+  (-> @(http/request
+         {:url     "https://swapi-graphql.netlify.app/.netlify/functions/index"
+          :method  :post
+          :headers {"Content-Type" "application/json"
+                    "Accept"       "*/*"}
+          :body    (json/write-str {:query query})})
+      :body
+      json/read-str))
+
+(def env
+  (-> {}
+      ; this setup will include everything from this GraphQL API
+      (p.gql/connect-graphql
+        ; define a namespace to auto-prefix everything, this is required
+        {::p.gql/namespace "swapi"}
+        request-swapi-graphql)))
+
+(comment
+  ; the query now is different because we are directly matching the GraphQL counter
+  ; part of it, which has some verbosity when traversing though collections
+  (p.eql/process
+    env
+    [{:swapi.Root/allPeople
+      [{:swapi.PeopleConnection/people
+        [:swapi.Person/name
+         {:swapi.Person/filmConnection
+          [{:swapi.PersonFilmsConnection/films
+            [:swapi.Film/title]}]}]}]}]))
+```
+
+Note the difference in how much code we have to write this time. Instead of doing dealing
+with dozens of endpoints, we can leverage GraphQL introspection to automatically generate
+all the access points and effectively integrate the full API in our system.
 
 :::note
 Even though the expected shape is always the same in static resolvers, there is a bit
 of room for variation using optional inputs. The output may omit some declared
 keys, but it should never return something wasn't declared by that specific resolver.
 :::
-
-
-
-In static resolvers (the "regular" ones), the input and output of a single invocation
-is always fixed.

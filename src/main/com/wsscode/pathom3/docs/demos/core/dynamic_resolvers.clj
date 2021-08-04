@@ -104,15 +104,22 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def gql-env2
-  (-> (pci/register
-        [all-people3])
+(def env
+  (-> {}
       (p.gql/connect-graphql
         {::p.gql/namespace "swapi"}
-        request-swapi-graphql)
-      ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
-       "swapigql")))
+        request-swapi-graphql)))
 
+
+(comment
+  (p.eql/process
+    env
+    [{:swapi.gql.Root/allPeople
+      [{:swapi.gql.PeopleConnection/people
+        [:swapi.gql.Person/name
+         {:swapi.gql.Person/filmConnection
+          [{:swapi.gql.PersonFilmsConnection/films
+            [:swapi.gql.Film/title]}]}]}]}]))
 
 (comment
   (tap> (::pci/index-resolvers gql-env2))
