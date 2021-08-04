@@ -17,7 +17,9 @@ module.exports = {
         'plugins',
         'built-in-plugins',
         'async',
-        'debugging'
+        'debugging',
+        'dynamic-resolvers',
+        'foreign'
       ]
     },
     // 'modeling-guides',
