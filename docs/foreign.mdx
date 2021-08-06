@@ -3,9 +3,9 @@ title: Foreign Environments
 ---
 
 Foreign Pathom is the ability of Pathom 3 to make automatic integration between different
-Pathom instances.
+Pathom environments.
 
-This allows for a simple way to connect resolvers that may run in completely different
+This mechanism provides a simple way to connect resolvers that may run in completely different
 contexts (different machines or processes).
 
 ## Foreign setup
@@ -86,6 +86,23 @@ cancellation part of this hypothetical system.
 Using the boundary interface ensures the request handler fulfills the
 expected contract when calling a remote Pathom instance.
 :::
+
+## How it works
+
+When we use `(pcf/foreign-register foreign-request)`, it makes a request that asks
+for the indexes available in that instance.
+
+You can try it yourself by requesting the query:
+
+```clojure
+[:com.wsscode.pathom3.connect.indexes/indexes]
+```
+
+Pathom them transform the indexes in dynamic resolvers and
+we add these new indexes using `pci/register`.
+
+Check the [dynamic resolvers documentation](dynamic-resolvers.mdx) for more details
+about this process.
 
 ## Foreign HTTP Example
 

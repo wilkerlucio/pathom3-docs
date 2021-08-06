@@ -6,7 +6,8 @@
     [com.wsscode.pathom3.connect.operation.transit :as pcot]
     [com.wsscode.pathom3.interface.eql :as p.eql]
     [com.wsscode.transito :as transito]
-    [org.httpkit.client :as http]))
+    [org.httpkit.client :as http]
+    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]))
 
 (def todo-db
   {1 {:todo/id    1
@@ -37,7 +38,8 @@
   (pci/register
     {:com.wsscode.pathom3.connect.planner/plan-cache* (atom {})}
     [todo-items
-     todo-by-id]))
+     todo-by-id
+     (pbir/alias-resolver :todo/cancelled? :cancelled?)]))
 
 (def foreign-request
   (p.eql/boundary-interface foreign-env))
@@ -76,15 +78,22 @@
   (pci/register
     {:com.wsscode.pathom3.connect.planner/plan-cache* (atom {})}
     [; pull the remote instance
+
+     #_
      (pcf/foreign-register
        #(request-remote-pathom url %))
+
+     (pcf/foreign-register foreign-request)
+
      ; add our custom resolver on top
      todo-canceled?]))
 
 (comment
   (p.eql/process
-    env
+    (-> env
+        ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
+         "debug"))
     [{:app/all-todos
       [:todo/title
        :todo/done?
-       :todo/cancelled?]}]))
+       :cancelled?]}]))

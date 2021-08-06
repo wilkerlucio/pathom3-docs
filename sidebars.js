@@ -18,8 +18,8 @@ module.exports = {
         'built-in-plugins',
         'async',
         'debugging',
+        'foreign',
         'dynamic-resolvers',
-        'foreign'
       ]
     },
     // 'modeling-guides',
