@@ -35,7 +35,8 @@ module.exports = {
       'Tutorials': [
         'tutorials/hacker-news-scraper',
         'tutorials/serverless-pathom-gcf',
-        'tutorials/babashka'
+        'tutorials/babashka',
+        'tutorials/graphql-integration'
       ]
     }
     // 'faq',
