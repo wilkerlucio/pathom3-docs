@@ -110,7 +110,6 @@
         {::p.gql/namespace "swapi"}
         request-swapi-graphql)))
 
-
 (comment
   (p.eql/process
     env
@@ -123,8 +122,6 @@
 
 (comment
   (tap> (::pci/index-resolvers gql-env2))
-
-
 
   (pcp/compute-plan-snapshots
     (assoc gql-env2

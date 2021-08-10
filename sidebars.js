@@ -32,19 +32,19 @@ module.exports = {
       ]
     },
     {
+      'Integrations': [
+        'integrations/graphql'
+      ]
+    },
+    {
       'Tutorials': [
         'tutorials/hacker-news-scraper',
         'tutorials/serverless-pathom-gcf',
         'tutorials/babashka',
         'tutorials/graphql-integration'
       ]
-    }
+    },
     // 'faq',
-    // {
-    //   'Integrations': [
-    //     'integrations/graphql'
-    //   ]
-    // },
     // {
     //   Demos: [
     //     'tutorials/distributed-systems'
