@@ -14,245 +14,270 @@ Dynamic resolvers are used for:
 
 ## What dynamic resolvers can do?
 
-I think the simplest way to explain dynamic resolvers is by demonstrating the limitations
-of static resolvers.
+To understand the problem dynamic resolvers solve, let's first go through a manual
+process call a remote Pathom service.
 
-For this example we are going to play with the [Star Wars API](https://swapi.dev/)
-
-Our demo goal query is to request all the characters in star wars, including their
-names and which films they participated.
-
-This is a REST API, we will start wrapping the call that [lists all people](https://swapi.dev/documentation#people).
+Here is the code for the remote service:
 
 ```clojure
 (ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
   (:require
-    [clojure.data.json :as json]
-    [com.wsscode.misc.coll :as coll]
+    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+    [com.wsscode.pathom3.connect.foreign :as pcf]
     [com.wsscode.pathom3.connect.indexes :as pci]
     [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.connect.operation.transit :as pcot]
+    [com.wsscode.pathom3.connect.planner :as pcp]
     [com.wsscode.pathom3.interface.eql :as p.eql]
-    [org.httpkit.client :as http]))
+    [com.wsscode.transito :as transito]
+    [org.httpkit.client :as http]
+    [org.httpkit.server :as server]))
 
-(defn request-api [url]
-  (-> @(http/request {:url url})
-      :body json/read-str))
+(defonce servers* (atom {}))
 
-(defn adapt-person [{:strs [name films]}]
-  {:swapi.person/name  name
-   :swapi.person/films (mapv #(array-map :swapi.film/url %) films)})
+(defn make-server [port env]
+  (if-let [s (get @servers* port)]
+    (s))
 
-(pco/defresolver all-people []
-  {::pco/output
-   [{:swapi/all-people
-     [:swapi.person/name
-      {:swapi.person/films
-       [:swapi.film/url]}]}]}
-  {:swapi/all-people
-   (let [results (-> (request-api "https://swapi.dev/api/people")
-                     (get "results"))]
-     (mapv adapt-person results))})
+  (let [request (p.eql/boundary-interface env)
+        handler (fn [{:keys [body]}]
+                  (let [req (transito/read-str (slurp body)
+                              {:handlers pcot/read-handlers})]
+                    {:status 200
+                     :body   (transito/write-str
+                               (request req)
+                               {:handlers pcot/write-handlers})}))
+        server  (server/run-server handler
+                  {:port port})]
+    (swap! servers* assoc port server)
+    server))
 
-(def env
-  (pci/register
-    [all-people]))
-
-(comment
-  ; we can now request the people name for example:
-  (p.eql/process
-    env
-    [{:swapi/all-people
-      [:swapi.person/name]}]))
-```
-
-The endpoint we wrapped isn't enough for our task. We also want to get the titles of
-the movies, which requires a call to a [separate endpoint](https://swapi.dev/documentation#films).
-
-```clojure
-(ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
-  (:require
-    [clojure.data.json :as json]
-    [com.wsscode.misc.coll :as coll]
-    [com.wsscode.pathom3.connect.indexes :as pci]
-    [com.wsscode.pathom3.connect.operation :as pco]
-    [com.wsscode.pathom3.interface.eql :as p.eql]
-    [org.httpkit.client :as http]))
-
-(defn request-api [url]
-  (-> @(http/request {:url url})
-      :body json/read-str))
-
-(defn adapt-person [{:strs [name films]}]
-  {:swapi.person/name  name
-   :swapi.person/films (mapv #(array-map :swapi.film/url %) films)})
-
-(pco/defresolver all-people []
-  {::pco/output
-   [{:swapi/all-people
-     [:swapi.person/name
-      {:swapi.person/films
-       [:swapi.film/url]}]}]}
-  {:swapi/all-people
-   (let [results (-> (request-api "https://swapi.dev/api/people")
-                     (get "results"))]
-     (mapv adapt-person results))})
-
-(defn adapt-film [film]
-  (coll/map-keys #(keyword "swapi.film" %) film))
-
-(pco/defresolver film-by-url [{:keys [swapi.film/url]}]
-  {::pco/output
-   [:swapi.film/title]}
-  (-> (request-api url)
-      (adapt-film)))
-
-(def env
-  (pci/register
-    [all-people
-     film-by-url]))
-
-(comment
-  (p.eql/process
-    env
-    [{:swapi/all-people
-      [:swapi.person/name
-       {:swapi.person/films
-        [:swapi.film/title]}]}]))
-```
-
-:::note
-I wrap the minimum for this demo, but a more complete implementation should list all
-the fields from each endpoint, and properly adapt the shape to allow composition between
-all entities in the system.
-:::
-
-Now let's try something a bit different. Let's do the same, but instead of using the
-SWAPI, let's use a [GraphQL wrapper of the same API](https://swapi-graphql.netlify.app/).
-
-For the first version we are going to use it in the same way we did for the REST, one
-resolver at a time:
-
-```clojure
-(defn request-swapi-graphql [query]
+(defn http-req [port req]
   (-> @(http/request
-         {:url     "https://swapi-graphql.netlify.app/.netlify/functions/index"
-          :method  :post
-          :headers {"Content-Type" "application/json"
-                    "Accept"       "*/*"}
-          :body    (json/write-str {:query query})})
+         {:url    (str "http://localhost:" port)
+          :method :post
+          :body   (transito/write-str req {:handlers pcot/write-handlers})})
       :body
-      json/read-str))
+      slurp
+      (transito/read-str {:handlers pcot/read-handlers})))
 
-(defn adapt-person [{:strs [name filmConnection]}]
-  {:swapi.person/name  name
-   :swapi.person/films (mapv #(array-map :swapi.film/id (get % "id"))
-                         (get filmConnection "films"))})
+(defn http-interface [port env]
+  (make-server port env)
+  #(http-req port %))
 
-(pco/defresolver all-people []
+(def users-data
+  {1 {:user/id    1
+      :user/name  "Christop Rippin"
+      :company/id 1}
+   2 {:user/id    2
+      :user/name  "Miss Annabell Kessler"
+      :company/id 1}
+   3 {:user/id    3
+      :user/name  "Demarco Padberg"
+      :company/id 1}
+   4 {:user/id    4
+      :user/name  "Daren Wolff Jr."
+      :company/id 1}
+   5 {:user/id    5
+      :user/name  "Carlo Schmitt"
+      :company/id 2}
+   6 {:user/id    6
+      :user/name  "Meda Hegmann"
+      :company/id 2}
+   7 {:user/id    7
+      :user/name  "Onie Schimmel"
+      :company/id 3}
+   8 {:user/id    8
+      :user/name  "Mayra Raynor"
+      :company/id 3}
+   9 {:user/id    9
+      :user/name  "Bobbie Grant"
+      :company/id 3}})
+
+(def company-data
+  {1 {:company/id   1
+      :company/name "Gladys King Inc"}
+   2 {:company/id   2
+      :company/name "Funk-Stamm"}
+   3 {:company/id   3
+      :company/name "Carter, Harber and Jacobi"}})
+
+(pco/defresolver all-users []
   {::pco/output
-   [{:swapi/all-people
-     [:swapi.person/name
-      {:swapi.person/films
-       [:swapi.film/id]}]}]}
-  {:swapi/all-people
-   (let [results (-> (request-swapi-graphql "query { allPeople { people { name filmConnection { films { id } } } } }")
-                     (get-in ["data" "allPeople" "people"]))]
-     (mapv adapt-person results))})
+   [{:user/all
+     [:user/id
+      :user/name
+      :company/id]}]}
+  {:user/all
+   (vec (vals users-data))})
 
-(defn adapt-film [film]
-  (coll/map-keys #(keyword "swapi.film" %) film))
-
-(pco/defresolver film-by-id [{:keys [swapi.film/id]}]
+(pco/defresolver user-by-id [{:user/keys [id]}]
   {::pco/output
-   [:swapi.film/title]}
-  (-> (request-swapi-graphql (str "query { film(id: \"" id "\") { title } }"))
-      (get-in ["data" "film"])
-      adapt-film))
+   [:user/name
+    :company/id]}
+  (get users-data id))
+
+(pco/defresolver company-by-id [{:company/keys [id]}]
+  {::pco/output
+   [:company/name]}
+  (get company-data id))
 
 (def env
   (-> (pci/register
-        [all-people
-         film-by-id])
-      ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
-       "swapi")))
+        [all-users
+         user-by-id
+         company-by-id])
+      (pcp/with-plan-cache (atom {}))))
 
-(comment
-  (p.eql/process
-    env
-    [{:swapi/all-people
-      [:swapi.person/name
-       {:swapi.person/films
-        [:swapi.film/title]}]}]))
+; this function will take a request and run though HTTP
+(def request
+  (http-interface 8087 env))
 ```
 
-This works as well, but it's far from optimal efficiency. This implementation runs 6
-requests to the GraphQL, but since GraphQL supports rich queries, an optimal solution
-should run just a single request.
+Now let's consider we have a different server, and we want to consume and extend
+the user data to add the `:user/ip` of each user.
 
-The challenging part is that what query must be sent is highly dependent on the current
-context (including resolver dependencies and user queries).
-
-Dynamic resolvers are designed to work in these sorts of situations.
-
-The main difference between static resolvers (the "regular" ones) and dynamic resolvers
-is in terms of input and output. A static resolvers always get the same input shape and
-always output the same shape. While dynamic resolvers are designed to be more flexible
-and "mask" a complex query to send to a rich data source.
-
-The primary case for dynamic resolvers in Pathom is to integrate with foreign Pathom
-resources. You can learn more about this at the [foreign](foreign.mdx) documentation
-page.
-
-Let's implement this again, but this time we are going use the [Pathom 3 GraphQL Integration](https://github.com/wilkerlucio/pathom3-graphql)
+In this case we are going get the information writing resolvers to forward some
+queries to our previous server.
 
 ```clojure
-(ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
-  (:require
-    [clojure.data.json :as json]
-    [com.wsscode.pathom3.connect.indexes :as pci]
-    [com.wsscode.pathom3.connect.operation :as pco]
-    [com.wsscode.pathom3.graphql :as p.gql]
-    [com.wsscode.pathom3.interface.eql :as p.eql]
-    [org.httpkit.client :as http]))
+(def ips
+  {1 "82949-5679"
+   2 "39359-0412"
+   3 "40703-7676"
+   4 "85822-1129"
+   5 "03074-6343"
+   6 "09986-9393"
+   7 "74750-0040"
+   8 "82239"
+   9 "81444-2468"})
 
-; same request helper for graphql from previous example
-(defn request-swapi-graphql [query]
-  (-> @(http/request
-         {:url     "https://swapi-graphql.netlify.app/.netlify/functions/index"
-          :method  :post
-          :headers {"Content-Type" "application/json"
-                    "Accept"       "*/*"}
-          :body    (json/write-str {:query query})})
-      :body
-      json/read-str))
+(pco/defresolver remote-users
+  "Forward user list request to remote server"
+  []
+  {::pco/output
+   [{:user/all
+     [:user/id
+      :user/name
+      :company/id]}]}
+  (request
+    [{:user/all
+      [:user/id
+       :user/name
+       :company/id]}]))
 
-(def env
-  (-> {}
-      ; this setup will include everything from this GraphQL API
-      (p.gql/connect-graphql
-        ; define a namespace to auto-prefix everything, this is required
-        {::p.gql/namespace "swapi"}
-        request-swapi-graphql)))
+(pco/defresolver remote-company
+  "Forward company data request to remote server"
+  [{:keys [company/id]}]
+  {::pco/output
+   [:company/name]}
+  (request
+    {:pathom/entity
+     {:company/id id}
 
-(comment
-  ; the query now is different because we are directly matching the GraphQL counter
-  ; part of it, which has some verbosity when traversing though collections
-  (p.eql/process
-    env
-    [{:swapi.Root/allPeople
-      [{:swapi.PeopleConnection/people
-        [:swapi.Person/name
-         {:swapi.Person/filmConnection
-          [{:swapi.PersonFilmsConnection/films
-            [:swapi.Film/title]}]}]}]}]))
+     :pathom/eql
+     [:company/name]}))
+
+(def client-env
+  (-> (pci/register
+        [(pcf/foreign-register request)
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))))
+
+(def client-request
+  (p.eql/boundary-interface client-env))
 ```
 
-Note the difference in how much code we have to write this time. Instead of doing dealing
-with dozens of endpoints, we can leverage GraphQL introspection to automatically generate
-all the access points and effectively integrate the full API in our system.
+With this setup we can run the following query combining the sources:
 
-:::note
-Even though the expected shape is always the same in static resolvers, there is a bit
-of room for variation using optional inputs. The output may omit some declared
-keys, but it should never return something wasn't declared by that specific resolver.
-:::
+```clojure
+(client-request
+  [{:user/all
+    [:user/name
+     :user/ip
+     :company/name]}])
+; {:user/all [{:user/name "Onie Schimmel",
+;              :user/ip "74750-0040",
+;              :company/name "Carter, Harber and Jacobi"}
+;             {:user/name "Christop Rippin",
+;              :user/ip "82949-5679",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Daren Wolff Jr.",
+;              :user/ip "85822-1129",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Meda Hegmann",
+;              :user/ip "09986-9393",
+;              :company/name "Funk-Stamm"}
+;             {:user/name "Demarco Padberg",
+;              :user/ip "40703-7676",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Miss Annabell Kessler",
+;              :user/ip "39359-0412",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Bobbie Grant",
+;              :user/ip "81444-2468",
+;              :company/name "Carter, Harber and Jacobi"}
+;             {:user/name "Carlo Schmitt",
+;              :user/ip "03074-6343",
+;              :company/name "Funk-Stamm"}
+;             {:user/name "Mayra Raynor",
+;              :user/ip "82239",
+;              :company/name "Carter, Harber and Jacobi"}]}
+```
+
+It works! But there are several inefficiencies in this process. For start let's look
+at the trace graph from this query:
+
+![Trace manual](./dynamic-resolvers/trace-manual.png)
+
+The trace show us that to complete this request, it called the remote server four times.
+One for the users, plus one per company (given we have 3 different companies).
+
+Some key points:
+- We have to manually integrate each resolvers, which means every change on the server might require changes on the clients
+- Excessive round trips, which adds significant overhead
+
+Now try to imagine how this would scale, with hundreds of resolvers and maybe multiple
+services. It just won't scale, so we got to have a better way to handle this.
+
+That's were dynamic resolvers come in. Dynamic resolvers can leverage the planning
+algorithms of Pathom to calculate a request to an external service. When we think
+about Pathom integrating with Pathom, this translates as having the external index,
+but instead of processing it locally, its filtered and send to a remote service.
+
+Let's redo our client code, but this time using the foreign Pathom feature, which
+provides tools to integrate a Pathom system with another:
+
+```clojure
+(def ips
+  {1 "82949-5679"
+   2 "39359-0412"
+   3 "40703-7676"
+   4 "85822-1129"
+   5 "03074-6343"
+   6 "09986-9393"
+   7 "74750-0040"
+   8 "82239"
+   9 "81444-2468"})
+
+(def client-env
+  (-> (pci/register
+        [; we use foreign-register which takes a function with a request, like the
+         ; one we used to make the manual requests internally
+         (pcf/foreign-register request)
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))))
+
+(def client-request
+  (p.eql/boundary-interface client-env))
+```
+
+Now let's run the same query and check the trace:
+
+![Trace foreign](./dynamic-resolvers/trace-foreign.png)
+
+Note this time there was only a single request sent to the remote server. To handle
+this Pathom is taking the query and the remote server in consideration to find the
+optimal query to request, reducing the round trips.

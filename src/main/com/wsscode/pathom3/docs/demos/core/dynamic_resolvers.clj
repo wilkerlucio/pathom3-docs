@@ -1,163 +1,175 @@
 (ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
   (:require
-    [clojure.data.json :as json]
-    [com.wsscode.misc.coll :as coll]
+    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+    [com.wsscode.pathom3.connect.foreign :as pcf]
     [com.wsscode.pathom3.connect.indexes :as pci]
     [com.wsscode.pathom3.connect.operation :as pco]
-    [com.wsscode.pathom3.graphql :as p.gql]
-    [com.wsscode.pathom3.interface.eql :as p.eql]
-    [org.httpkit.client :as http]
+    [com.wsscode.pathom3.connect.operation.transit :as pcot]
     [com.wsscode.pathom3.connect.planner :as pcp]
-    [edn-query-language.core :as eql]))
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [com.wsscode.transito :as transito]
+    [org.httpkit.client :as http]
+    [org.httpkit.server :as server]))
 
-; helper function to go from URL to map data
-(defn request-api [url]
-  (-> @(http/request {:url url})
-      :body json/read-str))
+(defonce servers* (atom {}))
 
-(defn adapt-person [{:strs [name films]}]
-  {:swapi.person/name  name
-   :swapi.person/films (mapv #(array-map :swapi.film/url %) films)})
+(defn make-server [port env]
+  (if-let [s (get @servers* port)]
+    (s))
 
-(pco/defresolver all-people []
-  {::pco/output
-   [{:swapi/all-people
-     [:swapi.person/name
-      {:swapi.person/films
-       [:swapi.film/url]}]}]}
-  {:swapi/all-people
-   (let [results (-> (request-api "https://swapi.dev/api/people")
-                     (get "results"))]
-     (mapv adapt-person results))})
+  (let [request (p.eql/boundary-interface env)
+        handler (fn [{:keys [body]}]
+                  (let [req (transito/read-str (slurp body)
+                              {:handlers pcot/read-handlers})]
+                    {:status 200
+                     :body   (transito/write-str
+                               (request req)
+                               {:handlers pcot/write-handlers})}))
+        server  (server/run-server handler
+                  {:port port})]
+    (swap! servers* assoc port server)
+    server))
 
-(defn adapt-film [film]
-  (coll/map-keys #(keyword "swapi.film" %) film))
-
-(pco/defresolver film-by-url [{:keys [swapi.film/url]}]
-  {::pco/output
-   [:swapi.film/title]}
-  (-> (request-api url)
-      (adapt-film)))
-
-(def env
-  (pci/register
-    [all-people
-     film-by-url]))
-
-(comment
-  (p.eql/process
-    env
-    [{:swapi/all-people
-      [:swapi.person/name]}])
-
-  (p.eql/process
-    env
-    [{:swapi/all-people
-      [:swapi.person/name
-       {:swapi.person/films
-        [:swapi.film/title]}]}]))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn request-swapi-graphql [query]
+(defn http-req [port req]
   (-> @(http/request
-         {:url     "https://swapi-graphql.netlify.app/.netlify/functions/index"
-          :method  :post
-          :headers {"Content-Type" "application/json"
-                    "Accept"       "*/*"}
-          :body    (json/write-str {:query query})})
+         {:url    (str "http://localhost:" port)
+          :method :post
+          :body   (transito/write-str req {:handlers pcot/write-handlers})})
       :body
-      json/read-str))
+      slurp
+      (transito/read-str {:handlers pcot/read-handlers})))
 
-(defn adapt-person [{:strs [name filmConnection]}]
-  {:swapi.person/name  name
-   :swapi.person/films (mapv #(array-map :swapi.film/id (get % "id"))
-                         (get filmConnection "films"))})
+(defn http-interface [port env]
+  (make-server port env)
+  #(http-req port %))
 
-(pco/defresolver all-people []
+(def users-data
+  {1 {:user/id    1
+      :user/name  "Christop Rippin"
+      :company/id 1}
+   2 {:user/id    2
+      :user/name  "Miss Annabell Kessler"
+      :company/id 1}
+   3 {:user/id    3
+      :user/name  "Demarco Padberg"
+      :company/id 1}
+   4 {:user/id    4
+      :user/name  "Daren Wolff Jr."
+      :company/id 1}
+   5 {:user/id    5
+      :user/name  "Carlo Schmitt"
+      :company/id 2}
+   6 {:user/id    6
+      :user/name  "Meda Hegmann"
+      :company/id 2}
+   7 {:user/id    7
+      :user/name  "Onie Schimmel"
+      :company/id 3}
+   8 {:user/id    8
+      :user/name  "Mayra Raynor"
+      :company/id 3}
+   9 {:user/id    9
+      :user/name  "Bobbie Grant"
+      :company/id 3}})
+
+(def company-data
+  {1 {:company/id   1
+      :company/name "Gladys King Inc"}
+   2 {:company/id   2
+      :company/name "Funk-Stamm"}
+   3 {:company/id   3
+      :company/name "Carter, Harber and Jacobi"}})
+
+(pco/defresolver all-users []
   {::pco/output
-   [{:swapi/all-people
-     [:swapi.person/name
-      {:swapi.person/films
-       [:swapi.film/id]}]}]}
-  {:swapi/all-people
-   (let [results (-> (request-swapi-graphql "query { allPeople { people { name filmConnection { films { id } } } } }")
-                     (get-in ["data" "allPeople" "people"]))]
-     (mapv adapt-person results))})
+   [{:user/all
+     [:user/id
+      :user/name
+      :company/id]}]}
+  {:user/all
+   (vec (vals users-data))})
 
-(defn adapt-film [film]
-  (coll/map-keys #(keyword "swapi.film" %) film))
-
-(pco/defresolver film-by-id [{:keys [swapi.film/id]}]
+(pco/defresolver user-by-id [{:user/keys [id]}]
   {::pco/output
-   [:swapi.film/title]}
-  (-> (request-swapi-graphql (str "query { film(id: \"" id "\") { title } }"))
-      (get-in ["data" "film"])
-      adapt-film))
+   [:user/name
+    :company/id]}
+  (get users-data id))
 
-(def gql-env
-  (-> (pci/register
-        [all-people
-         film-by-id])
-      ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
-       "swapi")))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(pco/defresolver company-by-id [{:company/keys [id]}]
+  {::pco/output
+   [:company/name]}
+  (get company-data id))
 
 (def env
-  (-> {}
-      (p.gql/connect-graphql
-        {::p.gql/namespace "swapi"}
-        request-swapi-graphql)))
+  (-> (pci/register
+        [all-users
+         user-by-id
+         company-by-id])
+      (pcp/with-plan-cache (atom {}))))
 
-(comment
-  (p.eql/process
-    env
-    [{:swapi.gql.Root/allPeople
-      [{:swapi.gql.PeopleConnection/people
-        [:swapi.gql.Person/name
-         {:swapi.gql.Person/filmConnection
-          [{:swapi.gql.PersonFilmsConnection/films
-            [:swapi.gql.Film/title]}]}]}]}]))
+(def request
+  (http-interface 8087 env))
 
-(comment
-  (tap> (::pci/index-resolvers gql-env2))
+(def ips
+  {1 "82949-5679"
+   2 "39359-0412"
+   3 "40703-7676"
+   4 "85822-1129"
+   5 "03074-6343"
+   6 "09986-9393"
+   7 "74750-0040"
+   8 "82239"
+   9 "81444-2468"})
 
-  (pcp/compute-plan-snapshots
-    (assoc gql-env2
-      :edn-query-language.ast/node (eql/query->ast
-                                     [{:swapi/all-people
-                                       [:swapi.Person/name]}]))
-    )
+(pco/defresolver remote-users
+  "Forward user list request to remote server"
+  []
+  {::pco/output
+   [{:user/all
+     [:user/id
+      :user/name
+      :company/id]}]}
+  (request
+    [{:user/all
+      [:user/id
+       :user/name
+       :company/id]}]))
 
-  (let [id "ZmlsbXM6MQ=="]
-    (request-swapi-graphql (str "query { film(id: \"" id "\") { title } }")))
+(pco/defresolver remote-company
+  "Forward company data request to remote server"
+  [{:keys [company/id]}]
+  {::pco/output
+   [:company/name]}
+  (request
+    {:pathom/entity
+     {:company/id id}
 
-  (p.eql/process
-    gql-env
-    [{:swapi/all-people
-      [:swapi.person/name
-       {:swapi.person/films
-        [:swapi.film/title]}]}])
+     :pathom/eql
+     [:company/name]}))
 
-  (p.eql/process
-    gql-env
-    [{:swapi.gql.Root/allPeople
-      [{:swapi.gql.PeopleConnection/people
-        [:swapi.gql.Person/name
-         {:swapi.gql.Person/filmConnection
-          [{:swapi.gql.PersonFilmsConnection/films
-            [:swapi.gql.Film/title]}]}]}]}
-
-     {:swapi/all-people
-      [:swapi.person/name
-       {:swapi.person/films
-        [:swapi.film/title]}]}])
-
-  (-> gql-env
+(def client-env
+  (-> (pci/register
+        [(pcf/foreign-register request)
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))
       ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
-       "swapi2"))
+       "debug")))
 
-  (keys (adapt-film (request-api "https://swapi.dev/api/films/1/")))
+(def client-request
+  (p.eql/boundary-interface client-env))
 
-  (adapt-person (request-api "https://swapi.dev/api/people/1")))
+(comment
+  (request
+    [:user/all])
+
+  (client-request
+    [{:user/all
+      [:user/name
+       :user/ip
+       :company/name]}])
+
+  (take 10 ((requiring-resolve 'faker.name/names)))
+  (take 10 ((requiring-resolve 'faker.name/names)))
+  (take 10 (repeatedly #((requiring-resolve 'faker.address/zip-code))))
+  (require-res 'faker.name))
