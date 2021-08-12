@@ -9,7 +9,8 @@
     [com.wsscode.pathom3.interface.eql :as p.eql]
     [com.wsscode.transito :as transito]
     [org.httpkit.client :as http]
-    [org.httpkit.server :as server]))
+    [org.httpkit.server :as server]
+    [edn-query-language.core :as eql]))
 
 (defonce servers* (atom {}))
 
@@ -159,7 +160,44 @@
 (def client-request
   (p.eql/boundary-interface client-env))
 
+; region dynamic manual
+
+(def remote-dynamic-resolvers
+  [; 1 - the main resolver
+   (pco/resolver 'remote-dynamic
+     {::pco/dynamic-resolver? true}
+     (fn [env input]
+       (request
+         {:pathom/ast    (-> env ::pcp/node ::pcp/foreign-ast)
+          :pathom/entity input})))
+
+   ; 2 - the auxiliary resolvers, note they reference the main one
+   (pco/resolver 'remote-user-by-id
+     {::pco/input        [:user/id]
+      ::pco/output       [:user/name :company/id]
+      ::pco/dynamic-name 'remote-dynamic})
+   (pco/resolver 'remote-company-by-id
+     {::pco/input        [:company/id]
+      ::pco/output       [:company/name]
+      ::pco/dynamic-name 'remote-dynamic})])
+
+(def client-env2
+  (-> (pci/register
+        [remote-dynamic-resolvers
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))
+      ((requiring-resolve 'com.wsscode.pathom.viz.ws-connector.pathom3/connect-env)
+       "debug2")))
+
+(def client-request2
+  (p.eql/boundary-interface client-env2))
+
+; endregion
+
 (comment
+
+
   (request
     [:user/all])
 
@@ -168,6 +206,28 @@
       [:user/name
        :user/ip
        :company/name]}])
+
+  (client-request2
+    {:pathom/entity
+     {:user/id 1}
+
+     :pathom/eql
+     [:user/name
+      :user/ip
+      :company/name]})
+
+  (spit "static/viz/dynamic-resolvers/remote-plan.edn"
+    (pr-str
+      (pcp/compute-plan-snapshots
+        (assoc client-env2
+          ::pcp/available-data
+          {:user/id {}}
+
+          :edn-query-language.ast/node
+          (eql/query->ast
+            [:user/name
+             :user/ip
+             :company/name])))))
 
   (take 10 ((requiring-resolve 'faker.name/names)))
   (take 10 ((requiring-resolve 'faker.name/names)))

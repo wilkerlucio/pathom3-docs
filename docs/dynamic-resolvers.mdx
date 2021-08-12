@@ -12,6 +12,13 @@ Dynamic resolvers are used for:
 - [Integrate Pathom with GraphQL servers](https://github.com/wilkerlucio/pathom3-graphql)
 - [Integrate Pathom with Datomic](https://github.com/wilkerlucio/pathom3-datomic)
 
+:::important
+Dynamic resolvers are an advanced feature of Pathom, this page describes the motivations
+and how it works, but for most users you can take full advantage of dynamic resolvers
+using driver implementations like the ones linked before, without understand the
+implementation details.
+:::
+
 ## What dynamic resolvers can do?
 
 To understand the problem dynamic resolvers solve, let's first go through a manual
@@ -235,7 +242,7 @@ The trace show us that to complete this request, it called the remote server fou
 One for the users, plus one per company (given we have 3 different companies).
 
 Some key points:
-- We have to manually integrate each resolvers, which means every change on the server might require changes on the clients
+- We have to manually integrate each resolver, which means every change on the server might require changes on the clients
 - Excessive round trips, which adds significant overhead
 
 Now try to imagine how this would scale, with hundreds of resolvers and maybe multiple
@@ -281,3 +288,119 @@ Now let's run the same query and check the trace:
 Note this time there was only a single request sent to the remote server. To handle
 this Pathom is taking the query and the remote server in consideration to find the
 optimal query to request, reducing the round trips.
+
+## How dynamic resolvers work
+
+Dynamic resolvers have two main parts.
+
+The first is the `dynamic resolver` itself, it's like a normal resolver, but with
+`::pco/dynamic-resolver? true`. One difference from static resolvers, is that dynamic resolvers
+will also include a `foreign ast`. This AST describes the request for the dynamic
+resolver to use.
+
+The second part are `auxiliar resolvers`. Those resolvers don't have an implementation,
+they are used to calculate the sub-query to send to the dynamic resolver.
+
+We can make an adaptation of our previous manual example to implement it using dynamic
+resolvers:
+
+```clojure
+(def remote-dynamic-resolvers
+  [; 1 - the main resolver
+   (pco/resolver 'remote-dynamic
+     {::pco/dynamic-resolver? true}
+     (fn [env input]
+       (request
+         {:pathom/ast    (-> env ::pcp/node ::pcp/foreign-ast)
+          :pathom/entity input})))
+
+   ; 2 - the auxiliary resolvers, note they reference the main one
+   (pco/resolver 'remote-user-by-id
+     {::pco/input        [:user/id]
+      ::pco/output       [:user/name :company/id]
+      ::pco/dynamic-name 'remote-dynamic})
+   (pco/resolver 'remote-company-by-id
+     {::pco/input        [:company/id]
+      ::pco/output       [:company/name]
+      ::pco/dynamic-name 'remote-dynamic})])
+
+(def client-env2
+  (-> (pci/register
+        [remote-dynamic-resolvers
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))))
+
+(def client-request2
+  (p.eql/boundary-interface client-env2))
+```
+
+We did a little change, we are going to get information from a single users, so it's simpler
+to inspect:
+
+```clojure
+(client-request2
+  {:pathom/entity
+   {:user/id 1}
+
+   :pathom/eql
+   [:user/name
+    :user/ip
+    :company/name]})
+```
+
+In the following component you can see the final plan, and the steps to get to it.
+
+import {PlanStepperFile} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
+
+<div className="pathom-plan-view">
+  <PlanStepperFile path="/viz/dynamic-resolvers/remote-plan.edn"/>
+</div>
+
+Try going back to the `=== Optimize ===` path, where you will be able to see three
+nodes for `remote-dynamic`.
+
+:::tip
+Use the combobox on the left to switch between displaying the node resolver name
+and the node id.
+:::
+
+The merge at the step `Merge chained same dynamic resolvers.` is one interesting to note.
+
+In this case the first node will get the `:company/id` from the `:user/id`, the second
+will use the `:company/id` to fetch the `:company/name`.
+
+In this situation, Pathom understands that this dynamic source already know about
+the middle transitions, so we can remove the middle parts. This results in an end
+node that will have `:user/id` as input and `:company/name` as the output, skipping
+the `:company/id` fetch part.
+
+A different kind of merging happens at the step `Merging sibling resolver calls to resolver remote-dynamic`.
+
+This time is different, it's a sibling relationship merge. In this case Pathom merges
+the foreign ast of the nodes, combining then in a single request.
+
+:::tip
+Click on the nodes in the graph to see their data details, you can follow how they
+change at each step of the graph definition.
+:::
+
+## Other data sources
+
+The previous example demonstrates how Pathom uses dynamic resolvers to combine request
+demands of a foreign source.
+
+One important thing to note is that the dynamic resolver idea is not be strict to Pathom
+usages. Instead, you can think of a generic solution for sources that could support
+this kind of request, or something adaptive.
+
+The simplest example that supports this kind of shape query is GraphQL.
+
+We can also use a shape like this to translate to other formats like SQL. The
+Walkable library is a good example on how to translate a shape request into
+something that's not native adaptive to it, like SQL.
+
+### GraphQL
+
+The library [Pathom 3 GraphQL](https://github.com/wilkerlucio/pathom3-graphql) has an implementation to incorporate GraphQL
+data sources into the Pathom system. Learn more at the [GraphQL tutorial](../tutorials/graphql-integration).
