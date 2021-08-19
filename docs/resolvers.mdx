@@ -507,7 +507,7 @@ To illustrate, lets start with a resolver that pulls todo from some mock memory 
 (def env (pci/register todos-resolver))
 
 ; list all todos
-(pf.eql/process env [::todos])
+(p.eql/process env [::todos])
 ```
 
 :::note
@@ -523,7 +523,7 @@ for example:
 
 ```clojure
 ; list undone todos:
-(pf.eql/process env ['(::todos {::todo-done? false})])
+(p.eql/process env ['(::todos {::todo-done? false})])
 ```
 
 If we just ran the previous code, nothing happens. To make this work, we need to use
@@ -555,7 +555,7 @@ on it:
 (def env (pci/register todos-resolver))
 
 ; list undone todos
-(pf.eql/process env
+(p.eql/process env
   '[(::todos {::todo-done? false})])
 ```
 
