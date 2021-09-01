@@ -61,7 +61,7 @@ another resolver to pull the TODO details.
        :todo/done?]}]))
 ```
 
-Now the interesting part, we are going to start a new Pathom environment, connect and
+Now we are going to start a new Pathom environment, connect and
 extend the previous one. The local extension will add the ability to know if a TODO
 item was cancelled. You can imagine this is a separate service responsible for the
 cancellation part of this hypothetical system.
@@ -140,6 +140,12 @@ Here is how we can do this integration using this HTTP based communication:
           :body    (twrite request)})
       :body
       tread))
+
+(def canceled-todos
+  #{2})
+
+(pco/defresolver todo-canceled? [{:todo/keys [id]}]
+  {:todo/cancelled? (contains? canceled-todos id)})
 
 (def url "https://southamerica-east1-pathomdemos.cloudfunctions.net/development-pathom-server-demo")
 
