@@ -2,17 +2,19 @@
 title: GraphQL
 ---
 
-The way Pathom consumers GraphQL is by first adapting a GraphQL schema to the Pathom
-format.
+This page explains how Pathom consumes GraphQL services via [dynamic resolvers](../dynamic-resolvers.mdx)
+
+Pathom consumers GraphQL by first adapting a GraphQL schema to the Pathom format. The
+follow sections will explain how each part of GraphQL translates to Pathom.
 
 ## How Pathom translates from GraphQL
 
 It's important to remember that Pathom and GraphQL use different base abstraction ideas.
 
-While GraphQL is based typed schema, Pathom works with attributes directly.
+While GraphQL is based typed schema, Pathom works with attributes as the primary building blocks.
 
-Let's take a look in an example to see what this translation look like, let's take
-this GraphQL schema as an example:
+Let's take a look in an example to see what this translation look like, take the
+following GraphQL schema as an example:
 
 ```graphql
 type Query {
@@ -36,6 +38,14 @@ like:
   {::p.gql/namespace "gqldemo"}
   request-graphql-fn)
 ```
+
+:::note
+### The request function
+
+The `request-graphql-fn` must be a function that takes a GraphQL string as input and
+output the GraphQL JSON results converted to Clojure data structures. It's important
+that you use strings for the keys (not keywords).
+:::
 
 With that configuration, we should expect the following attributes to be available
 from Pathom:
@@ -88,7 +98,7 @@ enter the GraphQL from its properties.
 
 ### Interfaces
 
-From Pathom point of view, interfaces kinda work backwards. Pathom will find all the
+From Pathom point of view, interfaces work backwards. Pathom will find all the
 implementations of the interface and link them will all implementor object types.
 
 ### Mutations
@@ -147,13 +157,6 @@ Using the same prefix as before, this is how we can call createMessage:
   [:gqldemo.Message/id
    :gqldemo.Message/content]}]
 ```
-
-### Ident Mapping
-
-Although the types are not a thing in Pathom, we make some attributes to represent those
-types, so we can avoid copying all the type attributes over and over in all the places
-which it is applicable.
-
 
 ## Complete tutorial
 

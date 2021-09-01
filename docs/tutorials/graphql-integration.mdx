@@ -138,14 +138,14 @@ Using Pathom Viz, we can use the auto-complete to explore our new possibilities:
 
 :::note
 The reason we see other types like `TVShow` is due to the fact the entry point for an
-entity in TMDB is a generic type called `Node`, so in that point this schema isn't clear
-about what kind of entity is there, and in this case Pathom will offer all the possible
-options there.
+entity in TMDB is a generic type called `Node`, which means any type that implements
+this interface might be a valid option here, and in this case Pathom will offer all the possible
+options.
 
-An interesting part of this translation from Pathom, is that Pathom will automatically
-group the attributes when sending to GraphQL using the `... on TYPE { attr attr2 } ` syntax,
-and since in Pathom we have the full type name on each attribute that grouping is based
-on looking at the last namespace part in the attribute name.
+Pathom will automatically group the attributes when sending to GraphQL using the
+`... on TYPE { attr attr2 } ` syntax, and since in Pathom we have the full type name on
+each attribute that grouping is based on looking at the last namespace part in the
+attribute name.
 :::
 
 An example query getting the title from SWAPI, while overview and budget from TMDB:
@@ -161,8 +161,7 @@ An example query getting the title from SWAPI, while overview and budget from TM
 ![Integrated query](graphql-integration/query.png)
 
 :::note
-In this scenario we see an N+1 issue, this is due to a current limitation around
-batching with dynamic resolvers. In the future this should be optimized internally
+In this scenario we see an N+1 issue. In the future this should be optimized internally
 and the same process should be resolved with just one request for each GraphQL
 service.
 
