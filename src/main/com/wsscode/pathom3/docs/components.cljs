@@ -35,13 +35,16 @@
                                   :flexDirection "column"}
                            full?
                            (merge {:position      "fixed" :inset "0"
-                                   :zIndex        "1000"}))}}
+                                   :zIndex        "1000"})
+
+                           (not full?)
+                           (merge {:height height}))}}
       (dom/button {:on-click #(sf! (not full?))}
         (if full? "Leave Full Screen" "Full Screen"))
       (dom/iframe {:src     embed-url
                    :ref     iframe-ref
                    :loading "lazy"
-                   :style   {:flex "1" :width "100%" :height (if full? "auto" height) :border "0"}}))))
+                   :style   {:flex "1" :width "100%" :height "auto" :border "0"}}))))
 
 (defn use-edn-file [path]
   (let [[contents c!] (hooks/use-state ::loading)]

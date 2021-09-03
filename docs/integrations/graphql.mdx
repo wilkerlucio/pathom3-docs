@@ -1,3 +1,164 @@
 ---
 title: GraphQL
 ---
+
+This page explains how Pathom consumes GraphQL services via [dynamic resolvers](../dynamic-resolvers.mdx)
+
+Pathom consumers GraphQL by first adapting a GraphQL schema to the Pathom format. The
+follow sections will explain how each part of GraphQL translates to Pathom.
+
+## How Pathom translates from GraphQL
+
+It's important to remember that Pathom and GraphQL use different base abstraction ideas.
+
+While GraphQL is based typed schema, Pathom works with attributes as the primary building blocks.
+
+Let's take a look in an example to see what this translation look like, take the
+following GraphQL schema as an example:
+
+```graphql
+type Query {
+  me: User
+}
+
+type User {
+  id: ID
+  name: String
+}
+```
+
+When we connect to Pathom, it's required that you define a namespace to prefix all
+the names that we will import from the GraphQL service.
+
+For this example I'll pick the name `"gqldemo"`, this is what the import code looks
+like:
+
+```clojure
+(p.gql/connect-graphql
+  {::p.gql/namespace "gqldemo"}
+  request-graphql-fn)
+```
+
+:::note
+### The request function
+
+The `request-graphql-fn` must be a function that takes a GraphQL string as input and
+output the GraphQL JSON results converted to Clojure data structures. It's important
+that you use strings for the keys (not keywords).
+:::
+
+With that configuration, we should expect the following attributes to be available
+from Pathom:
+
+```clojure
+:gqldemo.Query/me
+:gqldemo.User/id
+:gqldemo.User/name
+```
+
+An example query to fetch the name of the current user:
+
+```clojure
+[{:gqldemo.Query/me
+  [:gqldemo.User/name]}]
+```
+
+### Scalars
+
+Pathom doesn't do anything about scalars, in the context of Pathom integration with
+GraphQL they are irrelevant.
+
+### Object Types
+
+For each object type in GraphQL, Pathom will add one attribute to hold the type itself
+and one attribute for each property of that type in GraphQL.
+
+Getting back to our previous example, for the type `User` we will have this:
+
+```clojure
+; type name
+:gqldemo.types/User
+
+; attributes for properties
+:gqldemo.User/id
+:gqldemo.User/name
+```
+
+It's important to note that `:gqldemo.types/User` is marked as a transient attribute.
+This means you can't query for it, but it's part of the query resolution.
+
+Having these types named allow us to reference the type (which means we can access
+all attributes of it) in a simple way.
+
+### Query Type
+
+Query types are first defined in the same way as the object types. The special thing
+about the Query type is that Pathom will make it accessible from anywhere, so you can
+enter the GraphQL from its properties.
+
+### Interfaces
+
+From Pathom point of view, interfaces work backwards. Pathom will find all the
+implementations of the interface and link them will all implementor object types.
+
+### Mutations
+
+All mutations are imported all namespaced by the user prefix plus `.Mutation`, for
+example:
+
+```graphql
+type Mutation {
+  setMessage(message: String): String
+}
+```
+
+Here is how we call it:
+
+```clojure
+[(gqldemo.Mutation/setMessage {:message "Some message"})]
+```
+
+:::note
+The namespace at the mutation params are not relevant, with or without a namespace
+Pathom will send them as-is.
+:::
+
+Depending on the mutation you may need to add a sub-query to satisfy the GraphQL
+syntax.
+
+Taking another example from GraphQL documentation:
+
+```graphql
+input MessageInput {
+  content: String
+  author: String
+}
+
+type Message {
+  id: ID!
+  content: String
+  author: String
+}
+
+type Query {
+  getMessage(id: ID!): Message
+}
+
+type Mutation {
+  createMessage(input: MessageInput): Message
+  updateMessage(id: ID!, input: MessageInput): Message
+}
+```
+
+Using the same prefix as before, this is how we can call createMessage:
+
+```clojure
+[{(gqldemo.Mutation/createMessage {:id 123 :content "Some message" :author "Margaret"})
+  [:gqldemo.Message/id
+   :gqldemo.Message/content]}]
+```
+
+## Complete tutorial
+
+If you like to see a more complete integration example check the
+[GraphQL Tutorial](/docs/tutorials/graphql-integration).

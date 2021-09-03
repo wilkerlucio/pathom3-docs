@@ -1,0 +1,173 @@
+---
+title: Foreign Environments
+---
+
+:::danger
+Foreign parsers is a sub-system of [Dynamic Resolvers](./dynamic-resolvers.mdx), which are still in research/experimental
+stages.
+:::
+
+Foreign Pathom is the ability of Pathom 3 to make automatic integration between different
+Pathom environments.
+
+This mechanism provides a simple way to connect resolvers that may run in completely different
+contexts (different machines or processes).
+
+## Foreign setup
+
+To demonstrate it working, let's start with some resolvers to list some TODO ids and
+another resolver to pull the TODO details.
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.foreign
+  (:require [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.interface.eql :as p.eql]
+            [com.wsscode.pathom3.connect.foreign :as pcf]))
+
+(def todo-db
+  {1 {:todo/id    1
+      :todo/title "Write foreign docs"
+      :todo/done? true}
+   2 {:todo/id    2
+      :todo/title "Integrate the whole internet"
+      :todo/done? false}})
+
+(pco/defresolver todo-items []
+  {::pco/output
+   [{:app/all-todos
+     [:todo/id]}]}
+  ; export only the ids to force the usage of another resolver for
+  ; the details
+  {:app/all-todos
+   [{:todo/id 1}
+    {:todo/id 2}]})
+
+(pco/defresolver todo-by-id [{:todo/keys [id]}]
+  {::pco/output
+   [:todo/id
+    :todo/title
+    :todo/done?]}
+  (get todo-db id))
+
+(def foreign-env
+  (pci/register
+    {:com.wsscode.pathom3.connect.planner/plan-cache* (atom {})}
+    [todo-items
+     todo-by-id]))
+
+(def foreign-request
+  (p.eql/boundary-interface foreign-env))
+
+(comment
+  (foreign-request
+    [{:app/all-todos
+      [:todo/title
+       :todo/done?]}]))
+```
+
+Now we are going to start a new Pathom environment, connect and
+extend the previous one. The local extension will add the ability to know if a TODO
+item was cancelled. You can imagine this is a separate service responsible for the
+cancellation part of this hypothetical system.
+
+```clojure
+(def canceled-todos
+  #{2})
+
+(pco/defresolver todo-canceled? [{:todo/keys [id]}]
+  {:todo/cancelled? (contains? canceled-todos id)})
+
+(def local-env
+  (pci/register
+    {:com.wsscode.pathom3.connect.planner/plan-cache* (atom {})}
+    [; pull the remote instance
+     (pcf/foreign-register foreign-request)
+     ; add our custom resolver on top
+     todo-canceled?]))
+```
+
+:::note
+Using the boundary interface ensures the request handler fulfills the
+expected contract when calling a remote Pathom instance.
+:::
+
+## How it works
+
+When we use `(pcf/foreign-register foreign-request)`, it makes a request that asks
+for the indexes available in that instance.
+
+You can try it yourself by requesting the query:
+
+```clojure
+[:com.wsscode.pathom3.connect.indexes/indexes]
+```
+
+Pathom them transform the indexes in dynamic resolvers and
+we add these new indexes using `pci/register`.
+
+Check the [dynamic resolvers documentation](dynamic-resolvers.mdx) for more details
+about this process.
+
+## Foreign HTTP Example
+
+It's important to note that the foreign environment might well be in a different machine.
+The integration process is serializable, and can work over the network.
+
+I have this same example deployed at https://southamerica-east1-pathomdemos.cloudfunctions.net/development-pathom-server-demo
+
+Here is how we can do this integration using this HTTP based communication:
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.foreign
+  (:require
+    [com.wsscode.pathom3.connect.foreign :as pcf]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.connect.operation.transit :as pcot]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [com.wsscode.transito :as transito]
+    [org.httpkit.client :as http]))
+
+(defn tread [s]
+  (transito/read-str s {:handlers pcot/read-handlers}))
+
+(defn twrite [x]
+  (transito/write-str x {:handlers pcot/write-handlers}))
+
+; helper to deal with encoding, sending via HTTP and decoding
+(defn request-remote-pathom [url request]
+  (-> @(http/request
+         {:url     url
+          :method  :post
+          :headers {"Content-Type" "application/transit+json"
+                    "Accept"       "application/transit+json"}
+          :body    (twrite request)})
+      :body
+      tread))
+
+(def canceled-todos
+  #{2})
+
+(pco/defresolver todo-canceled? [{:todo/keys [id]}]
+  {:todo/cancelled? (contains? canceled-todos id)})
+
+(def url "https://southamerica-east1-pathomdemos.cloudfunctions.net/development-pathom-server-demo")
+
+(def env
+  (pci/register
+    {:com.wsscode.pathom3.connect.planner/plan-cache* (atom {})}
+    [; pull the remote instance
+     (pcf/foreign-register
+       #(request-remote-pathom url %))
+     ; add our custom resolver on top
+     todo-canceled?]))
+
+(comment
+  (p.eql/process
+    env
+    [{:app/all-todos
+      [:todo/title
+       :todo/done?
+       :todo/cancelled?]}]))
+```

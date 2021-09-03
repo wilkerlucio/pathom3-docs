@@ -1,0 +1,412 @@
+---
+title: Dynamic Resolvers
+---
+
+:::danger
+Dynamic resolvers feature in Pathom is currently in research/experimental stage, please
+avoid relying on this feature for critical parts of your system until there is time
+to build confidence in it.
+:::
+
+## What are dynamic resolvers?
+
+Dynamic resolvers is a feature of Pathom that enables the definition of remote complex
+sources of information.
+
+Dynamic resolvers are used for:
+- [Integrate a Pathom instance with another Pathom instance](foreign.mdx)
+- [Integrate Pathom with GraphQL servers](https://github.com/wilkerlucio/pathom3-graphql)
+- [Integrate Pathom with Datomic](https://github.com/wilkerlucio/pathom3-datomic)
+
+:::important
+Dynamic resolvers are an advanced feature of Pathom, this page describes the motivations
+and how it works, but for most users you can take full advantage of dynamic resolvers
+using driver implementations like the ones linked before, without understand the
+implementation details.
+:::
+
+## What dynamic resolvers can do?
+
+To understand the problem dynamic resolvers solve, let's first go through a manual
+process call a remote Pathom service.
+
+Here is the code for the remote service:
+
+```clojure
+(ns com.wsscode.pathom3.docs.demos.core.dynamic-resolvers
+  (:require
+    [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]
+    [com.wsscode.pathom3.connect.foreign :as pcf]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.connect.operation.transit :as pcot]
+    [com.wsscode.pathom3.connect.planner :as pcp]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [com.wsscode.transito :as transito]
+    [org.httpkit.client :as http]
+    [org.httpkit.server :as server]))
+
+(defonce servers* (atom {}))
+
+(defn make-server [port env]
+  (if-let [s (get @servers* port)]
+    (s))
+
+  (let [request (p.eql/boundary-interface env)
+        handler (fn [{:keys [body]}]
+                  (let [req (transito/read-str (slurp body)
+                              {:handlers pcot/read-handlers})]
+                    {:status 200
+                     :body   (transito/write-str
+                               (request req)
+                               {:handlers pcot/write-handlers})}))
+        server  (server/run-server handler
+                  {:port port})]
+    (swap! servers* assoc port server)
+    server))
+
+(defn http-req [port req]
+  (-> @(http/request
+         {:url    (str "http://localhost:" port)
+          :method :post
+          :body   (transito/write-str req {:handlers pcot/write-handlers})})
+      :body
+      slurp
+      (transito/read-str {:handlers pcot/read-handlers})))
+
+(defn http-interface [port env]
+  (make-server port env)
+  #(http-req port %))
+
+(def users-data
+  {1 {:user/id    1
+      :user/name  "Christop Rippin"
+      :company/id 1}
+   2 {:user/id    2
+      :user/name  "Miss Annabell Kessler"
+      :company/id 1}
+   3 {:user/id    3
+      :user/name  "Demarco Padberg"
+      :company/id 1}
+   4 {:user/id    4
+      :user/name  "Daren Wolff Jr."
+      :company/id 1}
+   5 {:user/id    5
+      :user/name  "Carlo Schmitt"
+      :company/id 2}
+   6 {:user/id    6
+      :user/name  "Meda Hegmann"
+      :company/id 2}
+   7 {:user/id    7
+      :user/name  "Onie Schimmel"
+      :company/id 3}
+   8 {:user/id    8
+      :user/name  "Mayra Raynor"
+      :company/id 3}
+   9 {:user/id    9
+      :user/name  "Bobbie Grant"
+      :company/id 3}})
+
+(def company-data
+  {1 {:company/id   1
+      :company/name "Gladys King Inc"}
+   2 {:company/id   2
+      :company/name "Funk-Stamm"}
+   3 {:company/id   3
+      :company/name "Carter, Harber and Jacobi"}})
+
+(pco/defresolver all-users []
+  {::pco/output
+   [{:user/all
+     [:user/id
+      :user/name
+      :company/id]}]}
+  {:user/all
+   (vec (vals users-data))})
+
+(pco/defresolver user-by-id [{:user/keys [id]}]
+  {::pco/output
+   [:user/name
+    :company/id]}
+  (get users-data id))
+
+(pco/defresolver company-by-id [{:company/keys [id]}]
+  {::pco/output
+   [:company/name]}
+  (get company-data id))
+
+(def env
+  (-> (pci/register
+        [all-users
+         user-by-id
+         company-by-id])
+      (pcp/with-plan-cache (atom {}))))
+
+; this function will take a request and run though HTTP
+(def request
+  (http-interface 8087 env))
+```
+
+Now let's consider we have a different server, and we want to consume and extend
+the user data to add the `:user/ip` of each user.
+
+In this case we are going get the information writing resolvers to forward some
+queries to our previous server.
+
+```clojure
+(def ips
+  {1 "82949-5679"
+   2 "39359-0412"
+   3 "40703-7676"
+   4 "85822-1129"
+   5 "03074-6343"
+   6 "09986-9393"
+   7 "74750-0040"
+   8 "82239"
+   9 "81444-2468"})
+
+(pco/defresolver remote-users
+  "Forward user list request to remote server"
+  []
+  {::pco/output
+   [{:user/all
+     [:user/id
+      :user/name
+      :company/id]}]}
+  (request
+    [{:user/all
+      [:user/id
+       :user/name
+       :company/id]}]))
+
+(pco/defresolver remote-company
+  "Forward company data request to remote server"
+  [{:keys [company/id]}]
+  {::pco/output
+   [:company/name]}
+  (request
+    {:pathom/entity
+     {:company/id id}
+
+     :pathom/eql
+     [:company/name]}))
+
+(def client-env
+  (-> (pci/register
+        [(pcf/foreign-register request)
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))))
+
+(def client-request
+  (p.eql/boundary-interface client-env))
+```
+
+With this setup we can run the following query combining the sources:
+
+```clojure
+(client-request
+  [{:user/all
+    [:user/name
+     :user/ip
+     :company/name]}])
+; {:user/all [{:user/name "Onie Schimmel",
+;              :user/ip "74750-0040",
+;              :company/name "Carter, Harber and Jacobi"}
+;             {:user/name "Christop Rippin",
+;              :user/ip "82949-5679",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Daren Wolff Jr.",
+;              :user/ip "85822-1129",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Meda Hegmann",
+;              :user/ip "09986-9393",
+;              :company/name "Funk-Stamm"}
+;             {:user/name "Demarco Padberg",
+;              :user/ip "40703-7676",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Miss Annabell Kessler",
+;              :user/ip "39359-0412",
+;              :company/name "Gladys King Inc"}
+;             {:user/name "Bobbie Grant",
+;              :user/ip "81444-2468",
+;              :company/name "Carter, Harber and Jacobi"}
+;             {:user/name "Carlo Schmitt",
+;              :user/ip "03074-6343",
+;              :company/name "Funk-Stamm"}
+;             {:user/name "Mayra Raynor",
+;              :user/ip "82239",
+;              :company/name "Carter, Harber and Jacobi"}]}
+```
+
+It works! But there are several inefficiencies in this process. For start let's look
+at the trace graph from this query:
+
+![Trace manual](./dynamic-resolvers/trace-manual.png)
+
+The trace show us that to complete this request, it called the remote server four times.
+One for the users, plus one per company (given we have 3 different companies).
+
+Some key points:
+- We have to manually integrate each resolver, which means every change on the server might require changes on the clients
+- Excessive round trips, which adds significant overhead
+
+Now try to imagine how this would scale, with hundreds of resolvers and maybe multiple
+services.
+
+That's were dynamic resolvers come in. Dynamic resolvers can leverage the planning
+algorithms of Pathom to calculate a request to an external service. When we think
+about Pathom integrating with Pathom, this translates as having the external index,
+but instead of processing it locally, its filtered and send to a remote service.
+
+Let's redo our client code, but this time using the foreign Pathom feature, which
+provides tools to integrate a Pathom system with another:
+
+```clojure
+(def ips
+  {1 "82949-5679"
+   2 "39359-0412"
+   3 "40703-7676"
+   4 "85822-1129"
+   5 "03074-6343"
+   6 "09986-9393"
+   7 "74750-0040"
+   8 "82239"
+   9 "81444-2468"})
+
+(def client-env
+  (-> (pci/register
+        [; we use foreign-register which takes a function with a request, like the
+         ; one we used to make the manual requests internally
+         (pcf/foreign-register request)
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))))
+
+(def client-request
+  (p.eql/boundary-interface client-env))
+```
+
+Now let's run the same query and check the trace:
+
+![Trace foreign](./dynamic-resolvers/trace-foreign.png)
+
+Note this time there was only a single request sent to the remote server. To handle
+this Pathom is taking the query and the remote server in consideration to find the
+optimal query to request, reducing the round trips.
+
+## How dynamic resolvers work
+
+Dynamic resolvers have two main parts.
+
+The first is the `dynamic resolver` itself, it's like a normal resolver, but with
+`::pco/dynamic-resolver? true`. One difference from static resolvers, is that dynamic resolvers
+will also include a `foreign ast`. This AST describes the request for the dynamic
+resolver to use.
+
+The second part are `auxiliar resolvers`. Those resolvers don't have an implementation,
+they are used to calculate the sub-query to send to the dynamic resolver.
+
+We can make an adaptation of our previous manual example to implement it using dynamic
+resolvers:
+
+```clojure
+(def remote-dynamic-resolvers
+  [; 1 - the main resolver
+   (pco/resolver 'remote-dynamic
+     {::pco/dynamic-resolver? true}
+     (fn [env input]
+       (request
+         {:pathom/ast    (-> env ::pcp/node ::pcp/foreign-ast)
+          :pathom/entity input})))
+
+   ; 2 - the auxiliary resolvers, note they reference the main one
+   (pco/resolver 'remote-user-by-id
+     {::pco/input        [:user/id]
+      ::pco/output       [:user/name :company/id]
+      ::pco/dynamic-name 'remote-dynamic})
+   (pco/resolver 'remote-company-by-id
+     {::pco/input        [:company/id]
+      ::pco/output       [:company/name]
+      ::pco/dynamic-name 'remote-dynamic})])
+
+(def client-env2
+  (-> (pci/register
+        [remote-dynamic-resolvers
+         (pbir/static-attribute-map-resolver
+           :user/id :user/ip ips)])
+      (pcp/with-plan-cache (atom {}))))
+
+(def client-request2
+  (p.eql/boundary-interface client-env2))
+```
+
+We did a little change, we are going to get information from a single users, so it's simpler
+to inspect:
+
+```clojure
+(client-request2
+  {:pathom/entity
+   {:user/id 1}
+
+   :pathom/eql
+   [:user/name
+    :user/ip
+    :company/name]})
+```
+
+In the following component you can see the final plan, and the steps to get to it.
+
+import {PlanStepperFile} from './assets/cljs-components/com.wsscode.pathom3.docs.components.js'
+
+<div className="pathom-plan-view">
+  <PlanStepperFile path="/viz/dynamic-resolvers/remote-plan.edn"/>
+</div>
+
+Try going back to the `=== Optimize ===` path, where you will be able to see three
+nodes for `remote-dynamic`.
+
+:::tip
+Use the combobox on the left to switch between displaying the node resolver name
+and the node id.
+:::
+
+The merge at the step `Merge chained same dynamic resolvers.` is one interesting to note.
+
+In this case the first node will get the `:company/id` from the `:user/id`, the second
+will use the `:company/id` to fetch the `:company/name`.
+
+In this situation, Pathom understands that this dynamic source already know about
+the middle transitions, so we can remove the middle parts. This results in an end
+node that will have `:user/id` as input and `:company/name` as the output, skipping
+the `:company/id` fetch part.
+
+A different kind of merging happens at the step `Merging sibling resolver calls to resolver remote-dynamic`.
+
+This time is different, it's a sibling relationship merge. In this case Pathom merges
+the foreign ast of the nodes, combining then in a single request.
+
+:::tip
+Click on the nodes in the graph to see their data details, you can follow how they
+change at each step of the graph definition.
+:::
+
+## Other data sources
+
+The previous example demonstrates how Pathom uses dynamic resolvers to combine request
+demands of a foreign source.
+
+One important thing to note is that the dynamic resolver idea is not be strict to Pathom
+usages. Instead, you can think of a generic solution for sources that could support
+this kind of request, or something adaptive.
+
+The simplest example that supports this kind of shape query is GraphQL.
+
+We can also use a shape like this to translate to other formats like SQL. The
+Walkable library is a good example on how to translate a shape request into
+something that's not native adaptive to it, like SQL.
+
+### GraphQL
+
+The library [Pathom 3 GraphQL](https://github.com/wilkerlucio/pathom3-graphql) has an implementation to incorporate GraphQL
+data sources into the Pathom system. Learn more at the [GraphQL tutorial](./tutorials/graphql-integration).
