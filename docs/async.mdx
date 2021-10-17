@@ -134,6 +134,83 @@ async:
   (js/console.log "!! " res))
 ```
 
+## Parallel Process
+
+In Parallel mode Pathom will run as many things at the same time as it can.
+
+Example setup:
+
+```clojure
+(pco/defresolver random-dog-image []
+  {::pco/output [::random-dog-image-url]
+   ::pco/cache? false}
+  (p/let [{:keys [message]} (json-get "https://dog.ceo/api/breeds/image/random")]
+    {::random-dog-image-url message}))
+
+(pco/defresolver random-cat-image []
+  {::pco/output [::random-cat-image-url]
+   ::pco/cache? false}
+  (p/let [{:keys [file]} (json-get "https://aws.random.cat/meow")]
+    {::random-cat-image-url file}))
+
+(pco/defresolver random-pets [{::keys [random-dog-image-url
+                                       random-cat-image-url]}]
+  {::random-pets [random-dog-image-url
+                  random-cat-image-url]})
+
+(def parallel-env
+  (-> {::p.a.eql/parallel? true}
+      (pci/register
+        [random-dog-image
+         random-cat-image
+         random-pets])))
+
+(p.a.eql/process async-env
+  {:items [{} {} {} {} {}]}
+  [{:items
+    [::random-pets]}])
+```
+
+In the previous example, we have 5 items and load a random dog and cat picture
+for each. Using Pathom Viz we can see the items running in parallel:
+
+![Pets Parallel](./assets/pathom-viz/pets-parallel.png)
+
+Let's compare it with the serial runner:
+
+```clojure
+(def parallel-env
+  (-> {::p.a.eql/parallel? false} ; disable parallel
+      (pci/register
+        [random-dog-image
+         random-cat-image
+         random-pets])))
+```
+
+![Pets Serial](./assets/pathom-viz/pets-serial.png)
+
+Now you can see the cascading and each event running one after the other.
+
+### Batching in parallel mode
+
+In Parallel mode the batch process is different from the serial modes.
+
+In serial mode, the batches run after scanning every entity on the query, to trigger
+the items and resume each graph run.
+
+In parallel, the notion of "scanning" isn't as clear and requires a different approach.
+
+Instead of waiting for the end scan, Pathom will run batches based on time, it waits
+for a window without any new entries and run.
+
+The default wait time is 10ms, and you can change it setting via the
+`:com.wsscode.pathom3.connect.runner.parallel/batch-hold-delay-ms` variable in your
+environment.
+
+You can also force a flush at a certain number of items collected for batching using
+the `:com.wsscode.pathom3.connect.runner.parallel/batch-hold-flush-threshold`, the
+default value is `nil`, which will make it flush only by time.
+
 ## Using core.async
 
 To use core.async we can extend the channel protocol to implement the conversion from

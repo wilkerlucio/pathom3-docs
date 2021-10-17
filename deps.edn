@@ -9,7 +9,7 @@
   com.fulcrologic/fulcro      {:mvn/version "3.4.3"}
   com.fulcrologic/guardrails  {:mvn/version "0.0.12"}
   com.wsscode/async           {:mvn/version "2021.01.15"}
-  com.wsscode/pathom3         {:git/url "https://github.com/wilkerlucio/pathom3" :sha "16a69027e6bb6426d39beab4ad398cee3da7ce32"}
+  com.wsscode/pathom3         {:git/url "https://github.com/wilkerlucio/pathom3" :sha "ccd6b59102eaa55b598db319480bc484b70dde8b"}
   com.wsscode/pathom3-viz     {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
   com.wsscode/pathom3-graphql {:git/url "https://github.com/wilkerlucio/pathom3-graphql" :sha "c24eddb40e22bbdd023dbd046776eb923f4a3300"}
   com.wsscode/transito        {:mvn/version "2021.07.04"}

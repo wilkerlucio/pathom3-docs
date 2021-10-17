@@ -5,6 +5,7 @@
             [com.wsscode.pathom3.connect.operation.transit :as pcot]
             [com.wsscode.transito :as tt]
             [promesa.core :as p]
+            [com.wsscode.pathom.viz.ws-connector.pathom3 :as pvc]
             [com.wsscode.pathom3.connect.foreign :as pcf]
             [com.wsscode.pathom3.connect.built-in.resolvers :as pbir]))
 
@@ -40,14 +41,21 @@
     (cljs.pprint/pprint res)))
 
 (pco/defresolver random-dog-image []
-  {::pco/output [::random-dog-image-url]}
+  {::pco/output [::random-dog-image-url]
+   ::pco/cache? false}
   (p/let [{:keys [message]} (json-get "https://dog.ceo/api/breeds/image/random")]
     {::random-dog-image-url message}))
 
 (pco/defresolver random-cat-image []
-  {::pco/output [::random-cat-image-url]}
+  {::pco/output [::random-cat-image-url]
+   ::pco/cache? false}
   (p/let [{:keys [file]} (json-get "https://aws.random.cat/meow")]
     {::random-cat-image-url file}))
+
+(pco/defresolver random-pets [{::keys [random-dog-image-url
+                                       random-cat-image-url]}]
+  {::random-pets [random-dog-image-url
+                  random-cat-image-url]})
 
 (pco/defresolver search-animes [{:jikan.anime/keys [search-title]}]
   {::pco/output [{:jikan.search/animes
@@ -82,13 +90,27 @@
       :person/last-name  "Mascarenhas"}})
 
 (def async-env
-  (p/let [rem (pcf/foreign-register pathom-remote)]
-    (pci/register
-      [rem
-       (pbir/static-table-resolver :person/id users)])))
+  (-> {::p.a.eql/parallel? false}
+      (pci/register
+        [random-dog-image
+         random-cat-image
+         random-pets
+         (pbir/static-table-resolver :person/id users)])
+      (pvc/connect-env "js")))
 
 (comment
   (p/let [res (p.a.eql/process async-env
                 {:person/id 2}
                 [:person/full-name])]
     (js/console.log "!! " res)))
+
+; region parallel
+
+(comment
+  (p/let [res (p.a.eql/process async-env
+                {:items [{} {} {} {} {}]}
+                [{:items
+                  [::random-pets]}])]
+    (js/console.log "!! " res)))
+
+; endregion
