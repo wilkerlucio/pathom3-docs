@@ -118,6 +118,14 @@ This requires a more tolerant mode, which is the lenient mode in Pathom 3.
 In lenient mode, errors are handled per attribute. The following sections will explain
 how to handle errors in this way.
 
+Example setup using lenient mode:
+
+```clojure
+(def env
+  (-> {:com.wsscode.pathom3.error/lenient-mode? true}
+      (pci/register ...)))
+```
+
 ## Attribute Errors
 
 Pathom is an abstraction around attributes, and the error handling follow this idea by
