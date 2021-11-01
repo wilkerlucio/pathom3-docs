@@ -69,6 +69,11 @@ in the output map:
 ;      :user/password ::protected-value}}
 ```
 
+:::important
+The data from those attributes may still leak in the meta for stats, to make
+it really secure you need to prevent regular users from seeing the stats.
+:::
+
 Now let's talk in more detail about the things we used in this example.
 
 ### Define the wrapper fn
