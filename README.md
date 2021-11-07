@@ -2,16 +2,10 @@
 
 View website at https://pathom3.wsscode.com/
 
-### Installation
-
-```
-$ yarn
-```
-
 ### Local Development
 
 ```
-$ yarn start
+$ bb dev
 ```
 
 This command starts a local development server and open up a browser window. Most changes are reflected live without having to restart the server.
