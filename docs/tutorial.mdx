@@ -300,7 +300,7 @@ at it again:
 ```
 
 We have the `:ip` attribute in a map, and then we have `3` function names,
-which dictates the step. Now we will to replace all the resolver names with a single
+which dictates the step. Now we will replace all the resolver names with a single
 attribute: our data demand, the `:temperature`.
 
 It's time to leverage the attribute relations established from the resolvers.
@@ -441,12 +441,12 @@ indexes.
 When we request the `:temperature`, Pathom looks in the index for a path to that attribute.
 It depends on `:woeid`, which we don't have, but the index says you can
 get it if you provide `:latitude` and `:longitude`. We don't have those either, then
-Pathom has to look again in the index for then, and those are available through `:ip`,
+Pathom has to look again in the index for them, and those are available through `:ip`,
 which is in the data context. It's the same path we described before with the table
 column associations.
 
 The previous paragraph described the **planning** process. The output of that process
-is an execution graph that describes what will take to fulfill the demand. Then it
+is an execution graph that describes what it will take to fulfill the demand. Then it
 starts running it, first figure `:latitude` and `:longitude` from `:ip`:
 
 <div className="pathom-diagram">
