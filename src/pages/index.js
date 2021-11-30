@@ -8,6 +8,17 @@ import styles from './styles.module.css';
 
 const features = [
   {
+    title: 'EQL',
+    to: 'docs/eql',
+    imageUrl: 'img/eql-icon-150.png',
+    description: (
+      <>
+        Request specific shapes of data and let Pathom optimize the process. And if
+        makes sense, use the parallel parser for maximum execution speed.
+      </>
+    ),
+  },
+  {
     title: 'Flexible Modeling',
     to: 'docs/resolvers',
     description: (
@@ -25,16 +36,6 @@ const features = [
     description: (
       <>
         Maps that can realize new attributes from resolvers.
-      </>
-    ),
-  },
-  {
-    title: 'EQL',
-    to: 'docs/eql',
-    description: (
-      <>
-        Request specific shapes of data and let Pathom optimize the process. And if
-        makes sense, use the parallel parser for maximum execution speed.
       </>
     ),
   },
