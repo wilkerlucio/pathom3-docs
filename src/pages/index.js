@@ -19,14 +19,10 @@ const features = [
     ),
   },
   {
-    title: 'Flexible Modeling',
+    title: '',
     to: 'docs/resolvers',
     description: (
-      <>
-        Enjoy the freedom of not having to define a schema ahead of time, just keep
-        adding attributes to the system as you figure it out. Model inspired
-        by <a href="https://www.w3.org/RDF/">RDF</a> and <a href="https://www.datomic.com/">Datomic</a>.
-      </>
+      <div></div>
     ),
   },
   {
