@@ -82,7 +82,7 @@ of those as a cache-store.
 
 ## Persistent caching
 
-There are cases in which a persistent cache can same some processing time in the application.
+There are cases in which a persistent cache can save some processing time in the application.
 
 For example, a Pathom server handling API requests for serving some UI. This kind of
 service tends to receive the same queries over and over. Instead of re-planning on every
@@ -146,7 +146,7 @@ To demonstrate it, we will make a persistent cache using a `LRUCache` from core.
   (-> (cc/lru-cache-factory base :threshold threshold)
       (->CoreCacheStore)))
 
-; create a cache holds only the latest 100 read plans
+; create a cache that holds only the latest 100 read plans
 (defonce plan-cache* (lru-cache {} 100))
 
 (def env

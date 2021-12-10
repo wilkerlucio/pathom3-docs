@@ -86,7 +86,7 @@ You can provide initial data to the EQL process using the following syntax:
 ### Providing data via EQL idents
 
 Pathom uses the EQL `ident` as a form to specify a single attribute to start requesting
-data from. Here is an example using the revolvers we created before:
+data from. Here is an example using the resolvers we created before:
 
 ```clojure
 (p.eql/process indexes [{[::pi 2.3] [::tau]}])
@@ -131,7 +131,7 @@ the params data to it, to illustrate let's make a nested example of it:
 
 ### Union queries
 
-Union queries provide a way to archive polymorphism in with EQL, for a review on the
+Union queries provide a way to achieve polymorphism in EQL, for a review on the
 union syntax refer to the [EQL Union specification page](https://edn-query-language.org/eql/1.0.0/specification.html#_unions).
 
 Consider you want to request information for some user feed. In our feed example, there
@@ -424,7 +424,7 @@ It's recommended that you always use this at API boundaries.
 
 ### Extending environment
 
-The boundary API design is to make it flexible, and altough is more efficient
+The boundary API design is to make it flexible, and although is more efficient
 to initialize as much as possible before in the env, it still allows extension of
 it.
 
@@ -453,8 +453,8 @@ In this case we can set the user id on env when we call the boundary interface:
 ; => {:user/login "bunny"}
 ```
 
-In this example we sent env as a map, the boundary interface get this map and merge
-into the previous env and run.
+In this example we sent env as a map, the boundary interface gets this map and merges
+into the previous env and runs.
 
 The env extension can also be a function, this allows more complex operations like
 registering new resolvers, for example:

@@ -13,8 +13,8 @@ Here are the reasons that may cause Pathom to throw:
 
 - Attribute doesn't exist in the indexes
 - Attribute exists in the indexes, but the available data isn't enough to reach it
-- Attribute wasn't in the final output after all the process
-- A resolver throw an exception*
+- Attribute wasn't in the final output after all the processes
+- A resolver threw an exception*
 
 :::note
 * An exception to this rule is if a resolver is contained in a OR node, if there are
@@ -54,7 +54,7 @@ Let's see one example of each of those cases:
   [:d])
 ; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:c] at path [:a]
 
-; Attribute wasn't in the final output after all the process
+; Attribute wasn't in the final output after all the processes
 (p.eql/process
   (pci/register
     (pco/resolver 'data
@@ -64,7 +64,7 @@ Let's see one example of each of those cases:
   [:c])
 ; => EXCEPTION: Required attributes missing: [:c] at path []
 
-; A resolver throw an exception
+; A resolver threw an exception
 (p.eql/process
   (pci/register
     (pco/resolver 'error
@@ -110,7 +110,7 @@ This will ignore problems to fetch that attribute, except in case of an exceptio
 
 ## Lenient Mode
 
-When you Pathom scenario involves large queries (for a complex UI made with [Fulcro](https://fulcro.fulcrologic.com/)
+When your Pathom scenario involves large queries (for a complex UI made with [Fulcro](https://fulcro.fulcrologic.com/)
 for example) you probably don't want that a single attribute break the whole query.
 
 This requires a more tolerant mode, which is the lenient mode in Pathom 3.
