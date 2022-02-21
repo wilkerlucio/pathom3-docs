@@ -30,6 +30,12 @@
                             :key          ::now
                             :dispatch-key ::now}]}})
 
+;; strict error demo
+
+(comment
+
+  (pathom [:wrong]))
+
 ;;;;;;;;;; env extension demo
 
 (def users-db

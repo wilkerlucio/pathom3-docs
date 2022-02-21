@@ -357,6 +357,7 @@ Using the boundary interface adds the following capabilities to the request:
 - Add support to load the index via EQL (through `::pci/indexes` attribute)
 - Support provision of root entity data
 - Support requests in [AST format](https://edn-query-language.org/eql/1.0.0/specification.html)
+- Strict mode errors are turned into a data format instead of throwing
 
 Combined, those features allow another Pathom instance to integrate this graph.
 
@@ -421,6 +422,44 @@ Here you can see an example of a setup and usage of the boundary interface:
 ```
 
 It's recommended that you always use this at API boundaries.
+
+### Strict errors as data
+
+:::info
+Strict errors as data is feature from Pathom 3 `2022.02.21-alpha+` versions.
+:::
+
+When using the boundary interface, errors that would normally throw when using the EQL
+interface directly will be turned into a map format. This is more suitable to a boundary
+interface because then we can send this error reporting over the wire with ease.
+
+The error format is opinionated, and it looks like this:
+
+```clojure
+{:com.wsscode.pathom3.error/error-message "Pathom can't find a path for the following elements in the query: [:wrong] at path []",
+ :com.wsscode.pathom3.error/error-data {:com.wsscode.pathom3.connect.planner/graph {:com.wsscode.pathom3.connect.planner/nodes {},
+                                                                                    :com.wsscode.pathom3.connect.planner/index-ast {:wrong {:type :prop,
+                                                                                                                                            :dispatch-key :wrong,
+                                                                                                                                            :key :wrong}},
+                                                                                    :com.wsscode.pathom3.connect.planner/source-ast {:type :root,
+                                                                                                                                     :children [{:type :prop,
+                                                                                                                                                 :dispatch-key :wrong,
+                                                                                                                                                 :key :wrong}]},
+                                                                                    :com.wsscode.pathom3.connect.planner/available-data {},
+                                                                                    :com.wsscode.pathom3.connect.planner/unreachable-paths {:wrong {}}},
+                                        :com.wsscode.pathom3.connect.planner/unreachable-paths {:wrong {}},
+                                        :com.wsscode.pathom3.path/path [],
+                                        :com.wsscode.pathom3.error/phase :com.wsscode.pathom3.connect.planner/plan,
+                                        :com.wsscode.pathom3.error/cause :com.wsscode.pathom3.error/attribute-unreachable},
+ :com.wsscode.pathom3.error/error-stack "clojure.lang.ExceptionInfo: Pathom can't find a path for the following elements in the query: [:wrong] at path [] {:com.wsscode.pathom3.connect.planner/graph {:com.wsscode.pathom3.connect.planner/nodes {}, :com.wsscode.pathom3.connect.planner/index-ast {:wrong {:type :prop, :dispatch-key :wrong, :key :wrong}}, :com.wsscode.pathom3.connect.planner/source-ast {:type :root, :children [{:type :prop, :dispatch-key :wrong, :key :wrong}]}, :com.wsscode.pathom3.connect.planner/available-data {}, :com.wsscode.pathom3.connect.planner/unreachable-paths {:wrong {}}}, :com.wsscode.pathom3.connect.planner/unreachable-paths {:wrong {}}, :com.wsscode.pathom3.path/path [], :com.wsscode.pathom3.error/phase :com.wsscode.pathom3.connect.planner/plan, :com.wsscode.pathom3.error/cause :com.wsscode.pathom3.error/attribute-unreachable}
+                                         \tat com.wsscode.pathom3.connect.planner$verify_plan_BANG__STAR_.invokeStatic(planner.cljc:1510)
+                                         \tat com.wsscode.pathom3.connect.planner$verify_plan_BANG__STAR_.invoke(planner.cljc:1500)
+                                         \tat com.wsscode.pathom3.connect.planner$verify_plan_BANG_.invokeStatic(planner.cljc:1529)
+                                         \tat com.wsscode.pathom3.connect.planner$verify_plan_BANG_.invoke(planner.cljc:1522)
+                                         ..."}
+```
+
+Then, clients on the receiving end can use this to report the error back.
 
 ### Extending environment
 
