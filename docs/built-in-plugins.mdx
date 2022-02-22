@@ -8,6 +8,26 @@ Here you will find information about built-in plugins.
 [com.wsscode.pathom3.connect.built-in.plugins :as pbip]
 ```
 
+## Extend environment
+
+The plugin `pbip/env-wrap-plugin` provides a simple way to inject dynamic content
+at the env at the start of each request.
+
+The following example demonstrates how to set an attribute `:now` in the env that
+contains the time that the process starts:
+
+```clojure
+(def env
+  (-> (pci/register (pbir/constantly-fn-resolver :time :now))
+      (p.plugin/register
+        [(pbip/env-wrap-plugin #(assoc % :now (java.util.Date.)))])))
+
+(p.eql/process env [:time]) ; => {:time #inst "..."}
+```
+
+The `env-wrap-plugin` takes a function that will receive the env and should return
+the modified env.
+
 ## Resolve mutations params
 
 On Pathom, when you call a mutation, the params flow without any alteration. The default
