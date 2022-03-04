@@ -759,8 +759,36 @@ In the following example we alias `[com.wsscode.misc.coll :as coll]`.
              (shuffle)
              ; drop some item
              (drop 1))]
-    (coll/restore-order items :id results)))
+    (coll/restore-order2 items :id results)))
 ```
+
+### Batch in chunks
+
+Since Pathom 3 `2022.03.04-alpha`, the batch mode supports defining a chunk size.
+
+This is specially useful when dealing with large data sets where the input size might
+go over some limit on the external system:
+
+```clojure
+(pco/defresolver batch-fetch-v-reorder-fixed [items]
+  {::pco/input  [:id]
+   ::pco/output [:v]
+   ::pco/batch? true
+   ::pco/batch-chunk-size 10}
+  (Thread/sleep 300)
+  (let [results
+        (->> items
+             ; note we add the id again so the re-order function can match this item with the source
+             (mapv #(hash-map :id (:id %) :v (* 10 (:id %))))
+             ; make the order random
+             (shuffle)
+             ; drop some item
+             (drop 1))]
+    (coll/restore-order2 items :id results)))
+```
+
+In the previous setup, now if we have for example 25 items, instead of a single call with
+25 items, we will get 2 calls with 10 items and one with 5 items.
 
 ### Unsupported batch
 
