@@ -9,7 +9,7 @@
   com.fulcrologic/fulcro      {:mvn/version "3.4.3"}
   com.fulcrologic/guardrails  {:mvn/version "0.0.12"}
   com.wsscode/async           {:mvn/version "2021.01.15"}
-  com.wsscode/pathom3         {:mvn/version "2022.02.21-alpha-SNAPSHOT"}
+  com.wsscode/pathom3         {:mvn/version "2022.03.04-alpha-SNAPSHOT"}
   com.wsscode/pathom3-viz     {:git/url "https://github.com/wilkerlucio/pathom3-viz" :sha "1366467fac40b06ab5592e4fa4a4511f1dc0e9a3"}
   com.wsscode/pathom3-graphql {:mvn/version "2022.02.21-2-alpha"}
   com.wsscode/transito        {:mvn/version "2021.07.04"}
