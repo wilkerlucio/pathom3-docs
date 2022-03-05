@@ -806,11 +806,6 @@ go over some limit on the external system:
 In the previous setup, now if we have for example 25 items, instead of a single call with
 25 items, we will get 2 calls with 10 items and one with 5 items.
 
-:::note
-Setting `::pco/batch-chunk-size` will also affect the `::pcrp/batch-hold-flush-threshold`
-in the parallel processor.
-:::
-
 ### Unsupported batch
 
 Not all paths are supported in batch, for example:
