@@ -762,6 +762,22 @@ In the following example we alias `[com.wsscode.misc.coll :as coll]`.
     (coll/restore-order2 items :id results)))
 ```
 
+### Batch in Parallel processor
+
+Batching works a bit differently in the parallel processor.
+
+In parallel execution we don't have a clear signal that we finished a scan on the query.
+
+For that reason we need another way to decide we accumulated enough and trigger the
+batch request.
+
+The strategy in the parallel case is based on two configurations:
+
+`::pcrp/batch-hold-delay-ms` - After not receiving a new entry for an amount of milliseconds,
+Pathom will fire the batch with the items accumulated so far.
+`::pcrp/batch-hold-flush-threshold` - When the accumulator reaches the threshold, it
+triggers the batch immediately.
+
 ### Batch in chunks
 
 Since Pathom 3 `2022.03.04-alpha`, the batch mode supports defining a chunk size.
@@ -789,6 +805,11 @@ go over some limit on the external system:
 
 In the previous setup, now if we have for example 25 items, instead of a single call with
 25 items, we will get 2 calls with 10 items and one with 5 items.
+
+:::note
+Setting `::pco/batch-chunk-size` will also affect the `::pcrp/batch-hold-flush-threshold`
+in the parallel processor.
+:::
 
 ### Unsupported batch
 
