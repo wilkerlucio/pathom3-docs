@@ -1,6 +1,6 @@
 module.exports = {
   title: 'Pathom 3',
-  tagline: 'A library to unify data sources via attribute modeling.',
+  tagline: 'A library to unify data sources via attribute modeling in a seamless graph.',
   url: 'https://pathom3.wsscode.com',
   baseUrl: '/',
   onBrokenLinks: 'throw',
