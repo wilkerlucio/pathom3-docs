@@ -71,6 +71,10 @@ module.exports = {
           title: 'Presentations',
           items: [
             {
+              label: 'Data Navigation with Pathom 3',
+              href: 'https://www.youtube.com/watch?v=YaHiff2vZ_o',
+            },
+            {
               label: 'Conj 2019 - The Maximal Graph',
               href: 'https://www.youtube.com/watch?v=IS3i3DTUnAI',
             },
