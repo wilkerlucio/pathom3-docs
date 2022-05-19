@@ -39,7 +39,7 @@ Let's see one example of each of those cases:
 ; => EXCEPTION: Pathom can't find a path for the following elements in the query: [:b] at path []
 
 ; An extended version of this is also true in case of nested inputs, if Pathom can't see
-; a Pathom for a nested input requirement, it will consider it a plan failure.
+; a path for a nested input requirement, it will consider it a plan failure.
 (p.eql/process
   (pci/register
     [(pco/resolver 'nested-provider
