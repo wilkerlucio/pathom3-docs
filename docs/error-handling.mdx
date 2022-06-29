@@ -420,12 +420,16 @@ If you like to have more specific handlers for batches, there is also the
 
 ## Mutation Errors
 
-Mutation errors are simple. When a mutation fails, the value of the output is going
+Mutation errors are simple. In strict mode it will throw the exception, similar to how
+it handles resolvers.
+
+On lenient mode, when a mutation fails, the value of the output is going
 to be a map with the key `::pcr/mutation-error`, which has the exception.
 
 ```clojure
 (p.eql/process
   (pci/register
+    {::p.error/lenient-mode? true}
     (pco/mutation 'doit
       {}
       (fn [_ _]
