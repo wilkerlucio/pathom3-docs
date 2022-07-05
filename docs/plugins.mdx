@@ -233,6 +233,18 @@ Wrap the call of a mutation.
     (mutate env ast)))
 ```
 
+#### `::p.error/wrap-attribute-error`
+
+Wrap the error data, allowing you to modify it.
+
+```clojure
+(defn sample-attribute-error-wrapper [attr-error]
+  (fn [entity k]
+    (let [err (attr-error entity k)]
+      ; will return just the error cause
+      (:com.wsscode.pathom3.error/cause err))))
+```
+
 #### `::pcr/wrap-resolver-error`
 
 Wrap the operation that attaches an error to a node.
