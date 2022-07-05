@@ -193,8 +193,8 @@ Here is a function to extract the data points we mentioned at start from each it
    :hacker-news.item/id             (->> el :content first :attrs :id)
    :hacker-news.item/rank-in-page   (select-number (class-text el "rank"))
    :hacker-news.item/source         (class-text el "sitestr")
-   :hacker-news.item/title          (class-text el "storylink")
-   :hacker-news.item/url            (->> (hs/select (hs/class "storylink") el)
+   :hacker-news.item/title          (class-text el "titlelink")
+   :hacker-news.item/url            (->> (hs/select (hs/class "titlelink") el)
                                          first :attrs :href)})
 ```
 
