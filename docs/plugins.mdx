@@ -250,10 +250,11 @@ Wrap the error data, allowing you to modify it.
 Wrap the operation that attaches an error to a node.
 
 ```clojure
-(defn sample-resolver-error-wrapper [_]
-  (fn [env node error]
-    ; report error
-    ))
+(defn sample-resolver-error-wrapper [resolver-error]
+  (fn [env ast error]
+    (let [e (resolver-error env ast error)]
+      ; you may modify the error here
+      e)))
 ```
 
 #### `::pcr/wrap-batch-resolver-error`
@@ -272,10 +273,11 @@ Wrap batch errors
 Use this to get notified when mutation errors happen.
 
 ```clojure
-(defn sample-mutation-error-wrapper [_]
+(defn sample-mutation-error-wrapper [mutation-error]
   (fn [env ast error]
-    ; report error
-    ))
+    (let [e (mutation-error env ast error)]
+      ; you may modify the error here
+      e)))
 ```
 
 #### `::pcr/wrap-merge-attribute`
