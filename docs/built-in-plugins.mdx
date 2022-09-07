@@ -51,7 +51,7 @@ Example:
         [(pbir/single-attr-resolver :a :b inc)
          foo])
       (p.plugin/register pbip/mutation-resolve-params))
-  ['(foo {:a 1})])
+  [`(foo {:a 1})])
 ; => {foo {:res 2}}
 ```
 
