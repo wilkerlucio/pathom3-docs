@@ -193,7 +193,8 @@ queries to our previous server.
 
 (def client-env
   (-> (pci/register
-        [(pcf/foreign-register request)
+        [remote-users
+         remote-company
          (pbir/static-attribute-map-resolver
            :user/id :user/ip ips)])
       (pcp/with-plan-cache (atom {}))))
