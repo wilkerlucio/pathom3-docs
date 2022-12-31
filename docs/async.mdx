@@ -4,7 +4,7 @@ title: Async
 
 Async process allows Pathom to process resolvers that require async processing.
 
-In JS environments are limited without async support, you can't trigger HTTP or database
+JS environments are limited without async support, you can't trigger HTTP or database
 requests.
 
 In this section, you will learn how to use the async features from Pathom 3.
@@ -213,7 +213,7 @@ default value is `nil`, which will make it flush only by time.
 
 ## Using core.async
 
-To use core.async we can extend the channel protocol to implement the conversion from
+To use core.async, we can extend the channel protocol to implement the conversion from
 a core.async channel to a future.
 
 I have made a [library](https://github.com/wilkerlucio/promesa-bridges) to share the implementation of this extension, this way we can
