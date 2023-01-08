@@ -170,8 +170,8 @@ in the union entry key. When they match Pathom picks that path option.
 
 There is a secondary option, this is more intended for implementors of dynamic resolvers.
 
-If the meta contains the meta-data `::pf.eql/union-entry-path`, Pathom will use that
-to pick the path, example:
+If the meta contains the meta-data `::pf.eql/union-entry-key`, Pathom will use that
+as the union entry key, example:
 
 ```clojure
 (def union-env
