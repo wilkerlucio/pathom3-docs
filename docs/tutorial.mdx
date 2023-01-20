@@ -8,7 +8,7 @@ The task of this tutorial is to implement a series of resolvers that can tell th
 temperature, based on some IP address.
 
 To implement this, I'll use [GeoJS](https://get.geojs.io) to find the location from some
-given IP, and then use [Meta Weather](https://www.metaweather.com) to find the temperature.
+given IP, and then use [7timer](http://www.7timer.info/doc.php?lang=en#api) to find the temperature.
 
 ## App Setup
 
@@ -20,11 +20,13 @@ In this demo, I'll be using [Clojure Deps](https://clojure.org/guides/deps_and_c
 
  :deps
  {cheshire/cheshire   {:mvn/version "5.10.0"}
-  com.wsscode/pathom3 {:mvn/version "2021.07.10-alpha"}
-  org.clojure/clojure {:mvn/version "1.10.1"}}}
+  com.wsscode/pathom3 {:mvn/version "2022.10.19-alpha"}
+  org.clojure/clojure {:mvn/version "1.11.1"}
+  http-kit/http-kit   {:mvn/version "2.5.3"}}}
 ```
 
-We are going to use `cheshire` to parse `JSON` from the API responses.
+We are going to use `http-kit` to make our requests and `cheshire` to parse `JSON` from
+the API responses.
 
 ## Command Line Application
 
@@ -52,8 +54,9 @@ To make this command shorter, add an alias to `deps.edn`:
 
  :deps
  {cheshire/cheshire   {:mvn/version "5.10.0"}
-  com.wsscode/pathom3 {:mvn/version "2021.07.10-alpha"}
-  org.clojure/clojure {:mvn/version "1.10.0"}}
+  com.wsscode/pathom3 {:mvn/version "2022.10.19-alpha"}
+  org.clojure/clojure {:mvn/version "1.11.1"}
+  http-kit/http-kit   {:mvn/version "2.5.3"}}
 
  ; add alias to make easier to call
  :aliases
@@ -81,10 +84,10 @@ want (the temperature), we can start with this graph representation:
 
 </div>
 
-By looking at the documentation on the [Meta Weather API](https://www.metaweather.com/api/),
+By looking at the documentation on the [7timer](http://www.7timer.info/doc.php?lang=en#api),
 I see that the temperature information is present in the
-`https://www.metaweather.com/api/location/$WOEID$` endpoint (`WOEID` stands for [Where On Earth ID](https://en.wikipedia.org/wiki/WOEID))
-, under `consolidated_weather` -> `the_temp`. This means that to fetch the temperature, we need some `woeid`.
+`http://www.7timer.info/bin/api.pl?lon=$LONGITUDE$&lat=$LATITUDE$&product=astro&output=json` endpoint
+. This means that to fetch the temperature, we need some `latitude` and `longitude`.
 
 <div className="pathom-diagram">
 
@@ -92,34 +95,16 @@ I see that the temperature information is present in the
 
 </div>
 
-Meta Weather provides search endpoints to figure out the `WOEID`:
+Using the GeoJS API, we can use the endpoint `https://get.geojs.io/v1/ip/geo/$IP$.json`
+to figure the latitude and longitude, given some IP:
 
-```
-https://www.metaweather.com/api/location/search/?query=san
-https://www.metaweather.com/api/location/search/?query=london
-https://www.metaweather.com/api/location/search/?lattlong=36.96,-122.02
-https://www.metaweather.com/api/location/search/?lattlong=50.068,-5.316
-```
-
-To make this example more interesting, we are going to use the one with latitude and
-longitude. In these systems, this means that now `WOEID` depends on `latitude` and `longitude`:
+Now we have the complete path from the `IP` to the `temperature`.
 
 <div className="pathom-diagram">
 
   ![](./assets/diagrams/ip-weather/table-plan-2.png)
 
 </div>
-
-Finally, using the GeoJS API, we can use the endpoint `https://get.geojs.io/v1/ip/geo/$IP$.json`
-to figure the latitude and longitude, given some IP:
-
-<div className="pathom-diagram">
-
-  ![](./assets/diagrams/ip-weather/table-plan-3.png)
-
-</div>
-
-Now we have the complete path from the `IP` to the `temperature`.
 
 :::tip
 I found those API's using the [Public API's](https://github.com/public-apis/public-apis)
@@ -188,14 +173,15 @@ the resolver attribute vector.
 
 You can learn more about the details at [resolvers documentation page](resolvers.mdx).
 
-Now that we have the latitude and longitude, the next resolver will find a `WOEID` from
-that:
+Now that we have the latitude and longitude, the next resolver will find a `temperature`
+from them:
 
-```clojure {13-21}
+```clojure {5,14-23}
 (ns com.wsscode.pathom3.demos.ip-weather
   (:require
     [cheshire.core :as json]
-    [com.wsscode.pathom3.connect.operation :as pco]))
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [org.httpkit.client :as http]))
 
 (pco/defresolver ip->lat-long
   [{:keys [ip]}]
@@ -204,22 +190,23 @@ that:
       (json/parse-string keyword)
       (select-keys [:latitude :longitude])))
 
-(pco/defresolver latlong->woeid
+(pco/defresolver latlong->temperature
   [{:keys [latitude longitude]}]
-  {:woeid
-   (-> (slurp
-         (str "https://www.metaweather.com/api/location/search/?lattlong="
-              latitude "," longitude))
+  {:temperature
+   (-> @(http/request
+          {:url (str "http://www.7timer.info/bin/api.pl?lon=" longitude
+                     "&lat=" latitude
+                     "&product=astro&output=json")})
+       :body
        (json/parse-string keyword)
-       first
-       :woeid)})
+       :dataseries first :temp2m)})
 
 (defn main [{:keys [ip]}]
   (println "Request temperature for the IP" ip))
 ```
 
 :::note
-In `latlong->woeid` resolver, we let Pathom infer the output automatically. To use this
+In `latlong->temperature` resolver, we let Pathom infer the output automatically. To use this
 feature, remember that the last expression **must** be a map. Otherwise, Pathom will
 not try to infer the output.
 :::
@@ -227,53 +214,8 @@ not try to infer the output.
 Testing the resolver in the REPL:
 
 ```clojure
-(latlong->woeid {:longitude "-88.0569", :latitude "41.5119"})
-; => {:woeid 2379574}
-```
-
-We are getting close, the final step is to find out the temperature, given the `WOEID`:
-
-```clojure {23-30}
-(ns com.wsscode.pathom3.demos.ip-weather
-  (:require
-    [cheshire.core :as json]
-    [com.wsscode.pathom3.connect.operation :as pco]))
-
-(pco/defresolver ip->lat-long
-  [{:keys [ip]}]
-  {::pco/output [:latitude :longitude]}
-  (-> (slurp (str "https://get.geojs.io/v1/ip/geo/" ip ".json"))
-      (json/parse-string keyword)
-      (select-keys [:latitude :longitude])))
-
-(pco/defresolver latlong->woeid
-  [{:keys [latitude longitude]}]
-  {:woeid
-   (-> (slurp
-         (str "https://www.metaweather.com/api/location/search/?lattlong="
-              latitude "," longitude))
-       (json/parse-string keyword)
-       first
-       :woeid)})
-
-(pco/defresolver woeid->temperature
-  [{:keys [woeid]}]
-  {:temperature
-   (-> (slurp (str "https://www.metaweather.com/api/location/" woeid))
-       (json/parse-string keyword)
-       :consolidated_weather
-       first
-       :the_temp)})
-
-(defn main [{:keys [ip]}]
-  (println "Request temperature for the IP" ip))
-```
-
-To keep our REPL testing in check:
-
-```clojure
-(woeid->temperature {:woeid 2379574})
-; => {:temperature 4.529999999999999}
+(latlong->temperature {:longitude "-88.0569", :latitude "41.5119"})
+; => {:temperature -1}
 ```
 
 The whole process chains nicely, starting from `ip` to `temperature`, like this:
@@ -281,9 +223,8 @@ The whole process chains nicely, starting from `ip` to `temperature`, like this:
 ```clojure
 (-> {:ip "198.29.213.3"}
     ip->lat-long
-    latlong->woeid
-    woeid->temperature)
-; => {:temperature 4.529999999999999}
+    latlong->temperature)
+; => {:temperature -1}
 ```
 
 ### Graph Traversal
@@ -295,8 +236,7 @@ at it again:
 ```clojure
 (-> {:ip "198.29.213.3"}
     ip->lat-long
-    latlong->woeid
-    woeid->temperature)
+    latlong->temperature)
 ```
 
 We have the `:ip` attribute in a map, and then we have `3` function names,
@@ -309,12 +249,13 @@ To do this, Pathom needs some indexes that combine the attribute relations descr
 by a list of resolvers. This is demonstrated in the highlighted fragments of the
 following snippet:
 
-```clojure {4,33-36}
+```clojure {4,26-29}
 (ns com.wsscode.pathom3.demos.ip-weather
   (:require
     [cheshire.core :as json]
     [com.wsscode.pathom3.connect.indexes :as pci]
-    [com.wsscode.pathom3.connect.operation :as pco]))
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [org.httpkit.client :as http]))
 
 (pco/defresolver ip->lat-long
   [{:keys [ip]}]
@@ -323,40 +264,30 @@ following snippet:
       (json/parse-string keyword)
       (select-keys [:latitude :longitude])))
 
-(pco/defresolver latlong->woeid
+(pco/defresolver latlong->temperature
   [{:keys [latitude longitude]}]
-  {:woeid
-   (-> (slurp
-         (str "https://www.metaweather.com/api/location/search/?lattlong="
-              latitude "," longitude))
-       (json/parse-string keyword)
-       first
-       :woeid)})
-
-(pco/defresolver woeid->temperature
-  [{:keys [woeid]}]
   {:temperature
-   (-> (slurp (str "https://www.metaweather.com/api/location/" woeid))
+   (-> @(http/request
+          {:url (str "http://www.7timer.info/bin/api.pl?lon=" longitude
+                     "&lat=" latitude
+                     "&product=astro&output=json")})
+       :body
        (json/parse-string keyword)
-       :consolidated_weather
-       first
-       :the_temp)})
+       :dataseries first :temp2m)})
 
 (def env
   (pci/register [ip->lat-long
-                 latlong->woeid
-                 woeid->temperature]))
+                 latlong->temperature]))
 
 (defn main [{:keys [ip]}]
   (println "Request temperature for the IP" ip))
 ```
 
 Using the indexes we generated at the name of `env`, we can do the same processing
-without mentioning any resolver name, using a [Smart Map](smart-maps.mdx):
+without mentioning any resolver name, using a [EQL Processor](eql.mdx):
 
 ```clojure
-(-> (psm/smart-map env {:ip "198.29.213.3"})
-    :temperature)
+(p.eql/process env {:ip "198.29.213.3"} [:temperature])
 ; 5.24
 ```
 
@@ -364,13 +295,14 @@ Note the previous snippet doesn't include the name of any resolver!
 
 We can move that code to our `main` function and make our program work:
 
-```clojure {6,39-42}
+```clojure {6,32-35}
 (ns com.wsscode.pathom3.demos.ip-weather
   (:require
     [cheshire.core :as json]
     [com.wsscode.pathom3.connect.indexes :as pci]
     [com.wsscode.pathom3.connect.operation :as pco]
-    [com.wsscode.pathom3.interface.smart-map :as psm]))
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [org.httpkit.client :as http]))
 
 (pco/defresolver ip->lat-long
   [{:keys [ip]}]
@@ -379,24 +311,16 @@ We can move that code to our `main` function and make our program work:
       (json/parse-string keyword)
       (select-keys [:latitude :longitude])))
 
-(pco/defresolver latlong->woeid
+(pco/defresolver latlong->temperature
   [{:keys [latitude longitude]}]
-  {:woeid
-   (-> (slurp
-         (str "https://www.metaweather.com/api/location/search/?lattlong="
-              latitude "," longitude))
-       (json/parse-string keyword)
-       first
-       :woeid)})
-
-(pco/defresolver woeid->temperature
-  [{:keys [woeid]}]
   {:temperature
-   (-> (slurp (str "https://www.metaweather.com/api/location/" woeid))
+   (-> @(http/request
+          {:url (str "http://www.7timer.info/bin/api.pl?lon=" longitude
+                     "&lat=" latitude
+                     "&product=astro&output=json")})
+       :body
        (json/parse-string keyword)
-       :consolidated_weather
-       first
-       :the_temp)})
+       :dataseries first :temp2m)})
 
 (def env
   (pci/register [ip->lat-long
@@ -404,9 +328,8 @@ We can move that code to our `main` function and make our program work:
                  woeid->temperature]))
 
 (defn main [args]
-  ; start smart maps with call args
-  (let [sm (psm/smart-map env args)]
-    (println (str "It's currently " (:temperature sm) "C at " (pr-str args)))))
+  (let [temp (p.eql/process-one env args :temperature)]
+    (println (str "It's currently " temp "C at " (pr-str args)))))
 ```
 
 Then we can run from the command line:
@@ -439,11 +362,9 @@ indexes.
 :::
 
 When we request the `:temperature`, Pathom looks in the index for a path to that attribute.
-It depends on `:woeid`, which we don't have, but the index says you can
-get it if you provide `:latitude` and `:longitude`. We don't have those either, then
-Pathom has to look again in the index for them, and those are available through `:ip`,
-which is in the data context. It's the same path we described before with the table
-column associations.
+It depends on `:latitude` and `:longitude`, which we don't have, but the index says you can
+get it if you provide an `:ip`, which is in the data context. It's the same path we described
+before with the table column associations.
 
 The previous paragraph described the **planning** process. The output of that process
 is an execution graph that describes what it will take to fulfill the demand. Then it
@@ -455,7 +376,7 @@ starts running it, first figure `:latitude` and `:longitude` from `:ip`:
 
 </div>
 
-With `:latitude` and `:longitude` available, now the process can fetch the `:woeid`:
+Then it can use `:latitude` and `:longitude` to get the `:temperature`:
 
 <div className="pathom-diagram">
 
@@ -463,25 +384,13 @@ With `:latitude` and `:longitude` available, now the process can fetch the `:woe
 
 </div>
 
-Finally, use `:woeid` to get the `:temperature`:
-
-<div className="pathom-diagram">
-
-  ![](./assets/diagrams/ip-weather/table-run-3.png)
-
-</div>
-
 Because our code only talks about context and demand, we can also use this command
-line tool in a few other forms:
+line tool in a few other forms, like starting for latitude and longitude:
 
 ```bash
 # from lat long
 clj -X:ip-weather :latitude '"41.5119"' :longitude '"-88.0569"'
 # => It's currently 8.33C at {:latitude "41.5119", :longitude "-88.0569"}
-
-# from woeid
-clj -X:ip-weather :woeid 2379574
-# => It's currently 8.33C at {:woeid 2379574}
 ```
 
 As long as you use some data that has a path to the temperature, it works.
@@ -493,12 +402,11 @@ This concludes this tutorial. A quick review:
 - Map the available data you have and the data you want in terms of attributes.
 - Write resolvers connecting the attribute names, adding more attributes as needed.
 - Prepare an environment with the [indexes](indexes.mdx).
-- Use [EQL](eql.mdx) to make the information request.
+- Use a [Smart Map](smart-maps.mdx) to make the information request.
 
 I designed this demo to illustrate the basic concepts of attribute modeling and Pathom.
 
 Here are a few exercise suggestions you can do to extend this demo:
 
 - Add a resolver to tell if the temperature is cold or not, based on some cold threshold
-- Add a resolver to use the Meta Weather API to search based on a search query.
 - Add a resolver to use the current user public IP when nothing else is provided.
