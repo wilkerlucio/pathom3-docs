@@ -324,8 +324,7 @@ We can move that code to our `main` function and make our program work:
 
 (def env
   (pci/register [ip->lat-long
-                 latlong->woeid
-                 woeid->temperature]))
+                 latlong->temperature]))
 
 (defn main [args]
   (let [temp (p.eql/process-one env args :temperature)]
