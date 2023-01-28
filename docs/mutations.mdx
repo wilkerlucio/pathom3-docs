@@ -7,7 +7,8 @@ check the [EQL Mutations specification](https://edn-query-language.org/eql/1.0.0
 
 ## Using `defmutation`
 
-To create mutations you can use the `defmutation` helper, which is similar to the `defresolver` macro.
+To create mutations you can use the `defmutation` helper, which is similar to the `defresolver` macro. And similarly to resolvers,
+it can take a variable number of arguments - none, one (`[parameters]`), or two (`[env parameters]`).
 
 Here is a mutation to save a file on disk:
 
