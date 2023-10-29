@@ -1,9 +1,9 @@
 {:tasks
  {js:watch
-  (shell "shadow-cljs watch docs")
+  (shell "npx shadow-cljs watch docs")
 
   docs:watch
-  (shell "yarn start")
+  (shell "npx yarn start")
 
   -dev
   {:depends [js:watch docs:watch]}

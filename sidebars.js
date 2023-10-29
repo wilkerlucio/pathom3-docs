@@ -3,6 +3,7 @@ module.exports = {
     'introduction',
     // 'rationale',
     'tutorial',
+    'nouns',
     {
       'Using Pathom': [
         'resolvers',

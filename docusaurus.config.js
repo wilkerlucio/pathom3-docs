@@ -5,8 +5,8 @@ module.exports = {
   baseUrl: '/',
   onBrokenLinks: 'throw',
   favicon: 'img/favicon.ico',
-  organizationName: 'wilkerlucio', // Usually your GitHub org/user name.
-  projectName: 'pathom3-docs', // Usually your repo name.
+  organizationName: 'wilkerlucio',
+  projectName: 'pathom3-docs',
   themeConfig: {
     sidebarCollapsible: true,
     colorMode: {
@@ -21,7 +21,7 @@ module.exports = {
     },
     algolia: {
       apiKey: '000878ddd4911b382989562da17a99dd',
-      indexName: 'phantom3',
+      indexName: 'phantom3', // algolia used the wrong name there that we have to replicate here
 
       // Optional: see doc section bellow
       contextualSearch: true,
