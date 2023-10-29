@@ -6,7 +6,6 @@
   cheshire/cheshire           {:mvn/version "5.10.0"}
   clj-http/clj-http           {:mvn/version "3.11.0"}
   http-kit/http-kit           {:mvn/version "2.5.3"}
-  com.fulcrologic/fulcro      {:mvn/version "3.4.3"}
   com.fulcrologic/guardrails  {:mvn/version "0.0.12"}
   com.wsscode/async           {:mvn/version "2021.01.15"}
   com.wsscode/pathom3         {:mvn/version "2022.10.19-alpha"}
@@ -16,8 +15,8 @@
   hickory/hickory             {:mvn/version "0.7.1"}
   lilactown/helix             {:mvn/version "0.1.1"}
   org.clojure/clojure         {:mvn/version "1.11.1"}
-  org.clojure/clojurescript   {:mvn/version "1.10.764"}
-  thheller/shadow-cljs        {:mvn/version "2.11.4"}}
+  org.clojure/clojurescript   {:mvn/version "1.11.60"}
+  thheller/shadow-cljs        {:mvn/version "2.25.10"}}
 
  :aliases
  {:demos
