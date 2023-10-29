@@ -1,0 +1,54 @@
+---
+title: Nouns
+---
+
+This page contains a list with brief descriptions of the nouns used in Pathom.
+
+## [EQL Request](https://edn-query-language.org/)
+
+EQL is the main interface to communicate with Pathom, with EQL you describe the shape of the
+response data you need, and Pathom uses its engine to realize the data. EQL syntax also supports
+the calling of mutations that enables a layer of side effects to be invoked in a request.
+
+## Entity
+
+Most maps returned by Pathom are considered entities, but not all of them. When you make a request
+and ask for specific keys of a map, that's an entity, but there are some opaque maps (from Pathom
+perspective), in these cases they are not entities.
+
+## [Resolver](resolvers.mdx)
+
+The primary building block of Pathom data resolution, resolvers represent edges on the graph
+of data traversing, they always provide at least one attribute, and usually have some input
+requirement.
+
+## [Mutation](mutations.mdx)
+
+Mutations are the `write` side of Pathom. They provide entry points to run some operation that
+usually does some side effects.
+
+## Operation
+
+The parent type of Resolvers and Mutations. The common trait they share is that both have a
+map containing configuration data.
+
+## [Cache Store](cache.mdx)
+
+Pathom uses caches all over the place and provides a way to the user to implement custom behavior
+on how this caching works.
+
+## [Planner](planner.mdx)
+
+The planner is a critical part of Pathom 3. The planner is the algorithm core of the system, it
+receives the context of the request and produces a data structure with instructions of how to
+execute which functions in which order to resolve the user demand.
+
+## Runner
+
+The runner starts from a plan produced by the planner and go about executing it.
+
+## [Smart Maps](smart-maps.mdx)
+
+Smart Maps provide an alternative interface to use the Pathom system that doesn't depend on the
+EQL. Smart maps are less efficient than using EQL, but are handy when you want to enable the resolution
+power of Pathom integrated with the simple interface of Clojure maps.
