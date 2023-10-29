@@ -13,7 +13,7 @@
   com.wsscode/pathom3-graphql {:mvn/version "2022.02.21-2-alpha"}
   com.wsscode/transito        {:mvn/version "2021.07.04"}
   hickory/hickory             {:mvn/version "0.7.1"}
-  lilactown/helix             {:mvn/version "0.1.1"}
+  lilactown/helix             {:mvn/version "0.1.10"}
   org.clojure/clojure         {:mvn/version "1.11.1"}
   org.clojure/clojurescript   {:mvn/version "1.11.60"}
   thheller/shadow-cljs        {:mvn/version "2.25.10"}}
