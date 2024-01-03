@@ -8,7 +8,6 @@ module.exports = {
   organizationName: 'wilkerlucio',
   projectName: 'pathom3-docs',
   themeConfig: {
-    sidebarCollapsible: true,
     colorMode: {
       defaultMode: 'dark',
       disableSwitch: true,
@@ -16,11 +15,9 @@ module.exports = {
     prism: {
       additionalLanguages: ['clojure'],
     },
-    gtag: {
-      trackingID: 'G-GZFCYV0DXN',
-    },
     algolia: {
-      apiKey: '000878ddd4911b382989562da17a99dd',
+      appId: '8YW0ZACTDN',
+      apiKey: '34931c185ac6b79c655ceaaf46214a83',
       indexName: 'phantom3', // algolia used the wrong name there that we have to replicate here
 
       // Optional: see doc section bellow
@@ -108,6 +105,9 @@ module.exports = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/',
+        },
+        gtag: {
+          trackingID: 'G-GZFCYV0DXN',
         },
         // blog: {
         //   showReadingTime: true,
