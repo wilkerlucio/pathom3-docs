@@ -16,9 +16,6 @@ module.exports = {
     prism: {
       additionalLanguages: ['clojure'],
     },
-    gtag: {
-      trackingID: 'G-GZFCYV0DXN',
-    },
     algolia: {
       apiKey: '000878ddd4911b382989562da17a99dd',
       indexName: 'phantom3', // algolia used the wrong name there that we have to replicate here
@@ -108,6 +105,9 @@ module.exports = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl: 'https://github.com/wilkerlucio/pathom3-docs/edit/master/',
+        },
+        gtag: {
+          trackingID: 'G-GZFCYV0DXN',
         },
         // blog: {
         //   showReadingTime: true,
