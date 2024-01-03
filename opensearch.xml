@@ -7,5 +7,5 @@
   <Image width="16" height="16" type="image/x-icon">https://pathom3.wsscode.com/img/favicon.ico</Image>
   <Url type="text/html" method="get" template="https://pathom3.wsscode.com/search?q={searchTerms}"/>
   <Url type="application/opensearchdescription+xml" rel="self" template="https://pathom3.wsscode.com/opensearch.xml" />
-  <moz:SearchForm>https://pathom3.wsscode.com</moz:SearchForm>
+  <moz:SearchForm>https://pathom3.wsscode.com/</moz:SearchForm>
 </OpenSearchDescription>
