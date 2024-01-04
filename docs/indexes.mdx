@@ -129,7 +129,7 @@ A set with all the input combinations that this attribute appears in.
 
 ## index-resolvers
 
-In this index you can lookup resolvers by their name. Using both `product-by-id` and
+In this index, you can look up resolvers by their name. Using both `product-by-id` and
 `full-name` resolvers, this is what the `index-resolvers` looks like:
 
 ```clojure
@@ -153,4 +153,29 @@ In this index you can lookup resolvers by their name. Using both `product-by-id`
              :com.wsscode.pathom3.connect.operation/provides {::full-name {}}
              :com.wsscode.pathom3.connect.operation/op-name  full-name}
    :resolve full-name--23079}}}
+```
+
+## index-mutations
+
+In this index, you can look up mutations by their name. Here is an example of what it looks like:
+
+```clojure
+;; the mutations
+
+(pco/defmutation create-product [{:keys [acme.product/name acme.product/price acme.product/in-stock?]}]
+  {::pco/output [:acme.product/id]}
+  (create-product name price in-stock?))
+
+{:com.wsscode.pathom3.connect.indexes/index-mutations
+ {demos.async-mutations/create-product
+  {:config
+   {:com.wsscode.pathom3.connect.operation/provides
+    {:acme.product/id {}},
+    :com.wsscode.pathom3.connect.operation/params
+    [:acme.product/name :acme.product/price :acme.product/in-stock?],
+    :com.wsscode.pathom3.connect.operation/output [:acme.product/id],
+    :com.wsscode.pathom3.connect.operation/op-name
+    demos.async-mutations/create-product},
+   :mutate
+   #object[demos.async_mutations$create_product__19314 0x2e4c1d84 "demos.async_mutations$create_product__19314@2e4c1d84"]}},}
 ```
