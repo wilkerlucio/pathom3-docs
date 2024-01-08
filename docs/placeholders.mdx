@@ -3,7 +3,7 @@ title: Placeholders
 ---
 
 Placeholders allow the user to add structure to some EQL request. They work as a special
-attribute namespace, by default, Pathom recognize any attribute with the namespace `>` as
+attribute namespace. By default, Pathom recognize any attribute with the namespace `>` as
 a placeholder attribute.
 
 :::note
@@ -15,6 +15,15 @@ In this guide, you will go over a few examples of how to use placeholders.
 
 ## Provide data
 
+Pathom provides a plugin that allows you to provide data to the query. This is useful
+when you want to use Pathom to process a query, but you already have some data that you want to provide for that
+specific context.
+
+:::important
+Before version `2023.08.22-alpha` the provide data feature was a built-in feature. If you are upgrading, please make sure
+to add the new plugin to your configuration.
+:::
+
 You can use placeholders to provide in-query data for Pathom processing. To do this, lets
 get back to our famous full name example, the way to provide data is to send it to
 a placeholder key as [EQL parameters](https://edn-query-language.org/eql/1.0.0/specification.html#_parameters):
@@ -23,7 +32,11 @@ a placeholder key as [EQL parameters](https://edn-query-language.org/eql/1.0.0/s
 (pco/defresolver full-name [{::keys [first-name last-name]}]
   {::full-name (str first-name " " last-name)})
 
-(def env (pci/register full-name))
+(def env
+  (-> {}
+      (pci/register full-name)
+      ;; make sure you install the placeholder data plugin
+      (p.plugin/register (pbip/placeholder-data-params))))
 
 (p.eql/process env
   [{'(:>/bret {::first-name "Bret" ::last-name "Victor"})
