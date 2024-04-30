@@ -902,43 +902,6 @@ You can see that the cached resolver returns `::pco/unknown-value`. This is equi
 that key in the response. Doing this way, we can leverage the output inference while expressing this value is unknown, which triggers the next option.
 :::
 
-It's important to notice that Pathom will choose will depend on the highest priority
-resolver on that path. This means a dependency with a high priority may override the
-priority of an "end resolver".
-
-Here is an example of this scenario:
-
-```clojure
-(p.eql/process
-  (pci/register
-    [(pco/resolver 'high-priority-dep
-       {::pco/priority 5 ; very high priority
-        ::pco/output   [:dep]}
-       (fn [_ _] {:dep "value"}))
-
-     (pco/resolver 'a1
-       {::pco/priority 1
-        ::pco/input    [:dep]
-        ::pco/output   [:a]}
-       (fn [_ _]
-         {:a 1}))
-
-     ; this is higher on priority than a1, and has no deps
-     (pco/resolver 'a2
-       {::pco/priority 2
-        ::pco/output   [:a]}
-       (fn [_ _]
-         {:a 2}))])
-  [:a])
-; => {:a 1} ; the lower priority for `:a` won, because the `:dep` on that path had the highest priority
-```
-
-Here is the graph to help visualize it:
-
-<div className="pathom-plan-view">
-  <PlanGraphFileWithDetails path="/viz/resolvers/priority-dep.edn"/>
-</div>
-
 ### Custom priority algorithm
 
 If you need fine control over prioritization, you can set the key `::pcr/choose-path`
