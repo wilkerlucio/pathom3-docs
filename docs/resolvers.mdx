@@ -672,7 +672,7 @@ As we can see, the ~900ms is expected since the resolver ran once for each item.
 
 Consider a case where some API has a batching feature; in this case, would be ideal
 to reduce the number of round trips, you can do it by writing a batch resolver. The main
-the difference is that, instead of an input map, you will get a sequence of maps, with all
+difference is that, instead of an input map, you will get a sequence of maps, with all
 the inputs collected for batching. Use this to return a list (of the same input size)
 and Pathom does the merging in place:
 
