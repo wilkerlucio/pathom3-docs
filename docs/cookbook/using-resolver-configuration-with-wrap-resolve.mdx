@@ -21,7 +21,7 @@ title: Using resolver configuration with wrap-resolve
                              ;; first we get the name of the op from the current planner node
        (let [op-name         (-> env :com.wsscode.pathom3.connect.planner/node ::pco/op-name)
                              ;; use the name to get resolver details from the index
-             resolver-config (-> env ::pci/index-resolvers op-name pco/operation-config)]
+             resolver-config (pci/resolver-config env op-name)]
          ;; print custom config
          (println "RESOLVER CUSTOM CONFIG" (:my/custom-config resolver-config))
          (resolve env input))))})
