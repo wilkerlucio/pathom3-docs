@@ -1,0 +1,45 @@
+---
+title: Recursive queries on filesystem
+---
+
+```clojure
+(ns com.wsscode.pathom3.demos.recursive
+  (:require
+    [clojure.java.io :as io]
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.interface.eql :as p.eql])
+  (:import
+    (java.io
+      File)))
+
+(pco/defresolver file-resolver
+  [{:file/keys [path]}]
+  {::pco/output [:file/dir?]}
+  (let [f    (io/file path)
+        dir? (.isDirectory f)]
+    {:file/dir? dir?}))
+
+(pco/defresolver directory-files-resolver
+  [env {:file/keys [path dir?]}]
+  ;; the recursion goes here, we have :file/path, that will get us :dir/files which is a collection of items that also
+  ;; have the :file/path attribute
+  {::pco/output [{:dir/files [:file/path]}]}
+  ;; stop recursion if current :file/path isn't a directory
+  (if dir?
+    {:dir/files
+     (mapv (fn [^File f0] {:file/path (.getPath f0)})
+       (.listFiles (io/file path)))}))
+
+(def env
+  (pci/register
+    [file-resolver
+     directory-files-resolver]))
+
+(comment
+  (p.eql/process env
+    ;; change the path to something that works in your machine
+    {:file/path "src/demos"}
+    '[:file/path
+      {:dir/files ...}]))
+```
