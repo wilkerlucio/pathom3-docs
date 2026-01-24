@@ -48,7 +48,8 @@ module.exports = {
     {
       'Cookbook': [
         'cookbook/using-resolver-configuration-with-wrap-resolve',
-        'cookbook/recursive-queries-on-fs'
+        'cookbook/recursive-queries-on-fs',
+        'cookbook/api-usage-quota'
       ]
     },
     // 'faq',

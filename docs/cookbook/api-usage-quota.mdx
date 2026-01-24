@@ -1,0 +1,54 @@
+---
+title: API Usage Quota
+---
+
+```clojure
+(ns com.wsscode.pathom3.demos.api-quotas
+  (:require
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.connect.planner :as pcp]
+    [com.wsscode.pathom3.interface.eql :as p.eql]
+    [com.wsscode.pathom3.plugin :as p.plugin]))
+
+(defonce user-quotas (atom {}))
+
+(pco/defresolver costly-resolver []
+  {:quota/cost 10}
+  {:response "value"})
+
+(pco/defresolver free-resolver []
+  {:free "value"})
+
+(p.plugin/defplugin quotas-plugin
+  {:com.wsscode.pathom3.connect.runner/wrap-resolve
+   (fn [resolve]
+     (fn [{:quota/keys [limit current-user] :as env} input]
+       (let [{:quota/keys [cost]}
+             (pci/resolver-config env (-> env ::pcp/node ::pco/op-name))]
+         ; check if resolver needs quota
+         (if cost
+           (let [user-quota (get @user-quotas current-user 0)
+                 new-quota  (+ user-quota cost)]
+             (if (<= new-quota limit)
+               (do
+                 ; add cost
+                 (swap! user-quotas update current-user (fnil + 0) cost)
+                 (resolve env input))
+               (throw (ex-info "Exceed user quota" {:user-quota     (- limit user-quota)
+                                                    :required-quota cost}))))
+           (resolve env input)))))})
+
+(def env
+  (-> {:quota/limit 25}
+      (pci/register
+        [costly-resolver
+         free-resolver])
+      (p.plugin/register quotas-plugin)))
+
+(comment
+  ;; it will work twice, on the third time it will throw due to quota exceeded
+  (let [env (assoc env :quota/current-user "maria")]
+    (p.eql/process env
+      [:response :free])))
+```
