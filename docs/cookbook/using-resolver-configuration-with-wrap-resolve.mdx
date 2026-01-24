@@ -1,0 +1,36 @@
+---
+title: Using resolver configuration with wrap-resolve
+---
+
+```clojure
+(ns pathom3.demos.wrap-resolver-options
+  (:require [com.wsscode.pathom3.connect.indexes :as pci]
+            [com.wsscode.pathom3.connect.operation :as pco]
+            [com.wsscode.pathom3.interface.eql :as p.eql]
+            [com.wsscode.pathom3.plugin :as p.plugin]))
+
+(pco/defresolver my-resolver []
+  ;; set some custom config in the resolver options map
+  {:my/custom-config "something"}
+  {:ran true})
+
+(p.plugin/defplugin my-plugin
+  {:com.wsscode.pathom3.connect.runner/wrap-resolve
+   (fn [resolve]
+     (fn [env input]
+                             ;; first we get the name of the op from the current planner node
+       (let [op-name         (-> env :com.wsscode.pathom3.connect.planner/node ::pco/op-name)
+                             ;; use the name to get resolver details from the index
+             resolver-config (-> env ::pci/index-resolvers op-name pco/operation-config)]
+         ;; print custom config
+         (println "RESOLVER CUSTOM CONFIG" (:my/custom-config resolver-config))
+         (resolve env input))))})
+
+(def env
+  (-> {}
+      (pci/register my-resolver)
+      (p.plugin/register my-plugin)))
+
+(comment
+  (p.eql/process env [:ran]))
+```

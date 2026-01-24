@@ -45,6 +45,11 @@ module.exports = {
         'tutorials/graphql-integration'
       ]
     },
+    {
+      'Cookbook': [
+        'cookbook/using-resolver-configuration-with-wrap-resolve'
+      ]
+    },
     // 'faq',
     // {
     //   Demos: [
