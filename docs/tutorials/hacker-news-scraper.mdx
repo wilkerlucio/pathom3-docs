@@ -111,7 +111,7 @@ you follow along in your REPL:
   (->> sample-html
        (hc/parse)
        (hc/as-hickory)
-       (hs/select (hs/class "itemlist"))
+       (hs/select (hs/id "hnmain"))
        first))
 ```
 
@@ -130,7 +130,7 @@ This is how we can do it with Hickory:
   (->> sample-html
        (hc/parse)
        (hc/as-hickory)
-       (hs/select (hs/class "itemlist"))
+       (hs/select (hs/id "hnmain"))
        first
        (hs/select (hs/and
                     (hs/tag "tr")
@@ -193,9 +193,9 @@ Here is a function to extract the data points we mentioned at start from each it
    :hacker-news.item/id             (->> el :content first :attrs :id)
    :hacker-news.item/rank-in-page   (select-number (class-text el "rank"))
    :hacker-news.item/source         (class-text el "sitestr")
-   :hacker-news.item/title          (class-text el "titlelink")
-   :hacker-news.item/url            (->> (hs/select (hs/class "titlelink") el)
-                                         first :attrs :href)})
+   :hacker-news.item/title          (class-text el "titleline")
+   :hacker-news.item/url            (->> (hs/select (hs/class "titleline") el)
+                                         first :content first :attrs :href)})
 ```
 
 Let's use it to extract the data from our previous process:
@@ -205,7 +205,7 @@ Let's use it to extract the data from our previous process:
   (->> sample-html
        (hc/parse)
        (hc/as-hickory)
-       (hs/select (hs/class "itemlist"))
+       (hs/select (hs/id "hnmain"))
        first
        (hs/select (hs/and
                     (hs/tag "tr")
@@ -267,9 +267,9 @@ Time to introduce Pathom, now I'm going to turn that exploration code in a resol
    :hacker-news.item/id             (->> el :content first :attrs :id)
    :hacker-news.item/rank-in-page   (select-number (class-text el "rank"))
    :hacker-news.item/source         (class-text el "sitestr")
-   :hacker-news.item/title          (class-text el "storylink")
-   :hacker-news.item/url            (->> (hs/select (hs/class "storylink") el)
-                                         first :attrs :href)})
+   :hacker-news.item/title          (class-text el "titleline")
+   :hacker-news.item/url            (->> (hs/select (hs/class "titleline") el)
+                                         first :content first :attrs :href)})
 
 (pco/defresolver news-page-html-string []
   {:hacker-news.page/news-raw-html
@@ -291,7 +291,7 @@ Time to introduce Pathom, now I'm going to turn that exploration code in a resol
    (->> news-raw-html
         (hc/parse)
         (hc/as-hickory)
-        (hs/select (hs/class "itemlist"))
+        (hs/select (hs/id "hnmain"))
         first
         (hs/select (hs/and
                      (hs/tag "tr")
@@ -428,7 +428,7 @@ by breaking this step into a new resolver.
       :hacker-news.item/url]}]}
   {:hacker-news.page/news
    (->> news-hickory
-        (hs/select (hs/class "itemlist"))
+        (hs/select (hs/id "hnmain"))
         first
         (hs/select (hs/and
                      (hs/tag "tr")
@@ -552,6 +552,16 @@ same process we did with the query before:
         (tree-seq :hacker-news.page/news-next-page
           (comp vector :hacker-news.page/news-next-page))
         (into [] (mapcat :hacker-news.page/news)))})
+
+; remember to update env to include all resolvers
+(def env
+  (-> {::durable-cache* cache*}
+      (pci/register
+        [news-page-html-string
+         news-page-hickory
+         news-page
+         news-next-page
+         all-news-pages])))
 ```
 
 Now we can, for example, make this query to read all titles in news, in all pages:
@@ -1024,7 +1034,7 @@ parse it, as we did for comments and user details.
 ```clojure
 (defn extract-items-from-list [hickory]
   (let [tbody (->> hickory
-                   (hs/select (hs/class "itemlist"))
+                   (hs/select (hs/id "hnmain"))
                    first
                    (hs/select (hs/tag "tbody"))
                    first)

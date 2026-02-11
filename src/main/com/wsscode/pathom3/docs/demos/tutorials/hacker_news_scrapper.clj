@@ -50,9 +50,9 @@
    :hacker-news.item/id             (->> el :content first :attrs :id)
    :hacker-news.item/rank-in-page   (select-number (class-text el "rank"))
    :hacker-news.item/source         (class-text el "sitestr")
-   :hacker-news.item/title          (class-text el "storylink")
-   :hacker-news.item/url            (->> (hs/select (hs/class "storylink") el)
-                                         first :attrs :href)})
+   :hacker-news.item/title          (class-text el "titleline")
+   :hacker-news.item/url            (->> (hs/select (hs/class "titleline") el)
+                                         first :content first :attrs :href)})
 
 ; endregion
 
@@ -84,7 +84,7 @@
       :hacker-news.item/url]}]}
   {:hacker-news.page/news
    (->> news-hickory
-        (hs/select (hs/class "itemlist"))
+        (hs/select (hs/id "hnmain"))
         first
         (hs/select (hs/and
                      (hs/tag "tr")
@@ -176,7 +176,7 @@
 
 (defn extract-items-from-list [hickory]
   (let [tbody (->> hickory
-                   (hs/select (hs/class "itemlist"))
+                   (hs/select (hs/id "hnmain"))
                    first
                    (hs/select (hs/tag "tbody"))
                    first)
